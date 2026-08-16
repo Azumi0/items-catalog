@@ -89,7 +89,7 @@ export const items = sqliteTable('items', {
   description: text('description'),
   mainImage: text('main_image').notNull(), // nazwa pliku w uploads
   additionalImages: text('additional_images', { mode: 'json' }).$type<string[]>().notNull().$defaultFn(() => []),
-  createdById: text('created_by_id').notNull().references(() => users.id),
+  createdById: text('created_by_id').references(() => users.id, { onDelete: 'set null' }),
   createdByName: text('created_by_name').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),

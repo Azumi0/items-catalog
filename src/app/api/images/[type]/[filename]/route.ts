@@ -14,6 +14,8 @@ const MIME_TYPES: Record<string, string> = {
   '.gif': 'image/gif',
   '.avif': 'image/avif',
   '.svg': 'image/svg+xml',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
 };
 
 export async function GET(

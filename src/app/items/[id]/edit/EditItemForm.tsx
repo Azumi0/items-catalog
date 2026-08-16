@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Select,
@@ -13,10 +13,11 @@ import {
   SimpleGrid,
   ActionIcon,
   Box,
-  FileInput,
   Paper,
   Divider,
+  rem,
 } from '@mantine/core';
+import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import { notifications } from '@mantine/notifications';
 import {
   IconCheck,
@@ -25,10 +26,17 @@ import {
   IconPlus,
   IconX,
   IconDeviceFloppy,
+  IconUpload,
 } from '@tabler/icons-react';
 import { updateItemAction } from '@/app/actions/items';
 import type { ItemWithCategory } from '@/lib/services/items';
 import type { CategoryWithCount } from '@/lib/services/categories';
+
+const ACCEPTED_IMAGE_TYPES = [
+  ...IMAGE_MIME_TYPE,
+  'image/heic',
+  'image/heif',
+];
 
 interface EditItemFormProps {
   item: ItemWithCategory;
@@ -52,28 +60,62 @@ export function EditItemForm({ item, categories }: EditItemFormProps) {
   const [newAdditionalPreviews, setNewAdditionalPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleMainImageChange = (file: File | null) => {
-    setNewMainImage(file);
-    if (file) {
-      setNewMainPreview(URL.createObjectURL(file));
-    } else {
-      setNewMainPreview(null);
+  // Refs for cleanup on unmount
+  const mainPreviewRef = useRef<string | null>(null);
+  const newAdditionalPreviewsRef = useRef<string[]>([]);
+
+  mainPreviewRef.current = newMainPreview;
+  newAdditionalPreviewsRef.current = newAdditionalPreviews;
+
+  useEffect(() => {
+    return () => {
+      if (mainPreviewRef.current) {
+        URL.revokeObjectURL(mainPreviewRef.current);
+      }
+      newAdditionalPreviewsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+    };
+  }, []);
+
+  const handleMainImageDrop = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
+
+    if (newMainPreview) {
+      URL.revokeObjectURL(newMainPreview);
     }
+    const url = URL.createObjectURL(file);
+    setNewMainImage(file);
+    setNewMainPreview(url);
+  };
+
+  const removeNewMainImage = () => {
+    if (newMainPreview) {
+      URL.revokeObjectURL(newMainPreview);
+    }
+    setNewMainImage(null);
+    setNewMainPreview(null);
   };
 
   const handleAddNewAdditionalImages = (files: File[]) => {
-    setNewAdditionalImages([...newAdditionalImages, ...files]);
+    if (!files.length) return;
     const previews = files.map((f) => URL.createObjectURL(f));
-    setNewAdditionalPreviews([...newAdditionalPreviews, ...previews]);
+    setNewAdditionalImages((prev) => [...prev, ...files]);
+    setNewAdditionalPreviews((prev) => [...prev, ...previews]);
   };
 
   const removeKeptImage = (filename: string) => {
-    setKeptAdditionalImages(keptAdditionalImages.filter((img) => img !== filename));
+    setKeptAdditionalImages((prev) => prev.filter((img) => img !== filename));
   };
 
   const removeNewAdditionalImage = (index: number) => {
-    setNewAdditionalImages(newAdditionalImages.filter((_, i) => i !== index));
-    setNewAdditionalPreviews(newAdditionalPreviews.filter((_, i) => i !== index));
+    const targetUrl = newAdditionalPreviews[index];
+    if (targetUrl) {
+      URL.revokeObjectURL(targetUrl);
+    }
+    setNewAdditionalImages((prev) => prev.filter((_, i) => i !== index));
+    setNewAdditionalPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -175,38 +217,85 @@ export function EditItemForm({ item, categories }: EditItemFormProps) {
 
         <Box>
           <Text size="sm" fw={500} mb="xs">
-            Aktualne zdjęcie główne:
+            Zdjęcie główne:
           </Text>
           <Group align="flex-start" gap="md">
             <Paper withBorder p="xs" radius="md">
-              <Image
-                src={
-                  newMainPreview || `/api/images/thumbs/${item.mainImage}`
-                }
-                height={120}
-                width={150}
-                radius="sm"
-                alt="Zdjęcie główne"
-                style={{ objectFit: 'cover' }}
-              />
+              <Box pos="relative">
+                <Image
+                  src={
+                    newMainPreview || `/api/images/thumbs/${item.mainImage}`
+                  }
+                  height={130}
+                  width={160}
+                  radius="sm"
+                  alt="Zdjęcie główne"
+                  style={{ objectFit: 'cover' }}
+                />
+                {newMainPreview && (
+                  <ActionIcon
+                    color="red"
+                    variant="filled"
+                    size="sm"
+                    pos="absolute"
+                    top={4}
+                    right={4}
+                    onClick={removeNewMainImage}
+                    title="Cofnij podmianę zdjęcia"
+                    disabled={loading}
+                  >
+                    <IconX size={14} />
+                  </ActionIcon>
+                )}
+              </Box>
             </Paper>
 
-            <Stack gap="xs" style={{ flex: 1 }}>
-              <FileInput
-                label="Podmień zdjęcie główne (opcjonalnie)"
-                placeholder="Wybierz nowy plik..."
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                leftSection={<IconPhoto size={18} />}
-                onChange={handleMainImageChange}
+            <Box style={{ flex: 1 }}>
+              <Dropzone
+                onDrop={handleMainImageDrop}
+                maxFiles={1}
+                accept={ACCEPTED_IMAGE_TYPES}
                 disabled={loading}
-                clearable
-              />
+              >
+                <Group justify="center" gap="sm" mih={80} style={{ pointerEvents: 'none' }}>
+                  <Dropzone.Accept>
+                    <IconUpload
+                      style={{ width: rem(28), height: rem(28), color: 'var(--mantine-color-teal-6)' }}
+                      stroke={1.5}
+                    />
+                  </Dropzone.Accept>
+                  <Dropzone.Reject>
+                    <IconX
+                      style={{ width: rem(28), height: rem(28), color: 'var(--mantine-color-red-6)' }}
+                      stroke={1.5}
+                    />
+                  </Dropzone.Reject>
+                  <Dropzone.Idle>
+                    <IconPhoto
+                      style={{ width: rem(28), height: rem(28), color: 'var(--mantine-color-dimmed)' }}
+                      stroke={1.5}
+                    />
+                  </Dropzone.Idle>
+
+                  <div>
+                    <Text size="xs" fw={500} inline>
+                      {newMainPreview
+                        ? 'Kliknij lub przeciągnij, aby wybrać inne zdjęcie'
+                        : 'Podmień zdjęcie główne (przeciągnij lub kliknij)'}
+                    </Text>
+                    <Text size="xs" c="dimmed" inline mt={4}>
+                      Obsługiwane: PNG, JPEG, WebP, GIF, HEIC
+                    </Text>
+                  </div>
+                </Group>
+              </Dropzone>
+
               {newMainPreview && (
-                <Text size="xs" c="teal">
-                  Wybrano nowy plik - stare zdjęcie główne zostanie zastąpione.
+                <Text size="xs" c="teal" mt={6}>
+                  ✓ Wybrano nowe zdjęcie główne (stare zostanie usunięte po zapisie).
                 </Text>
               )}
-            </Stack>
+            </Box>
           </Group>
         </Box>
 
@@ -241,6 +330,7 @@ export function EditItemForm({ item, categories }: EditItemFormProps) {
                       right={8}
                       onClick={() => removeKeptImage(img)}
                       title="Usuń zdjęcie"
+                      disabled={loading}
                     >
                       <IconX size={12} />
                     </ActionIcon>
@@ -250,15 +340,42 @@ export function EditItemForm({ item, categories }: EditItemFormProps) {
             </Box>
           )}
 
-          <FileInput
-            label="Dodaj nowe zdjęcia dodatkowe"
-            placeholder="Wybierz pliki..."
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            leftSection={<IconPlus size={18} />}
-            multiple
-            onChange={handleAddNewAdditionalImages}
+          <Dropzone
+            onDrop={handleAddNewAdditionalImages}
+            accept={ACCEPTED_IMAGE_TYPES}
             disabled={loading}
-          />
+            mb="xs"
+          >
+            <Group justify="center" gap="sm" mih={80} style={{ pointerEvents: 'none' }}>
+              <Dropzone.Accept>
+                <IconUpload
+                  style={{ width: rem(28), height: rem(28), color: 'var(--mantine-color-teal-6)' }}
+                  stroke={1.5}
+                />
+              </Dropzone.Accept>
+              <Dropzone.Reject>
+                <IconX
+                  style={{ width: rem(28), height: rem(28), color: 'var(--mantine-color-red-6)' }}
+                  stroke={1.5}
+                />
+              </Dropzone.Reject>
+              <Dropzone.Idle>
+                <IconPlus
+                  style={{ width: rem(28), height: rem(28), color: 'var(--mantine-color-dimmed)' }}
+                  stroke={1.5}
+                />
+              </Dropzone.Idle>
+
+              <div>
+                <Text size="xs" fw={500} inline>
+                  Dodaj nowe zdjęcia dodatkowe (przeciągnij lub kliknij)
+                </Text>
+                <Text size="xs" c="dimmed" inline mt={4}>
+                  Możesz wybrać wiele plików jednocześnie
+                </Text>
+              </div>
+            </Group>
+          </Dropzone>
 
           {newAdditionalPreviews.length > 0 && (
             <Box mt="xs">
@@ -267,7 +384,7 @@ export function EditItemForm({ item, categories }: EditItemFormProps) {
               </Text>
               <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs">
                 {newAdditionalPreviews.map((preview, index) => (
-                  <Paper key={index} withBorder p="xs" radius="md" pos="relative">
+                  <Paper key={preview} withBorder p="xs" radius="md" pos="relative">
                     <Image
                       src={preview}
                       height={90}
@@ -284,6 +401,7 @@ export function EditItemForm({ item, categories }: EditItemFormProps) {
                       right={8}
                       onClick={() => removeNewAdditionalImage(index)}
                       title="Usuń zdjęcie"
+                      disabled={loading}
                     >
                       <IconX size={12} />
                     </ActionIcon>

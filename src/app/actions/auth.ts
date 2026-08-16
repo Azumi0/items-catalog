@@ -1,7 +1,7 @@
 'use server';
 
 import { getSession, getCurrentUser } from '@/lib/session';
-import { getUserCount, setupFirstUser, authenticateUser } from '@/lib/services/users';
+import { getUserCount, setupFirstUser, authenticateUser, validatePassword } from '@/lib/services/users';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
@@ -29,8 +29,10 @@ export async function setupFirstUserAction(prevState: any, formData: FormData) {
     return { error: 'Hasła nie są identyczne.' };
   }
 
-  if (password.length < 4) {
-    return { error: 'Hasło musi mieć co najmniej 4 znaki.' };
+  try {
+    validatePassword(password);
+  } catch (err: any) {
+    return { error: err.message || 'Hasło musi mieć co najmniej 4 znaki.' };
   }
 
   try {

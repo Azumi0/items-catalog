@@ -6,6 +6,7 @@ import {
   createUser,
   changePassword,
   deleteUser,
+  validatePassword,
 } from '@/lib/services/users';
 import { revalidatePath } from 'next/cache';
 
@@ -23,11 +24,8 @@ export async function createUserAction(prevState: any, formData: FormData) {
     return { error: 'Nazwa użytkownika i hasło są wymagane.' };
   }
 
-  if (password.length < 4) {
-    return { error: 'Hasło musi mieć co najmniej 4 znaki.' };
-  }
-
   try {
+    validatePassword(password);
     await createUser(username, password);
     revalidatePath('/users');
     return { success: true };
@@ -45,11 +43,8 @@ export async function changePasswordAction(prevState: any, formData: FormData) {
     return { error: 'Użytkownik i nowe hasło są wymagane.' };
   }
 
-  if (newPassword.length < 4) {
-    return { error: 'Hasło musi mieć co najmniej 4 znaki.' };
-  }
-
   try {
+    validatePassword(newPassword);
     await changePassword(userId, newPassword);
     revalidatePath('/users');
     return { success: true };

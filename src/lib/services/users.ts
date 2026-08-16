@@ -16,14 +16,20 @@ export async function getUsers(): Promise<Array<Omit<User, 'passwordHash'>>> {
   return allUsers.map(({ passwordHash: _, ...rest }) => rest);
 }
 
-function validateCredentials(username: string, password: string): string {
+export const MIN_PASSWORD_LENGTH = 4;
+
+export function validatePassword(password: string): void {
+  if (!password || password.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+  }
+}
+
+export function validateCredentials(username: string, password: string): string {
   const trimmed = username.trim();
   if (!trimmed) {
     throw new Error('Username is required');
   }
-  if (!password || password.length < 4) {
-    throw new Error('Password must be at least 4 characters long');
-  }
+  validatePassword(password);
   return trimmed;
 }
 
@@ -90,9 +96,7 @@ export async function changePassword(
   userId: string,
   newPassword: string
 ): Promise<void> {
-  if (!newPassword || newPassword.length < 4) {
-    throw new Error('Password must be at least 4 characters long');
-  }
+  validatePassword(newPassword);
 
   const db = getDb();
   const existing = await db

@@ -76,4 +76,24 @@ describe('Image Serving Route Handler Seam', () => {
     const arrayBuffer = await response.arrayBuffer();
     expect(arrayBuffer.byteLength).toBeGreaterThan(0);
   });
+
+  it('serves HEIC image with correct image/heic Content-Type', async () => {
+    vi.spyOn(sessionLib, 'getCurrentUser').mockResolvedValue({
+      id: '123',
+      username: 'alice',
+    });
+
+    const originalsDir = path.join(TEST_DIR, 'uploads/originals');
+    fs.mkdirSync(originalsDir, { recursive: true });
+    const dummyHeicPath = path.join(originalsDir, 'test-photo.heic');
+    fs.writeFileSync(dummyHeicPath, Buffer.from('fake-heic-data'));
+
+    const req = new NextRequest('http://localhost:3000/api/images/originals/test-photo.heic');
+    const response = await GET(req, {
+      params: Promise.resolve({ type: 'originals', filename: 'test-photo.heic' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('image/heic');
+  });
 });
