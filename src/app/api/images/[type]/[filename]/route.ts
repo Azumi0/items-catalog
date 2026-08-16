@@ -45,7 +45,7 @@ export async function GET(
 
   try {
     const stat = await fs.promises.stat(filePath);
-    const ext = path.extname(safeFilename).toLowerCase();
+    const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
     const nodeStream = fs.createReadStream(filePath);

@@ -77,6 +77,28 @@ describe('Image Serving Route Handler Seam', () => {
     expect(arrayBuffer.byteLength).toBeGreaterThan(0);
   });
 
+  it('serves thumbnail when requested using original filename extension (e.g. .jpg)', async () => {
+    vi.spyOn(sessionLib, 'getCurrentUser').mockResolvedValue({
+      id: '123',
+      username: 'alice',
+    });
+
+    const imgBuffer = await sharp({
+      create: { width: 100, height: 100, channels: 3, background: { r: 255, g: 0, b: 0 } },
+    }).jpeg().toBuffer();
+
+    const saved = await saveImage(imgBuffer, 'sample.jpg');
+
+    // UI requests /api/images/thumbs/${item.mainImage} where mainImage is saved.filename (e.g. uuid.jpg)
+    const req = new NextRequest(`http://localhost:3000/api/images/thumbs/${saved.filename}`);
+    const response = await GET(req, {
+      params: Promise.resolve({ type: 'thumbs', filename: saved.filename }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('image/webp');
+  });
+
   it('serves HEIC image with correct image/heic Content-Type', async () => {
     vi.spyOn(sessionLib, 'getCurrentUser').mockResolvedValue({
       id: '123',

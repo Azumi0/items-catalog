@@ -48,6 +48,11 @@ describe('Storage & Media Processing Seam', () => {
     expect(fs.existsSync(originalPath)).toBe(true);
     expect(fs.existsSync(thumbPath)).toBe(true);
 
+    // Verify getImagePath resolves thumbnail even when queried with original filename (.jpg)
+    const resolvedThumbPath = getImagePath('thumbs', result.filename);
+    expect(fs.existsSync(resolvedThumbPath)).toBe(true);
+    expect(resolvedThumbPath).toBe(thumbPath);
+
     // Verify thumbnail dimensions <= 400x400 and format is webp
     const thumbMetadata = await sharp(thumbPath).metadata();
     expect(thumbMetadata.format).toBe('webp');

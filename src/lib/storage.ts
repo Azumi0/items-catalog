@@ -30,8 +30,20 @@ export function getUploadDirs() {
 
 export function getImagePath(type: 'originals' | 'thumbs', filename: string): string {
   const { originalsDir, thumbsDir } = getUploadDirs();
-  const dir = type === 'originals' ? originalsDir : thumbsDir;
-  return path.join(dir, path.basename(filename));
+  const base = path.basename(filename);
+  if (type === 'thumbs') {
+    const directPath = path.join(thumbsDir, base);
+    if (fs.existsSync(directPath)) {
+      return directPath;
+    }
+    const webpFilename = `${path.parse(base).name}.webp`;
+    const webpPath = path.join(thumbsDir, webpFilename);
+    if (fs.existsSync(webpPath)) {
+      return webpPath;
+    }
+    return directPath;
+  }
+  return path.join(originalsDir, base);
 }
 
 export async function saveImage(
