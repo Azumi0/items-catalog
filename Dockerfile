@@ -1,12 +1,13 @@
 # 1. Base image
 FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat su-exec python3 make g++
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # 2. Dependencies
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+RUN pnpm install --frozen-lockfile
 
 # 3. Builder
 FROM base AS builder
@@ -17,8 +18,9 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN npm run build
-RUN npx esbuild src/db/migrate.ts --bundle --platform=node --target=node20 --outfile=dist/migrate.js --external:better-sqlite3
+RUN pnpm run build
+RUN pnpm exec esbuild src/db/migrate.ts --bundle --platform=node --target=node20 --outfile=dist/migrate.js --external:better-sqlite3
+
 
 # 4. Production Runner
 FROM node:20-alpine AS runner

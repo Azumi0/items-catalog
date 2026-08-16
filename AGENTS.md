@@ -1,6 +1,11 @@
 ## Agent skills
 
+### Package manager
+
+Use `pnpm` exclusively for all package operations and scripts (`pnpm install`, `pnpm <script>`, `pnpm test`, `pnpm dlx`). Never use `npm`, `yarn`, or `bun`.
+
 ### Issue tracker
+
 
 GitHub Issues via `gh` CLI. See `docs/agents/issue-tracker.md`.
 
