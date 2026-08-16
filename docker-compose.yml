@@ -1,0 +1,17 @@
+services:
+  item-catalog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: home-item-catalog:latest
+    container_name: item-catalog
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    environment:
+      - NODE_ENV=production
+      - PUID=1026
+      - PGID=100
+      - SESSION_SECRET=super-tajny-losowy-klucz-minimum-32-znaki
