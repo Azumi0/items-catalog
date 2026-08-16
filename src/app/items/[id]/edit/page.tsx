@@ -1,7 +1,7 @@
-import { getCurrentUser } from '@/lib/session';
+import { requireAuthPage } from '@/lib/session';
 import { getItem } from '@/lib/services/items';
 import { getCategories } from '@/lib/services/categories';
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { EditItemForm } from './EditItemForm';
 import { Container, Paper, Title, Text, Breadcrumbs, Anchor } from '@mantine/core';
@@ -14,10 +14,7 @@ export default async function EditItemPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect('/login');
-  }
+  const user = await requireAuthPage();
 
   const { id } = await params;
   const [item, categories] = await Promise.all([

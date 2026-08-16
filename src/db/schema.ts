@@ -39,8 +39,7 @@ export const items = sqliteTable('items', {
     .notNull()
     .$defaultFn(() => []),
   createdById: text('created_by_id')
-    .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: 'set null' }),
   createdByName: text('created_by_name').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()

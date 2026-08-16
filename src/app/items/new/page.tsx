@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@/lib/session';
+import { requireAuthPage } from '@/lib/session';
 import { getCategories } from '@/lib/services/categories';
-import { redirect } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { NewItemForm } from './NewItemForm';
 import { Container, Paper, Title, Text, Breadcrumbs, Anchor, Group, Button, Alert } from '@mantine/core';
@@ -10,10 +9,7 @@ import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 export const dynamic = 'force-dynamic';
 
 export default async function NewItemPage() {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect('/login');
-  }
+  const user = await requireAuthPage();
 
   const categories = await getCategories();
 

@@ -12,12 +12,12 @@ CREATE TABLE `items` (
 	`description` text,
 	`main_image` text NOT NULL,
 	`additional_images` text NOT NULL,
-	`created_by_id` text NOT NULL,
+	`created_by_id` text,
 	`created_by_name` text NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL,
 	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`created_by_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`created_by_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
 CREATE TABLE `users` (

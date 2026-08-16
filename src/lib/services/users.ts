@@ -16,17 +16,22 @@ export async function getUsers(): Promise<Array<Omit<User, 'passwordHash'>>> {
   return allUsers.map(({ passwordHash: _, ...rest }) => rest);
 }
 
-export async function setupFirstUser(
-  username: string,
-  password: string
-): Promise<Omit<User, 'passwordHash'>> {
-  const trimmedUsername = username.trim();
-  if (!trimmedUsername) {
+function validateCredentials(username: string, password: string): string {
+  const trimmed = username.trim();
+  if (!trimmed) {
     throw new Error('Username is required');
   }
   if (!password || password.length < 4) {
     throw new Error('Password must be at least 4 characters long');
   }
+  return trimmed;
+}
+
+export async function setupFirstUser(
+  username: string,
+  password: string
+): Promise<Omit<User, 'passwordHash'>> {
+  const trimmedUsername = validateCredentials(username, password);
 
   const existingCount = await getUserCount();
   if (existingCount > 0) {
@@ -53,13 +58,7 @@ export async function createUser(
   username: string,
   password: string
 ): Promise<Omit<User, 'passwordHash'>> {
-  const trimmedUsername = username.trim();
-  if (!trimmedUsername) {
-    throw new Error('Username is required');
-  }
-  if (!password || password.length < 4) {
-    throw new Error('Password must be at least 4 characters long');
-  }
+  const trimmedUsername = validateCredentials(username, password);
 
   const db = getDb();
   const existing = await db

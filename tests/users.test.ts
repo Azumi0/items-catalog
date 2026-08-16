@@ -15,7 +15,8 @@ import {
 import fs from 'fs';
 import path from 'path';
 
-import { closeDb } from '@/db';
+import { closeDb, getDb } from '@/db';
+import { eq } from 'drizzle-orm';
 
 const TEST_DB_DIR = path.resolve(process.cwd(), 'tmp/test-users-db');
 const TEST_DB_PATH = path.join(TEST_DB_DIR, 'app.db');
@@ -106,5 +107,42 @@ describe('Users Management Seam', () => {
     await expect(deleteUser('some-other-id', admin.id)).rejects.toThrow(
       /cannot delete the last user/i
     );
+  });
+
+  it('allows deleting a user who authored items without breaking foreign keys', async () => {
+    const admin = await setupFirstUser('admin', 'admin123');
+    const bob = await createUser('bob', 'bob123');
+
+    const db = getDb();
+    const catId = crypto.randomUUID();
+    await db.insert(schema.categories).values({
+      id: catId,
+      name: 'General',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const itemId = crypto.randomUUID();
+    await db.insert(schema.items).values({
+      id: itemId,
+      categoryId: catId,
+      description: 'Bob item',
+      mainImage: 'item.jpg',
+      additionalImages: [],
+      createdById: bob.id,
+      createdByName: bob.username,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Delete Bob
+    await deleteUser(admin.id, bob.id);
+    expect(await getUserCount()).toBe(1);
+
+    // Item still exists with preserved author name snapshot and null createdById
+    const [item] = await db.select().from(schema.items).where(eq(schema.items.id, itemId));
+    expect(item).toBeDefined();
+    expect(item.createdByName).toBe('bob');
+    expect(item.createdById).toBeNull();
   });
 });

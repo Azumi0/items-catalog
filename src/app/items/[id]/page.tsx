@@ -1,6 +1,6 @@
-import { getCurrentUser } from '@/lib/session';
+import { requireAuthPage } from '@/lib/session';
 import { getItem } from '@/lib/services/items';
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { ItemDetailView } from './ItemDetailView';
 
@@ -11,10 +11,7 @@ export default async function ItemDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect('/login');
-  }
+  const user = await requireAuthPage();
 
   const { id } = await params;
   const item = await getItem(id);

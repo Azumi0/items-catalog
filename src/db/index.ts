@@ -43,7 +43,7 @@ function initDb(dbPath: string) {
 
 let dbInstance: { path: string; sqlite: Database.Database; db: ReturnType<typeof drizzle<typeof schema>> } | null = null;
 
-export function getDb() {
+function getOrCreateInstance() {
   const currentPath = getDatabasePath();
   if (!dbInstance || dbInstance.path !== currentPath) {
     if (dbInstance) {
@@ -60,27 +60,15 @@ export function getDb() {
       db: initialized.db,
     };
   }
-  return dbInstance.db;
+  return dbInstance;
+}
+
+export function getDb() {
+  return getOrCreateInstance().db;
 }
 
 export function getSqlite() {
-  const currentPath = getDatabasePath();
-  if (!dbInstance || dbInstance.path !== currentPath) {
-    if (dbInstance) {
-      try {
-        dbInstance.sqlite.close();
-      } catch {
-        // ignore
-      }
-    }
-    const initialized = initDb(currentPath);
-    dbInstance = {
-      path: currentPath,
-      sqlite: initialized.sqlite,
-      db: initialized.db,
-    };
-  }
-  return dbInstance.sqlite;
+  return getOrCreateInstance().sqlite;
 }
 
 export function closeDb() {

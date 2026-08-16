@@ -1,16 +1,12 @@
-import { getCurrentUser } from '@/lib/session';
+import { requireAuthPage } from '@/lib/session';
 import { getUsers } from '@/lib/services/users';
-import { redirect } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { UsersManager } from '@/components/UsersManager';
 
 export const dynamic = 'force-dynamic';
 
 export default async function UsersPage() {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect('/login');
-  }
+  const user = await requireAuthPage();
 
   const allUsers = await getUsers();
 

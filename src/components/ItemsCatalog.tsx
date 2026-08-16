@@ -56,12 +56,11 @@ export function ItemsCatalog({
           return false;
         }
 
-        // Search query filter (matches description or category name)
+        // Search query filter (matches description)
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           const descMatch = (item.description || '').toLowerCase().includes(q);
-          const catMatch = (item.categoryName || '').toLowerCase().includes(q);
-          if (!descMatch && !catMatch) {
+          if (!descMatch) {
             return false;
           }
         }
@@ -104,7 +103,7 @@ export function ItemsCatalog({
 
           <Group grow align="flex-end">
             <TextInput
-              placeholder="Szukaj po opisie lub nazwie kategorii..."
+              placeholder="Szukaj po opisie przedmiotu..."
               leftSection={<IconSearch size={18} />}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.currentTarget.value)}

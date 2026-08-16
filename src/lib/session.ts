@@ -19,6 +19,21 @@ export async function getCurrentUser() {
   return session.user;
 }
 
+import { getUserCount } from '@/lib/services/users';
+import { redirect } from 'next/navigation';
+
+export async function requireAuthPage() {
+  const count = await getUserCount();
+  if (count === 0) {
+    redirect('/setup');
+  }
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect('/login');
+  }
+  return user;
+}
+
 export async function requireAuth() {
   const user = await getCurrentUser();
   if (!user) {

@@ -23,6 +23,18 @@ export async function getItemAction(id: string) {
   return getItem(id);
 }
 
+async function processImageUploads(files: File[]): Promise<string[]> {
+  const savedFilenames: string[] = [];
+  for (const file of files) {
+    if (file && file instanceof File && file.size > 0) {
+      const buf = Buffer.from(await file.arrayBuffer());
+      const saved = await saveImage(buf, file.name || 'image.jpg');
+      savedFilenames.push(saved.filename);
+    }
+  }
+  return savedFilenames;
+}
+
 export async function createItemAction(prevState: any, formData: FormData) {
   const user = await requireAuth();
 
@@ -45,14 +57,7 @@ export async function createItemAction(prevState: any, formData: FormData) {
     const savedMain = await saveImage(mainBuffer, mainImageFile.name || 'image.jpg');
 
     // 2. Process Additional Images
-    const savedAdditionalImages: string[] = [];
-    for (const file of additionalImageFiles) {
-      if (file && file instanceof File && file.size > 0) {
-        const buf = Buffer.from(await file.arrayBuffer());
-        const saved = await saveImage(buf, file.name || 'extra.jpg');
-        savedAdditionalImages.push(saved.filename);
-      }
-    }
+    const savedAdditionalImages = await processImageUploads(additionalImageFiles);
 
     // 3. Save to Database
     const created = await createItem({
@@ -108,15 +113,7 @@ export async function updateItemAction(prevState: any, formData: FormData) {
       }
     }
 
-    const savedNewAdditional: string[] = [];
-    for (const file of newAdditionalImageFiles) {
-      if (file && file instanceof File && file.size > 0) {
-        const buf = Buffer.from(await file.arrayBuffer());
-        const saved = await saveImage(buf, file.name || 'extra.jpg');
-        savedNewAdditional.push(saved.filename);
-      }
-    }
-
+    const savedNewAdditional = await processImageUploads(newAdditionalImageFiles);
     const finalAdditionalImages = [...keptImages, ...savedNewAdditional];
 
     await updateItem(id, {

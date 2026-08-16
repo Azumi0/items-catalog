@@ -42,16 +42,28 @@ export async function GET(
   }
 
   try {
-    const fileBuffer = await fs.promises.readFile(filePath);
+    const stat = await fs.promises.stat(filePath);
     const ext = path.extname(safeFilename).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    return new NextResponse(fileBuffer, {
+    const nodeStream = fs.createReadStream(filePath);
+    const webStream = new ReadableStream({
+      start(controller) {
+        nodeStream.on('data', (chunk) => controller.enqueue(chunk));
+        nodeStream.on('end', () => controller.close());
+        nodeStream.on('error', (err) => controller.error(err));
+      },
+      cancel() {
+        nodeStream.destroy();
+      },
+    });
+
+    return new Response(webStream, {
       status: 200,
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'private, max-age=86400',
-        'Content-Length': fileBuffer.byteLength.toString(),
+        'Content-Length': stat.size.toString(),
       },
     });
   } catch (err) {
