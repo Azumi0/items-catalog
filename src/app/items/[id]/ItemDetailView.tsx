@@ -32,12 +32,11 @@ import {
   IconAlertTriangle,
   IconCheck,
   IconArrowsMaximize,
-  IconChevronLeft,
-  IconChevronRight,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { deleteItemAction } from '@/app/actions/items';
 import type { ItemWithCategory } from '@/lib/services/items';
+import { ImageLightboxModal } from '@/components/ImageLightboxModal';
 
 interface ItemDetailViewProps {
   item: ItemWithCategory;
@@ -57,14 +56,6 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
   const handleOpenLightbox = (index: number) => {
     setLightboxIndex(index);
     openLightbox();
-  };
-
-  const handleNextImage = () => {
-    setLightboxIndex((prev) => (prev + 1) % allImages.length);
-  };
-
-  const handlePrevImage = () => {
-    setLightboxIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
 
   const handleDelete = async () => {
@@ -316,49 +307,14 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
         </Stack>
       </Modal>
 
-      {/* Lightbox Modal */}
-      <Modal
+      {/* Image Zoom & Lightbox Modal */}
+      <ImageLightboxModal
         opened={lightboxOpened}
         onClose={closeLightbox}
-        size="xl"
-        centered
-        withCloseButton
-        title={`Zdjęcie ${lightboxIndex + 1} z ${allImages.length}`}
-      >
-        <Stack align="center" gap="md">
-          <Box pos="relative" style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-            <Image
-              src={`/api/images/originals/${allImages[lightboxIndex]}`}
-              alt={`Powiększenie ${lightboxIndex + 1}`}
-              style={{ maxHeight: '75vh', width: 'auto', objectFit: 'contain' }}
-            />
-          </Box>
-
-          {allImages.length > 1 && (
-            <Group justify="space-between" w="100%">
-              <Button
-                variant="light"
-                color="teal"
-                leftSection={<IconChevronLeft size={18} />}
-                onClick={handlePrevImage}
-              >
-                Poprzednie
-              </Button>
-              <Text size="sm" c="dimmed">
-                {lightboxIndex + 1} / {allImages.length}
-              </Text>
-              <Button
-                variant="light"
-                color="teal"
-                rightSection={<IconChevronRight size={18} />}
-                onClick={handleNextImage}
-              >
-                Następne
-              </Button>
-            </Group>
-          )}
-        </Stack>
-      </Modal>
+        images={allImages}
+        initialIndex={lightboxIndex}
+        title={item.description || item.categoryName}
+      />
     </Container>
   );
 }

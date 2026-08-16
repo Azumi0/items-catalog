@@ -47,6 +47,9 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.8(react@19.2.8)
+      react-zoom-pan-pinch:
+        specifier: ^4.0.4
+        version: 4.0.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
@@ -1635,6 +1638,13 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
 
+  react-zoom-pan-pinch@4.0.4:
+    resolution: {integrity: sha512-P0D7lfNHyJCNuUozoVdt0WNWcQ34ZbbD71B8pb+UtF7Th8MKBnxYiPApDfPZZmr+Gk0l0WmGTXL8R36JirHcQQ==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      react: '*'
+      react-dom: '*'
+
   react@19.2.8:
     resolution: {integrity: sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw==}
     engines: {node: '>=0.10.0'}
@@ -3048,6 +3058,11 @@ snapshots:
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
+  react-zoom-pan-pinch@4.0.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
