@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------
+# Home Item Catalog — Synology Container Manager (Projekt)
+#
+# Ten plik jest przeznaczony WYLACZNIE na NAS. Rozni sie od ./docker-compose.yml
+# tym, ze NIE buduje obrazu — uzywa gotowego obrazu zaimportowanego z pliku .tar
+# (docker save na PC -> Container Manager -> Obraz -> Importuj -> Dodaj z pliku).
+#
+# Katalog projektu na NAS:  /volume1/docker/items-catalog
+# Sciezka ./data rozwija sie wzgledem katalogu projektu.
+#
+# Dostep do aplikacji idzie przez odwrotny serwer proxy DSM (HTTPS -> localhost:3000).
+# ---------------------------------------------------------------------------
+
+services:
+  item-catalog:
+    image: home-item-catalog:1.0.0
+    container_name: item-catalog
+
+    # Autostart po restarcie DSM. UWAGA: "unless-stopped" nie wznowi kontenera,
+    # ktory zatrzymales recznie — po recznym stopie trzeba go recznie wystartowac.
+    restart: unless-stopped
+
+    ports:
+      # Port wystawiony TYLKO na petle zwrotna NAS-a. Odwrotny serwer proxy DSM
+      # (nginx dziala na hoscie) dosiegnie go bez przeszkod, ale z LAN-u port
+      # 3000 jest niewidoczny — jedyna droga do aplikacji jest HTTPS przez proxy.
+      #
+      # Skutek uboczny: nie podejrzysz aplikacji po http://192.168.1.100:3000
+      # nawet do testu. Na czas diagnostyki zmien tymczasowo na "3000:3000".
+      - "127.0.0.1:3000:3000"
+
+    volumes:
+      # app.db + uploads/originals + uploads/thumbs
+      - ./data:/data
+
+    environment:
+      - NODE_ENV=production
+
+      # Katalog danych. Zmienna nazywa sie DATA_DIR (README podawal DATA_PATH —
+      # ta nazwa nie jest nigdzie czytana w kodzie).
+      - DATA_DIR=/data
+
+      # UID/GID wlasciciela folderu na NAS. Sprawdz przez SSH: id twoj_login
+      # Domyslnie pierwszy uzytkownik DSM to 1026, grupa "users" to 100.
+      - PUID=1026
+      - PGID=100
+
+      # !!! PODMIEN na wlasny losowy ciag min. 32 znaki !!!
+      # Bez tego aplikacja uzyje wbudowanego sekretu z src/lib/auth.ts.
+      # Zmiana tej wartosci uniewaznia wszystkie aktywne sesje.
+      - SESSION_SECRET=ZMIEN-MNIE-na-losowy-ciag-minimum-32-znaki
+
+    # Rotacja logow — bez tego json-file rosnie w nieskonczonosc na wolumenie NAS.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Odkomentuj, jesli Container Manager przy starcie projektu probuje POBRAC
+    # obraz z rejestru i konczy sie bledem "pull access denied".
+    # pull_policy: never
