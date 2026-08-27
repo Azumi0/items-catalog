@@ -4,5 +4,7 @@ dist/
 data/
 tmp/
 *.log
+.env
 .env*.local
 tsconfig.tsbuildinfo
+*.tar

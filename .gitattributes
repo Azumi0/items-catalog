@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# Repozytorium przechowuje LF i working copy tez dostaje LF — niezaleznie od
+# tego, jak ustawione jest core.autocrlf na danej maszynie.
+#
+# To nie jest kosmetyka: entrypoint.sh trafia do obrazu Docker (node:20-alpine).
+# Shebang zakonczony CRLF powoduje, ze jadro probuje uruchomic interpreter
+# "/bin/sh\r", ktory nie istnieje — kontener pada przy starcie z komunikatem
+# w rodzaju "no such file or directory", mylnie wskazujacym na brak pliku.
+# ---------------------------------------------------------------------------
+
+# Domyslnie: wykrywaj pliki tekstowe, zawsze zapisuj i wypisuj z LF.
+* text=auto eol=lf
+
+# Jawnie dla plikow wykonywanych wewnatrz kontenera Linux.
+*.sh        text eol=lf
+entrypoint.sh text eol=lf
+Dockerfile  text eol=lf
+
+# Binaria — zadnej konwersji koncow linii.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.ico   binary
+*.svg   text eol=lf
+*.tar   binary
+*.db    binary

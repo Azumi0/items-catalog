@@ -1,3 +1,15 @@
+# ---------------------------------------------------------------------------
+# Lokalny build + uruchomienie obrazu produkcyjnego (stacja robocza).
+#
+# Na Synology NAS uzyj docker-compose.synology.yml — ten plik ma sekcje build:,
+# ktora zmusilaby Container Managera do kompilowania Next.js na NAS-ie.
+#
+# UWAGA: ciasteczko sesji ma flage Secure (NODE_ENV=production), wiec logowanie
+# zadziala tylko po http://localhost:3000 (localhost jest traktowany przez
+# przegladarki jako zaufane zrodlo) albo przez HTTPS. Wejscie po adresie IP
+# maszyny skonczy sie petla powrotow na /login.
+# ---------------------------------------------------------------------------
+
 services:
   item-catalog:
     build:
@@ -6,12 +18,33 @@ services:
     image: home-item-catalog:latest
     container_name: item-catalog
     restart: unless-stopped
+
     ports:
       - "3000:3000"
+
     volumes:
+      # app.db + uploads/originals + uploads/thumbs
       - ./data:/data
+
     environment:
       - NODE_ENV=production
-      - PUID=1026
-      - PGID=100
-      - SESSION_SECRET=super-tajny-losowy-klucz-minimum-32-znaki
+
+      # Katalog danych. Zmienna nazywa sie DATA_DIR — DATA_PATH nie jest
+      # nigdzie czytane w kodzie (src/lib/storage.ts, src/db/index.ts).
+      - DATA_DIR=/data
+
+      # UID/GID wlasciciela katalogu ./data na hoscie.
+      # Na Synology podmien na wynik polecenia `id twoj_login` (zwykle 1026/100).
+      - PUID=1000
+      - PGID=1000
+
+      # Czytane z pliku .env obok tego pliku — patrz .env.example.
+      # Bez tej zmiennej aplikacja uzyje stalego sekretu z src/lib/auth.ts,
+      # ktory jest publiczny w repozytorium.
+      - SESSION_SECRET=${SESSION_SECRET:?ustaw SESSION_SECRET w pliku .env (min. 32 znaki)}
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
