@@ -25,6 +25,7 @@ import {
   TransformComponent,
   type ReactZoomPanPinchContentRef,
 } from 'react-zoom-pan-pinch';
+import { originalUrl } from '@/lib/images';
 
 export interface ImageLightboxModalProps {
   opened: boolean;
@@ -221,7 +222,7 @@ export function ImageLightboxModal({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`/api/images/originals/${currentImage}`}
+                  src={originalUrl(currentImage)}
                   alt={`${title || 'Zdjęcie'} ${currentIndex + 1}`}
                   style={{
                     maxWidth: '100%',

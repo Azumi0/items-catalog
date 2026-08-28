@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Container,
   Paper,
@@ -19,16 +18,15 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
   IconUserPlus,
   IconKey,
   IconTrash,
   IconUsers,
   IconAlertTriangle,
-  IconCheck,
   IconUser,
 } from '@tabler/icons-react';
+import { useActionRunner } from '@/hooks/useActionRunner';
 import {
   createUserAction,
   changePasswordAction,
@@ -45,14 +43,12 @@ export function UsersManager({
   initialUsers,
   currentUserId,
 }: UsersManagerProps) {
-  const router = useRouter();
-
   // Create Modal
   const [createOpened, { open: openCreate, close: closeCreate }] =
     useDisclosure(false);
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const { run: runCreate, pending: isCreating } = useActionRunner();
 
   // Password Modal
   const [passwordOpened, { open: openPassword, close: closePassword }] =
@@ -60,47 +56,34 @@ export function UsersManager({
   const [targetUser, setTargetUser] =
     useState<Omit<User, 'passwordHash'> | null>(null);
   const [updatedPassword, setUpdatedPassword] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const { run: runChangePassword, pending: isChangingPassword } = useActionRunner();
 
   // Delete Modal
   const [deleteOpened, { open: openDelete, close: closeDelete }] =
     useDisclosure(false);
   const [deletingUser, setDeletingUser] =
     useState<Omit<User, 'passwordHash'> | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { run: runDelete, pending: isDeleting } = useActionRunner();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUsername.trim() || !newPassword) return;
 
-    setIsCreating(true);
     const formData = new FormData();
     formData.append('username', newUsername);
     formData.append('password', newPassword);
 
-    const result = await createUserAction(null, formData);
-    setIsCreating(false);
-
-    if (result?.error) {
-      notifications.show({
-        color: 'red',
-        title: 'Błąd dodawania użytkownika',
-        message: result.error,
-      });
-      return;
-    }
-
-    notifications.show({
-      color: 'teal',
-      title: 'Sukces',
-      message: `Użytkownik "${newUsername}" został utworzony.`,
-      icon: <IconCheck size={16} />,
+    await runCreate({
+      action: () => createUserAction(null, formData),
+      errorTitle: 'Błąd dodawania użytkownika',
+      successTitle: 'Sukces',
+      successMessage: `Użytkownik "${newUsername}" został utworzony.`,
+      onSuccess: () => {
+        setNewUsername('');
+        setNewPassword('');
+        closeCreate();
+      },
     });
-
-    setNewUsername('');
-    setNewPassword('');
-    closeCreate();
-    router.refresh();
   };
 
   const handleOpenPasswordModal = (user: Omit<User, 'passwordHash'>) => {
@@ -113,32 +96,18 @@ export function UsersManager({
     e.preventDefault();
     if (!targetUser || !updatedPassword) return;
 
-    setIsChangingPassword(true);
+    const { id, username } = targetUser;
     const formData = new FormData();
-    formData.append('userId', targetUser.id);
+    formData.append('userId', id);
     formData.append('newPassword', updatedPassword);
 
-    const result = await changePasswordAction(null, formData);
-    setIsChangingPassword(false);
-
-    if (result?.error) {
-      notifications.show({
-        color: 'red',
-        title: 'Błąd zmiany hasła',
-        message: result.error,
-      });
-      return;
-    }
-
-    notifications.show({
-      color: 'teal',
-      title: 'Zmieniono hasło',
-      message: `Hasło dla użytkownika "${targetUser.username}" zostało pomyślnie zaktualizowane.`,
-      icon: <IconCheck size={16} />,
+    await runChangePassword({
+      action: () => changePasswordAction(null, formData),
+      errorTitle: 'Błąd zmiany hasła',
+      successTitle: 'Zmieniono hasło',
+      successMessage: `Hasło dla użytkownika "${username}" zostało pomyślnie zaktualizowane.`,
+      onSuccess: closePassword,
     });
-
-    closePassword();
-    router.refresh();
   };
 
   const handleOpenDeleteModal = (user: Omit<User, 'passwordHash'>) => {
@@ -149,28 +118,15 @@ export function UsersManager({
   const handleDelete = async () => {
     if (!deletingUser) return;
 
-    setIsDeleting(true);
-    const result = await deleteUserAction(deletingUser.id);
-    setIsDeleting(false);
+    const { id, username } = deletingUser;
 
-    if (result?.error) {
-      notifications.show({
-        color: 'red',
-        title: 'Błąd usuwania',
-        message: result.error,
-      });
-      return;
-    }
-
-    notifications.show({
-      color: 'teal',
-      title: 'Usunięto użytkownika',
-      message: `Użytkownik "${deletingUser.username}" został usunięty z systemu.`,
-      icon: <IconCheck size={16} />,
+    await runDelete({
+      action: () => deleteUserAction(id),
+      errorTitle: 'Błąd usuwania',
+      successTitle: 'Usunięto użytkownika',
+      successMessage: `Użytkownik "${username}" został usunięty z systemu.`,
+      onSuccess: closeDelete,
     });
-
-    closeDelete();
-    router.refresh();
   };
 
   return (

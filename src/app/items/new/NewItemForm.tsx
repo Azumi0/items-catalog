@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Select,
@@ -14,26 +14,14 @@ import {
   ActionIcon,
   Box,
   Paper,
-  rem,
 } from '@mantine/core';
-import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import { notifications } from '@mantine/notifications';
-import {
-  IconUpload,
-  IconX,
-  IconPhoto,
-  IconCheck,
-  IconAlertCircle,
-  IconPlus,
-} from '@tabler/icons-react';
+import { IconUpload, IconX, IconCheck, IconAlertCircle } from '@tabler/icons-react';
 import { createItemAction } from '@/app/actions/items';
 import type { CategoryWithCount } from '@/lib/services/categories';
-
-const ACCEPTED_IMAGE_TYPES = [
-  ...IMAGE_MIME_TYPE,
-  'image/heic',
-  'image/heif',
-];
+import { toCategoryOptions } from '@/lib/categoryOptions';
+import { ImageDropzone } from '@/components/ImageDropzone';
+import { useSingleImagePreview, useMultiImagePreviews } from '@/hooks/useImagePreviews';
 
 interface NewItemFormProps {
   categories: CategoryWithCount[];
@@ -45,65 +33,10 @@ export function NewItemForm({ categories }: NewItemFormProps) {
     categories[0]?.id || null
   );
   const [description, setDescription] = useState('');
-  const [mainImage, setMainImage] = useState<File | null>(null);
-  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
-  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
-  const [additionalPreviews, setAdditionalPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Keep references for cleanup on unmount
-  const mainPreviewRef = useRef<string | null>(null);
-  const additionalPreviewsRef = useRef<string[]>([]);
-
-  mainPreviewRef.current = mainImagePreview;
-  additionalPreviewsRef.current = additionalPreviews;
-
-  useEffect(() => {
-    return () => {
-      if (mainPreviewRef.current) {
-        URL.revokeObjectURL(mainPreviewRef.current);
-      }
-      additionalPreviewsRef.current.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
-    };
-  }, []);
-
-  const handleMainImageDrop = (files: File[]) => {
-    const file = files[0];
-    if (!file) return;
-
-    if (mainImagePreview) {
-      URL.revokeObjectURL(mainImagePreview);
-    }
-    const url = URL.createObjectURL(file);
-    setMainImage(file);
-    setMainImagePreview(url);
-  };
-
-  const removeMainImage = () => {
-    if (mainImagePreview) {
-      URL.revokeObjectURL(mainImagePreview);
-    }
-    setMainImage(null);
-    setMainImagePreview(null);
-  };
-
-  const handleAdditionalImagesDrop = (files: File[]) => {
-    if (!files.length) return;
-    const newPreviews = files.map((f) => URL.createObjectURL(f));
-    setAdditionalImages((prev) => [...prev, ...files]);
-    setAdditionalPreviews((prev) => [...prev, ...newPreviews]);
-  };
-
-  const removeAdditionalImage = (index: number) => {
-    const targetUrl = additionalPreviews[index];
-    if (targetUrl) {
-      URL.revokeObjectURL(targetUrl);
-    }
-    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
-    setAdditionalPreviews((prev) => prev.filter((_, i) => i !== index));
-  };
+  const mainImage = useSingleImagePreview();
+  const additionalImages = useMultiImagePreviews();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +51,7 @@ export function NewItemForm({ categories }: NewItemFormProps) {
       return;
     }
 
-    if (!mainImage) {
+    if (!mainImage.file) {
       notifications.show({
         color: 'red',
         title: 'Błąd',
@@ -134,9 +67,9 @@ export function NewItemForm({ categories }: NewItemFormProps) {
       const formData = new FormData();
       formData.append('categoryId', categoryId);
       formData.append('description', description);
-      formData.append('mainImage', mainImage);
+      formData.append('mainImage', mainImage.file);
 
-      for (const file of additionalImages) {
+      for (const file of additionalImages.files) {
         formData.append('additionalImages', file);
       }
 
@@ -173,18 +106,13 @@ export function NewItemForm({ categories }: NewItemFormProps) {
     }
   };
 
-  const categoryData = categories.map((c) => ({
-    value: c.id,
-    label: c.name,
-  }));
-
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="lg">
         <Select
           label="Kategoria"
           placeholder="Wybierz kategorię"
-          data={categoryData}
+          data={toCategoryOptions(categories)}
           value={categoryId}
           onChange={setCategoryId}
           required
@@ -207,11 +135,11 @@ export function NewItemForm({ categories }: NewItemFormProps) {
             Zdjęcie główne (wymagane)
           </Text>
 
-          {mainImagePreview ? (
+          {mainImage.preview ? (
             <Paper withBorder p="xs" radius="md" style={{ display: 'inline-block' }}>
               <Box pos="relative">
                 <Image
-                  src={mainImagePreview}
+                  src={mainImage.preview}
                   height={180}
                   width={240}
                   radius="sm"
@@ -225,7 +153,7 @@ export function NewItemForm({ categories }: NewItemFormProps) {
                   pos="absolute"
                   top={4}
                   right={4}
-                  onClick={removeMainImage}
+                  onClick={mainImage.clear}
                   title="Usuń zdjęcie"
                   disabled={loading}
                 >
@@ -234,42 +162,16 @@ export function NewItemForm({ categories }: NewItemFormProps) {
               </Box>
             </Paper>
           ) : (
-            <Dropzone
-              onDrop={handleMainImageDrop}
+            <ImageDropzone
+              onDrop={mainImage.select}
               maxFiles={1}
-              accept={ACCEPTED_IMAGE_TYPES}
               disabled={loading}
-            >
-              <Group justify="center" gap="md" mih={120} style={{ pointerEvents: 'none' }}>
-                <Dropzone.Accept>
-                  <IconUpload
-                    style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-teal-6)' }}
-                    stroke={1.5}
-                  />
-                </Dropzone.Accept>
-                <Dropzone.Reject>
-                  <IconX
-                    style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-red-6)' }}
-                    stroke={1.5}
-                  />
-                </Dropzone.Reject>
-                <Dropzone.Idle>
-                  <IconPhoto
-                    style={{ width: rem(42), height: rem(42), color: 'var(--mantine-color-dimmed)' }}
-                    stroke={1.5}
-                  />
-                </Dropzone.Idle>
-
-                <div>
-                  <Text size="sm" inline fw={500}>
-                    Przeciągnij zdjęcie główne lub kliknij, aby wybrać plik
-                  </Text>
-                  <Text size="xs" c="dimmed" inline mt={7}>
-                    Obsługiwane formaty: PNG, JPEG, WebP, GIF, HEIC
-                  </Text>
-                </div>
-              </Group>
-            </Dropzone>
+              idleIcon="photo"
+              iconSize={42}
+              minHeight={120}
+              title="Przeciągnij zdjęcie główne lub kliknij, aby wybrać plik"
+              hint="Obsługiwane formaty: PNG, JPEG, WebP, GIF, HEIC"
+            />
           )}
         </Box>
 
@@ -279,46 +181,20 @@ export function NewItemForm({ categories }: NewItemFormProps) {
             Zdjęcia dodatkowe (opcjonalne)
           </Text>
 
-          <Dropzone
-            onDrop={handleAdditionalImagesDrop}
-            accept={ACCEPTED_IMAGE_TYPES}
+          <ImageDropzone
+            onDrop={additionalImages.add}
             disabled={loading}
+            idleIcon="plus"
+            iconSize={36}
+            minHeight={100}
             mb="xs"
-          >
-            <Group justify="center" gap="md" mih={100} style={{ pointerEvents: 'none' }}>
-              <Dropzone.Accept>
-                <IconUpload
-                  style={{ width: rem(36), height: rem(36), color: 'var(--mantine-color-teal-6)' }}
-                  stroke={1.5}
-                />
-              </Dropzone.Accept>
-              <Dropzone.Reject>
-                <IconX
-                  style={{ width: rem(36), height: rem(36), color: 'var(--mantine-color-red-6)' }}
-                  stroke={1.5}
-                />
-              </Dropzone.Reject>
-              <Dropzone.Idle>
-                <IconPlus
-                  style={{ width: rem(36), height: rem(36), color: 'var(--mantine-color-dimmed)' }}
-                  stroke={1.5}
-                />
-              </Dropzone.Idle>
+            title="Dodaj zdjęcia dodatkowe (przeciągnij lub kliknij)"
+            hint="Możesz wybrać wiele plików jednocześnie"
+          />
 
-              <div>
-                <Text size="sm" inline fw={500}>
-                  Dodaj zdjęcia dodatkowe (przeciągnij lub kliknij)
-                </Text>
-                <Text size="xs" c="dimmed" inline mt={7}>
-                  Możesz wybrać wiele plików jednocześnie
-                </Text>
-              </div>
-            </Group>
-          </Dropzone>
-
-          {additionalPreviews.length > 0 && (
+          {additionalImages.previews.length > 0 && (
             <SimpleGrid cols={{ base: 2, xs: 3, sm: 4 }} spacing="xs" mt="xs">
-              {additionalPreviews.map((previewUrl, index) => (
+              {additionalImages.previews.map((previewUrl, index) => (
                 <Paper key={previewUrl} withBorder p="xs" radius="md" pos="relative">
                   <Image
                     src={previewUrl}
@@ -334,7 +210,7 @@ export function NewItemForm({ categories }: NewItemFormProps) {
                     pos="absolute"
                     top={8}
                     right={8}
-                    onClick={() => removeAdditionalImage(index)}
+                    onClick={() => additionalImages.removeAt(index)}
                     title="Usuń zdjęcie"
                     disabled={loading}
                   >
