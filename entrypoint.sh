@@ -15,14 +15,19 @@ mkdir -p /data/uploads/thumbs
 chown -R "$PUID:$PGID" /data
 chmod -R 775 /data
 
-# Run database migrations
+# Run database migrations.
+#
+# The runner image ships a single pre-bundled migrator: the Dockerfile builds
+# dist/migrate.js with esbuild and copies it to ./migrate.js. There is no
+# node_modules, no src/ and no package manager in this image, so the previous
+# `npx tsx src/db/migrate.ts` fallback could never have run here — and `npx`
+# is an npm entrypoint, which AGENTS.md forbids in this repo.
 echo "Running database migrations..."
 if [ -f "migrate.js" ]; then
   node migrate.js
-elif [ -f "dist/migrate.js" ]; then
-  node dist/migrate.js
-elif [ -f "src/db/migrate.ts" ]; then
-  npx tsx src/db/migrate.ts || true
+else
+  echo "FATAL: migrate.js not found — image was built incorrectly." >&2
+  exit 1
 fi
 
 echo "Starting server..."
