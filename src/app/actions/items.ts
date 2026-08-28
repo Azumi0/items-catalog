@@ -2,26 +2,12 @@
 
 import { requireAuth } from '@/lib/session';
 import {
-  getItems,
-  getItem,
   createItem,
   updateItem,
   deleteItem,
-  GetItemsOptions,
 } from '@/lib/services/items';
 import { saveImage, deleteImage } from '@/lib/storage';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
-
-export async function getItemsAction(options: GetItemsOptions = {}) {
-  await requireAuth();
-  return getItems(options);
-}
-
-export async function getItemAction(id: string) {
-  await requireAuth();
-  return getItem(id);
-}
 
 async function processImageUploads(files: File[], uploaded: string[]): Promise<string[]> {
   const savedFilenames: string[] = [];

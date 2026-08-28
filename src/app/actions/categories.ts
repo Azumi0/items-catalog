@@ -2,17 +2,11 @@
 
 import { requireAuth } from '@/lib/session';
 import {
-  getCategories,
   createCategory,
   updateCategory,
   deleteCategory,
 } from '@/lib/services/categories';
 import { revalidatePath } from 'next/cache';
-
-export async function getCategoriesAction() {
-  await requireAuth();
-  return getCategories();
-}
 
 export async function createCategoryAction(prevState: any, formData: FormData) {
   await requireAuth();

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { runMigrations } from '@/db/migrate';
-import { closeDb, getDb } from '@/db';
+import { closeDb } from '@/db';
 import {
   getItems,
   getItem,

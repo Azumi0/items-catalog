@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
-import path from 'path';
 import { testTmpDir } from './helpers/tmpdir';
 import sharp from 'sharp';
 import {
@@ -8,7 +7,6 @@ import {
   deleteImage,
   getImagePath,
   deleteItemFiles,
-  getUploadDirs,
 } from '@/lib/storage';
 
 const TEST_DATA_DIR = testTmpDir('test-storage');

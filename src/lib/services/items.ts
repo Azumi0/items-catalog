@@ -1,6 +1,6 @@
 import { getDb } from '@/db';
 import { items, categories, Item } from '@/db/schema';
-import { eq, desc, asc, and, like, sql } from 'drizzle-orm';
+import { eq, desc, asc, and, like } from 'drizzle-orm';
 import { deleteImage, deleteItemFiles } from '@/lib/storage';
 import crypto from 'crypto';
 
