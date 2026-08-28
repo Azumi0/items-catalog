@@ -74,6 +74,41 @@ describe('Items Management Seam', () => {
     expect(fetched?.additionalImages).toEqual(['macbook-side.jpg']);
   });
 
+  it('keeps items with no description out of matches but still in the catalog', async () => {
+    await createItem({
+      categoryId: catElectronicsId,
+      description: 'Sony Headphones',
+      mainImage: 'sony.jpg',
+      additionalImages: [],
+      createdById: userId,
+      createdByName: userName,
+    });
+
+    await createItem({
+      categoryId: catElectronicsId,
+      description: undefined,
+      mainImage: 'mystery.jpg',
+      additionalImages: [],
+      createdById: userId,
+      createdByName: userName,
+    });
+
+    // A description-less item must stay in the unfiltered catalog but must not
+    // match a description search. `LIKE` yields NULL against a NULL column,
+    // which produces exactly that; this pins the behaviour so a well-meaning
+    // COALESCE does not quietly start matching them on every term.
+    const all = await getItems();
+    expect(all.length).toBe(2);
+    expect(all.find((i) => i.mainImage === 'mystery.jpg')?.description).toBeNull();
+
+    const matches = await getItems({ search: 'Sony' });
+    expect(matches.length).toBe(1);
+    expect(matches[0].mainImage).toBe('sony.jpg');
+
+    const noMatches = await getItems({ search: 'Nieistniejace' });
+    expect(noMatches.length).toBe(0);
+  });
+
   it('filters by category, searches description, and sorts newest/oldest', async () => {
     await createItem({
       categoryId: catElectronicsId,

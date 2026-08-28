@@ -63,17 +63,25 @@ export async function saveImage(
   const originalPath = path.join(originalsDir, filename);
   const thumbPath = path.join(thumbsDir, thumbFilename);
 
-  // Write original image
-  await fs.promises.writeFile(originalPath, buffer);
-
-  // Generate thumbnail with Sharp (max 400x400 WebP)
-  await sharp(buffer)
+  // Generate the thumbnail first, into memory. Sharp is the step that can
+  // reject the input (e.g. a .heic the Alpine build has no codec for), and
+  // writing the original before that would leave a file with no thumbnail
+  // and no database row pointing at it.
+  const thumbBuffer = await sharp(buffer)
     .resize(400, 400, {
       fit: 'inside',
       withoutEnlargement: true,
     })
     .webp({ quality: 80 })
-    .toFile(thumbPath);
+    .toBuffer();
+
+  await fs.promises.writeFile(originalPath, buffer);
+  try {
+    await fs.promises.writeFile(thumbPath, thumbBuffer);
+  } catch (err) {
+    await fs.promises.rm(originalPath, { force: true });
+    throw err;
+  }
 
   return { filename, thumbFilename };
 }
