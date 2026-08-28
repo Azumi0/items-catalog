@@ -31,10 +31,14 @@ function initDb(dbPath: string) {
   try {
     const migrationsFolder = path.resolve(process.cwd(), 'drizzle');
     if (fs.existsSync(migrationsFolder)) {
+      // Required lazily: the migrator is only needed when a drizzle/ folder is
+      // present, which is not the case in every runtime (e.g. the test suite
+      // runs migrations explicitly through src/db/migrate.ts).
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { migrate } = require('drizzle-orm/better-sqlite3/migrator');
       migrate(instance.db, { migrationsFolder });
     }
-  } catch (err) {
+  } catch {
     // ignore if already migrated
   }
 
@@ -65,10 +69,6 @@ function getOrCreateInstance() {
 
 export function getDb() {
   return getOrCreateInstance().db;
-}
-
-export function getSqlite() {
-  return getOrCreateInstance().sqlite;
 }
 
 export function closeDb() {

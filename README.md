@@ -111,6 +111,63 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. On first ru
 
 ---
 
+## Project Structure
+
+```
+src/
+  app/
+    actions/          Server Actions — auth, categories, items, users
+    api/images/       Authenticated image route (originals + thumbs)
+    categories/       Category management page
+    items/            Catalog list, detail, new and edit pages
+    login/  setup/    Public pages: sign-in and first-run onboarding
+    users/            User management page
+    layout.tsx        MantineProvider, Notifications, viewport, SW registration
+  components/         AppLayout, ItemsCatalog, ImageLightboxModal,
+                      ImageDropzone, CategoriesManager, UsersManager,
+                      ServiceWorkerRegistration
+  hooks/              useActionRunner, useImagePreviews
+  lib/
+    auth.ts           Session options, secret validation, password hashing
+    session.ts        getSession, requireAuth, requireAuthPage
+    storage.ts        Image writes, thumbnail generation, deletion
+    images.ts         Image URL builders and inline placeholders
+    categoryOptions.ts  Category list shaped for Mantine Select
+    services/         Data access: categories, items, users
+  db/                 Drizzle schema, connection, migrator
+  middleware.ts       Cookie-presence fast path (not a security boundary)
+
+public/
+  manifest.json       Web App Manifest
+  sw.js               Minimal pass-through service worker (installability only)
+  icons/              PWA icons (192, 512, maskable)
+
+tests/                Vitest suite, one file per seam
+  helpers/            Shared fixture-path helper
+
+drizzle/              Generated SQL migrations and snapshots
+
+docs/
+  initial-prompt.md   The originating specification (archived, Polish)
+  adr/                Architecture decision records
+  agents/             Agent conventions: issue tracker, triage labels, domain
+  deployment-synology.md
+
+AGENTS.md             Rules agents must follow in this repo
+CONTEXT.md            Ubiquitous domain language
+eslint.config.mjs     ESLint 9 flat config
+Dockerfile            Multi-stage build (base, deps, builder, runner)
+entrypoint.sh         PUID/PGID handling, migrations, server start
+docker-compose.yml            Local build and run
+docker-compose.synology.yml   NAS deployment from a pre-built image
+```
+
+Note that `docs/initial-prompt.md` §5 lists only the files the original
+generation pass was asked to produce. The tree above is the current, complete
+inventory; the agent-facing and deployment documents were added afterwards.
+
+---
+
 ## Available Scripts
 
 All scripts are executed via `pnpm`:
@@ -122,6 +179,8 @@ All scripts are executed via `pnpm`:
 | `pnpm start` | Runs the compiled Next.js production server |
 | `pnpm test` | Runs the test suite once via Vitest |
 | `pnpm test:watch` | Runs Vitest in watch mode |
+| `pnpm lint` | Runs ESLint across the project |
+| `pnpm lint:fix` | Runs ESLint and applies fixable changes |
 | `pnpm typecheck` | Validates TypeScript types (`tsc --noEmit`) |
 | `pnpm db:generate` | Generates Drizzle migration files from schema |
 | `pnpm db:push` | Pushes schema changes directly to SQLite database |
@@ -292,4 +351,7 @@ SQLite runs in WAL mode (`journal_mode = WAL`), so a live copy can capture a par
 - [CONTEXT.md](CONTEXT.md) – Ubiquitous domain language, entity definitions, and naming conventions.
 - [docs/deployment-synology.md](docs/deployment-synology.md) – Step-by-step deployment walkthrough for Synology Container Manager (Polish), covering image import, project setup, auto-start and the reverse proxy.
 - [docs/adr/ADR-001-item-catalog-pwa-architecture.md](docs/adr/ADR-001-item-catalog-pwa-architecture.md) – Architecture decision record covering data model, security, and Synology deployment.
-- [docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md](docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md) – Lightbox zoom and pan behaviour.
+- [docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md](docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md) – Lightbox zoom and pan behaviour, and why pinch-to-zoom is component-scoped rather than global.
+- [docs/adr/ADR-003-page-level-authorization-invariant.md](docs/adr/ADR-003-page-level-authorization-invariant.md) – Why `requireAuthPage()` is the real access guard and middleware is not a security boundary.
+- [AGENTS.md](AGENTS.md) – Rules agents must follow when working in this repository.
+- [docs/initial-prompt.md](docs/initial-prompt.md) – The originating specification (Polish, archived).

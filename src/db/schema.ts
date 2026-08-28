@@ -50,10 +50,5 @@ export const items = sqliteTable('items', {
 });
 
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-
 export type Category = typeof categories.$inferSelect;
-export type NewCategory = typeof categories.$inferInsert;
-
 export type Item = typeof items.$inferSelect;
-export type NewItem = typeof items.$inferInsert;

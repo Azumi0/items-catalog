@@ -2,37 +2,37 @@
 
 import { requireAuth } from '@/lib/session';
 import {
-  getItems,
-  getItem,
   createItem,
   updateItem,
   deleteItem,
-  GetItemsOptions,
 } from '@/lib/services/items';
-import { saveImage } from '@/lib/storage';
+import { saveImage, deleteImage } from '@/lib/storage';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
-export async function getItemsAction(options: GetItemsOptions = {}) {
-  await requireAuth();
-  return getItems(options);
-}
-
-export async function getItemAction(id: string) {
-  await requireAuth();
-  return getItem(id);
-}
-
-async function processImageUploads(files: File[]): Promise<string[]> {
+async function processImageUploads(files: File[], uploaded: string[]): Promise<string[]> {
   const savedFilenames: string[] = [];
   for (const file of files) {
     if (file && file instanceof File && file.size > 0) {
       const buf = Buffer.from(await file.arrayBuffer());
       const saved = await saveImage(buf, file.name || 'image.jpg');
+      uploaded.push(saved.filename);
       savedFilenames.push(saved.filename);
     }
   }
   return savedFilenames;
+}
+
+// Files are written to /data/uploads before the row that references them exists.
+// If the write to the database then fails, nothing would ever point at those
+// files again, so they have to be removed explicitly.
+async function discardUploads(filenames: string[]): Promise<void> {
+  for (const filename of filenames) {
+    try {
+      await deleteImage(filename);
+    } catch (err) {
+      console.error('Failed to clean up orphaned upload:', filename, err);
+    }
+  }
 }
 
 export async function createItemAction(prevState: any, formData: FormData) {
@@ -51,13 +51,15 @@ export async function createItemAction(prevState: any, formData: FormData) {
     return { error: 'Zdjęcie główne jest wymagane.' };
   }
 
+  const uploaded: string[] = [];
   try {
     // 1. Process Main Image
     const mainBuffer = Buffer.from(await mainImageFile.arrayBuffer());
     const savedMain = await saveImage(mainBuffer, mainImageFile.name || 'image.jpg');
+    uploaded.push(savedMain.filename);
 
     // 2. Process Additional Images
-    const savedAdditionalImages = await processImageUploads(additionalImageFiles);
+    const savedAdditionalImages = await processImageUploads(additionalImageFiles, uploaded);
 
     // 3. Save to Database
     const created = await createItem({
@@ -73,6 +75,7 @@ export async function createItemAction(prevState: any, formData: FormData) {
     revalidatePath('/categories');
     return { success: true, itemId: created.id };
   } catch (err: any) {
+    await discardUploads(uploaded);
     console.error('Error creating item:', err);
     return { error: err.message || 'Błąd podczas tworzenia przedmiotu.' };
   }
@@ -96,11 +99,13 @@ export async function updateItemAction(prevState: any, formData: FormData) {
     return { error: 'Kategoria jest wymagana.' };
   }
 
+  const uploaded: string[] = [];
   try {
     let mainImageFilename: string | undefined = undefined;
     if (mainImageFile && mainImageFile instanceof File && mainImageFile.size > 0) {
       const mainBuffer = Buffer.from(await mainImageFile.arrayBuffer());
       const savedMain = await saveImage(mainBuffer, mainImageFile.name || 'image.jpg');
+      uploaded.push(savedMain.filename);
       mainImageFilename = savedMain.filename;
     }
 
@@ -113,7 +118,7 @@ export async function updateItemAction(prevState: any, formData: FormData) {
       }
     }
 
-    const savedNewAdditional = await processImageUploads(newAdditionalImageFiles);
+    const savedNewAdditional = await processImageUploads(newAdditionalImageFiles, uploaded);
     const finalAdditionalImages = [...keptImages, ...savedNewAdditional];
 
     await updateItem(id, {
@@ -128,6 +133,9 @@ export async function updateItemAction(prevState: any, formData: FormData) {
     revalidatePath(`/items/${id}/edit`);
     return { success: true, itemId: id };
   } catch (err: any) {
+    // Only the files this request wrote. The item's previous images are still
+    // referenced by the unchanged row and must survive.
+    await discardUploads(uploaded);
     console.error('Error updating item:', err);
     return { error: err.message || 'Błąd podczas edycji przedmiotu.' };
   }

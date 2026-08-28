@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '@/db/schema';
 import { runMigrations } from '@/db/migrate';
 import {
@@ -14,11 +12,12 @@ import {
 } from '@/lib/services/users';
 import fs from 'fs';
 import path from 'path';
+import { testTmpDir } from './helpers/tmpdir';
 
 import { closeDb, getDb } from '@/db';
 import { eq } from 'drizzle-orm';
 
-const TEST_DB_DIR = path.resolve(process.cwd(), 'tmp/test-users-db');
+const TEST_DB_DIR = testTmpDir('test-users-db');
 const TEST_DB_PATH = path.join(TEST_DB_DIR, 'app.db');
 
 describe('Users Management Seam', () => {
@@ -50,7 +49,7 @@ describe('Users Management Seam', () => {
 
     // Second attempt to setupFirstUser should fail
     await expect(setupFirstUser('anotherAdmin', 'pass123')).rejects.toThrow(
-      /setup is only allowed when no users exist/i
+      /tylko wtedy, gdy w systemie nie ma żadnych użytkowników/i
     );
   });
 
@@ -94,7 +93,7 @@ describe('Users Management Seam', () => {
 
     // Rule 1: Cannot delete self
     await expect(deleteUser(admin.id, admin.id)).rejects.toThrow(
-      /cannot delete yourself/i
+      /nie możesz usunąć samego siebie/i
     );
 
     const bob = await createUser('bob', 'bob123');
@@ -105,7 +104,7 @@ describe('Users Management Seam', () => {
 
     // Rule 3: Cannot delete the last user even if somehow attempting
     await expect(deleteUser('some-other-id', admin.id)).rejects.toThrow(
-      /cannot delete the last user/i
+      /nie można usunąć jedynego konta/i
     );
   });
 

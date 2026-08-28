@@ -2,18 +2,11 @@
 
 import { requireAuth } from '@/lib/session';
 import {
-  getUsers,
   createUser,
   changePassword,
   deleteUser,
-  validatePassword,
 } from '@/lib/services/users';
 import { revalidatePath } from 'next/cache';
-
-export async function getUsersAction() {
-  await requireAuth();
-  return getUsers();
-}
 
 export async function createUserAction(prevState: any, formData: FormData) {
   await requireAuth();
@@ -25,7 +18,7 @@ export async function createUserAction(prevState: any, formData: FormData) {
   }
 
   try {
-    validatePassword(password);
+    // createUser validates the password itself — see services/users.ts.
     await createUser(username, password);
     revalidatePath('/users');
     return { success: true };
@@ -44,7 +37,7 @@ export async function changePasswordAction(prevState: any, formData: FormData) {
   }
 
   try {
-    validatePassword(newPassword);
+    // changePassword validates the password itself — see services/users.ts.
     await changePassword(userId, newPassword);
     revalidatePath('/users');
     return { success: true };

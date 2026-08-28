@@ -29,7 +29,13 @@ Celem projektu jest stworzenie samohostowanej, domowej aplikacji typu PWA (Progr
 ### 2.1. Framework i Warstwa Frontendowa
 * **Decyzja:** Next.js (App Router, TypeScript, React 19/18) w trybie `output: 'standalone'` w połączeniu z Mantine UI v7 (`@mantine/core`, `@mantine/hooks`, `@mantine/notifications`, `@tabler/icons-react`).
 * **Uzasadnienie:** Mantine UI v7 oferuje kompletny, responsywny zestaw komponentów z wbudowanym systemem motywów i powiadomień. App Router w Next.js umożliwia ścisłą integrację Server Actions z autoryzowanymi Route Handlerami.
-* **PWA:** Implementacja Web App Manifest (`manifest.json`), meta tagów `apple-touch-icon` oraz `display: standalone`. Rezygnacja z Service Workera offline ze względu na pełną zależność danych od lokalnego NAS.
+* **PWA:** Implementacja Web App Manifest (`manifest.json`), meta tagów `apple-touch-icon` oraz `display: standalone`. Rezygnacja z Service Workera **offline** ze względu na pełną zależność danych od lokalnego NAS — katalog bez zdjęć i bazy jest bezużyteczny, a nieaktualny cache jest gorszy niż czytelny błąd połączenia.
+
+  **Uzupełnienie (2026-08-28):** rezygnacja z trybu offline nie oznacza rezygnacji z Service Workera w ogóle. Przeglądarki oparte na Chromium nie zaproponują instalacji aplikacji (`beforeinstallprompt`), jeśli zarejestrowany worker nie ma obsługi zdarzenia `fetch` — sam manifest nie wystarcza. Ponieważ prompt założycielski (§1) wymaga „obsługi instalowalności", projekt rejestruje minimalny worker (`public/sw.js`), który obsługuje `fetch` i **nie robi nic więcej**: nie wywołuje `respondWith`, więc każde żądanie idzie do sieci dokładnie tak, jak bez workera. Dodanie do niego cache'owania byłoby sprzeczne z powyższą decyzją i wymaga wcześniejszej zmiany tego ADR.
+
+* **Orientacja ekranu:** manifest celowo **nie** deklaruje `orientation`. Wcześniejsze `portrait-primary` blokowało tryb poziomy w aplikacji, której głównym zadaniem jest oglądanie zdjęć; prompt (§6) wymagał wyłącznie ikon, `theme_color`, `background_color` i `display`.
+
+* **Zasoby zewnętrzne:** aplikacja nie pobiera niczego z sieci publicznej w czasie działania. Zastępcze grafiki („Brak zdjęcia") są generowane jako inline SVG w `src/lib/images.ts`, a nie pobierane z CDN-a typu `placehold.co`. Instancja jest wprawdzie wystawiona do internetu przez odwrotny serwer proxy DSM, ale nie powinna uzależniać renderowania od dostępności obcego serwisu ani wysyłać do niego informacji o tym, co użytkownik przegląda.
 
 ### 2.2. Baza Danych i ORM
 * **Decyzja:** SQLite (`better-sqlite3`) zarządzana przez **Drizzle ORM** (`drizzle-kit`).
