@@ -32,6 +32,7 @@ import {
 import Link from 'next/link';
 import type { CategoryWithCount } from '@/lib/services/categories';
 import type { ItemWithCategory } from '@/lib/services/items';
+import { thumbUrl } from '@/lib/images';
 
 interface ItemsCatalogProps {
   initialCategories: CategoryWithCount[];
@@ -225,7 +226,7 @@ export function ItemsCatalog({
               >
                 <Card.Section>
                   <Image
-                    src={`/api/images/thumbs/${item.mainImage}`}
+                    src={thumbUrl(item.mainImage)}
                     height={190}
                     alt={item.description || item.categoryName}
                     fallbackSrc="https://placehold.co/400x300?text=Brak+zdjęcia"
