@@ -49,7 +49,7 @@ describe('Users Management Seam', () => {
 
     // Second attempt to setupFirstUser should fail
     await expect(setupFirstUser('anotherAdmin', 'pass123')).rejects.toThrow(
-      /setup is only allowed when no users exist/i
+      /tylko wtedy, gdy w systemie nie ma żadnych użytkowników/i
     );
   });
 
@@ -93,7 +93,7 @@ describe('Users Management Seam', () => {
 
     // Rule 1: Cannot delete self
     await expect(deleteUser(admin.id, admin.id)).rejects.toThrow(
-      /cannot delete yourself/i
+      /nie możesz usunąć samego siebie/i
     );
 
     const bob = await createUser('bob', 'bob123');
@@ -104,7 +104,7 @@ describe('Users Management Seam', () => {
 
     // Rule 3: Cannot delete the last user even if somehow attempting
     await expect(deleteUser('some-other-id', admin.id)).rejects.toThrow(
-      /cannot delete the last user/i
+      /nie można usunąć jedynego konta/i
     );
   });
 

@@ -37,7 +37,7 @@ import Link from 'next/link';
 import { deleteItemAction } from '@/app/actions/items';
 import type { ItemWithCategory } from '@/lib/services/items';
 import { ImageLightboxModal } from '@/components/ImageLightboxModal';
-import { thumbUrl, originalUrl } from '@/lib/images';
+import { thumbUrl, originalUrl, DETAIL_PLACEHOLDER } from '@/lib/images';
 
 interface ItemDetailViewProps {
   item: ItemWithCategory;
@@ -138,7 +138,7 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
               <Image
                 src={originalUrl(item.mainImage)}
                 alt={item.description || item.categoryName}
-                fallbackSrc="https://placehold.co/600x400?text=Brak+zdjęcia"
+                fallbackSrc={DETAIL_PLACEHOLDER}
                 style={{ width: '100%', maxHeight: 450, objectFit: 'contain', background: '#00000010' }}
               />
               <ActionIcon

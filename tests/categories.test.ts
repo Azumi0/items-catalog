@@ -46,10 +46,10 @@ describe('Categories Management Seam', () => {
     expect(cat1.name).toBe('Electronics');
 
     await expect(createCategory('Electronics')).rejects.toThrow(
-      /already exists/i
+      /już istnieje/i
     );
     await expect(createCategory('  electronics  ')).rejects.toThrow(
-      /already exists/i
+      /już istnieje/i
     );
   });
 
