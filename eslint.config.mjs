@@ -14,6 +14,10 @@ const config = [
       'node_modules/**',
       'drizzle/**',
       '.claude/**',
+      // design-sync: the staged converter and the bundle it builds. Both are
+      // generated, gitignored, and full of vendored code.
+      '.ds-sync/**',
+      'ds-bundle/**',
       'next-env.d.ts',
       'tsconfig.tsbuildinfo',
     ],

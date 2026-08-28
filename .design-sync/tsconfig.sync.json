@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "target": "ES2022",
+    "jsx": "automatic",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/app/actions/*": [".design-sync/stubs/actions/*"],
+      "next/navigation": [".design-sync/stubs/next-navigation.ts"],
+      "next/link": [".design-sync/stubs/next-link.tsx"],
+      "@/*": ["src/*"]
+    }
+  }
+}
