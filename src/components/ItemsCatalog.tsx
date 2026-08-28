@@ -32,7 +32,7 @@ import {
 import Link from 'next/link';
 import type { CategoryWithCount } from '@/lib/services/categories';
 import type { ItemWithCategory } from '@/lib/services/items';
-import { thumbUrl } from '@/lib/images';
+import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
 
 interface ItemsCatalogProps {
   initialCategories: CategoryWithCount[];
@@ -229,7 +229,7 @@ export function ItemsCatalog({
                     src={thumbUrl(item.mainImage)}
                     height={190}
                     alt={item.description || item.categoryName}
-                    fallbackSrc="https://placehold.co/400x300?text=Brak+zdjęcia"
+                    fallbackSrc={THUMB_PLACEHOLDER}
                     style={{ objectFit: 'cover' }}
                   />
                 </Card.Section>

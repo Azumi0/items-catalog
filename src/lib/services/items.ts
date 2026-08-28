@@ -127,7 +127,7 @@ export async function updateItem(
   const db = getDb();
   const existing = await getItem(id);
   if (!existing) {
-    throw new Error('Item not found');
+    throw new Error('Nie znaleziono przedmiotu.');
   }
 
   // If mainImage was changed, delete the old main image
