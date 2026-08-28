@@ -5,9 +5,10 @@ import * as sessionLib from '@/lib/session';
 import { NextRequest } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { testTmpDir } from './helpers/tmpdir';
 import sharp from 'sharp';
 
-const TEST_DIR = path.resolve(process.cwd(), 'tmp/test-images-route');
+const TEST_DIR = testTmpDir('test-images-route');
 
 describe('Image Serving Route Handler Seam', () => {
   beforeEach(() => {
