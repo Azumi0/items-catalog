@@ -1,6 +1,8 @@
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { sessionOptions, SessionData, defaultSession } from './auth';
+import { getUserCount } from '@/lib/services/users';
 
 export async function getSession() {
   const cookieStore = await cookies();
@@ -18,9 +20,6 @@ export async function getCurrentUser() {
   }
   return session.user;
 }
-
-import { getUserCount } from '@/lib/services/users';
-import { redirect } from 'next/navigation';
 
 export async function requireAuthPage() {
   const count = await getUserCount();
