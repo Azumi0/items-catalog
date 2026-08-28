@@ -61,7 +61,7 @@ Celem projektu jest stworzenie samohostowanej, domowej aplikacji typu PWA (Progr
 
 ### 2.5. Konteneryzacja i Specyfika Synology NAS
 * **Decyzja:**
-  * Multi-stage `Dockerfile` oparty o `node:20-alpine`.
+  * Multi-stage `Dockerfile` oparty o `node:22-alpine` (pnpm 11 z pola `packageManager` wymaga Node >= 22.13).
   * Skrypt `entrypoint.sh` obsługujący zmienne środowiskowe `PUID` i `PGID`.
   * Automatyczne dostosowanie uprawnień katalogu `/data` (`chown -R $PUID:$PGID /data`) przed uruchomieniem aplikacji.
   * Gotowy plik `docker-compose.yml` do natychmiastowego wdrożenia w Synology Container Manager.

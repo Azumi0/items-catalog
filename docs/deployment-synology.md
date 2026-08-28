@@ -29,6 +29,8 @@ docker build -t home-item-catalog:1.0.0 -t home-item-catalog:latest .
 
 Build trwa zwykle 5–15 minut — kompiluje natywnie `better-sqlite3` i `sharp`, stąd `python3 make g++` w warstwie bazowej.
 
+Wersja Node w obrazie jest związana z wersją pnpm: `package.json` przypina `pnpm@11.15.1`, a pnpm 11 korzysta z wbudowanego modułu `node:sqlite` i wymaga Node ≥ 22.13 — stąd `node:22-alpine`. Dockerfile robi samo `corepack enable` (bez `pnpm@latest`), więc obraz zawsze bierze dokładnie wersję z pola `packageManager`. Podnosząc pnpm, sprawdź jednocześnie wymagane Node.
+
 **Jeśli build wywali się na `pnpm exec esbuild`** (`esbuild: not found`): `esbuild` jest tylko zależnością przechodnią `drizzle-kit`, a pnpm nie linkuje binarek zależności przechodnich do `node_modules/.bin`. Napraw raz w repo:
 
 ```powershell

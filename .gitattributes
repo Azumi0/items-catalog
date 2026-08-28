@@ -2,7 +2,7 @@
 # Repozytorium przechowuje LF i working copy tez dostaje LF — niezaleznie od
 # tego, jak ustawione jest core.autocrlf na danej maszynie.
 #
-# To nie jest kosmetyka: entrypoint.sh trafia do obrazu Docker (node:20-alpine).
+# To nie jest kosmetyka: entrypoint.sh trafia do obrazu Docker (node:22-alpine).
 # Shebang zakonczony CRLF powoduje, ze jadro probuje uruchomic interpreter
 # "/bin/sh\r", ktory nie istnieje — kontener pada przy starcie z komunikatem
 # w rodzaju "no such file or directory", mylnie wskazujacym na brak pliku.

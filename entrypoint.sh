@@ -23,11 +23,19 @@ chmod -R 775 /data
 # `npx tsx src/db/migrate.ts` fallback could never have run here — and `npx`
 # is an npm entrypoint, which AGENTS.md forbids in this repo.
 echo "Running database migrations..."
-if [ -f "migrate.js" ]; then
-  node migrate.js
-else
+if [ ! -f "migrate.js" ]; then
   echo "FATAL: migrate.js not found — image was built incorrectly." >&2
   exit 1
+fi
+
+# Migrations run as PUID:PGID, not as root. Run as root they would create
+# app.db owned by root:root 0644, and the server — which drops to PUID below —
+# could no longer write to it ("attempt to write a readonly database" przy
+# zakladaniu pierwszego konta).
+if command -v su-exec >/dev/null 2>&1; then
+  su-exec "$PUID:$PGID" node migrate.js
+else
+  node migrate.js
 fi
 
 echo "Starting server..."
