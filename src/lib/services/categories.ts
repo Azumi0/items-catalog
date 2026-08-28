@@ -40,7 +40,7 @@ export async function getCategory(id: string): Promise<Category | null> {
 export async function createCategory(name: string): Promise<Category> {
   const trimmed = name.trim();
   if (!trimmed) {
-    throw new Error('Category name cannot be empty');
+    throw new Error('Nazwa kategorii nie może być pusta.');
   }
 
   const db = getDb();
@@ -51,7 +51,7 @@ export async function createCategory(name: string): Promise<Category> {
     .limit(1);
 
   if (existing.length > 0) {
-    throw new Error(`Category "${trimmed}" already exists`);
+    throw new Error(`Kategoria "${trimmed}" już istnieje.`);
   }
 
   const now = new Date();
@@ -71,7 +71,7 @@ export async function createCategory(name: string): Promise<Category> {
 export async function updateCategory(id: string, name: string): Promise<Category> {
   const trimmed = name.trim();
   if (!trimmed) {
-    throw new Error('Category name cannot be empty');
+    throw new Error('Nazwa kategorii nie może być pusta.');
   }
 
   const db = getDb();
@@ -82,7 +82,7 @@ export async function updateCategory(id: string, name: string): Promise<Category
     .limit(1);
 
   if (existing.length > 0) {
-    throw new Error(`Category "${trimmed}" already exists`);
+    throw new Error(`Kategoria "${trimmed}" już istnieje.`);
   }
 
   const now = new Date();
@@ -96,7 +96,7 @@ export async function updateCategory(id: string, name: string): Promise<Category
     .returning();
 
   if (!updated) {
-    throw new Error('Category not found');
+    throw new Error('Nie znaleziono kategorii.');
   }
 
   return updated;

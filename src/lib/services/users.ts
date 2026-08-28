@@ -20,14 +20,14 @@ export const MIN_PASSWORD_LENGTH = 4;
 
 export function validatePassword(password: string): void {
   if (!password || password.length < MIN_PASSWORD_LENGTH) {
-    throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long`);
+    throw new Error(`Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaki.`);
   }
 }
 
 export function validateCredentials(username: string, password: string): string {
   const trimmed = username.trim();
   if (!trimmed) {
-    throw new Error('Username is required');
+    throw new Error('Nazwa użytkownika jest wymagana.');
   }
   validatePassword(password);
   return trimmed;
@@ -41,7 +41,7 @@ export async function setupFirstUser(
 
   const existingCount = await getUserCount();
   if (existingCount > 0) {
-    throw new Error('Setup is only allowed when no users exist');
+    throw new Error('Konfiguracja pierwszego konta jest możliwa tylko wtedy, gdy w systemie nie ma żadnych użytkowników.');
   }
 
   const passwordHash = await hashPassword(password);
@@ -74,7 +74,7 @@ export async function createUser(
     .limit(1);
 
   if (existing.length > 0) {
-    throw new Error(`User "${trimmedUsername}" already exists`);
+    throw new Error(`Użytkownik "${trimmedUsername}" już istnieje.`);
   }
 
   const passwordHash = await hashPassword(password);
@@ -106,7 +106,7 @@ export async function changePassword(
     .limit(1);
 
   if (existing.length === 0) {
-    throw new Error('User not found');
+    throw new Error('Nie znaleziono użytkownika.');
   }
 
   const passwordHash = await hashPassword(newPassword);
@@ -121,12 +121,12 @@ export async function deleteUser(
   targetUserId: string
 ): Promise<void> {
   if (currentUserId === targetUserId) {
-    throw new Error('You cannot delete yourself');
+    throw new Error('Nie możesz usunąć samego siebie.');
   }
 
   const totalUsers = await getUserCount();
   if (totalUsers <= 1) {
-    throw new Error('You cannot delete the last user in the system');
+    throw new Error('Nie można usunąć jedynego konta w systemie.');
   }
 
   const db = getDb();

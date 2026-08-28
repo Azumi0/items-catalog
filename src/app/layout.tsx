@@ -5,6 +5,7 @@ import '@mantine/dropzone/styles.css';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { theme } from '@/theme';
+import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body>
         <MantineProvider theme={theme} defaultColorScheme="auto">
           <Notifications position="top-right" zIndex={1000} />
+          <ServiceWorkerRegistration />
           {children}
         </MantineProvider>
       </body>

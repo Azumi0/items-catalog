@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Container,
   Paper,
@@ -18,15 +17,14 @@ import {
   Alert,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
   IconPlus,
   IconEdit,
   IconTrash,
   IconCategory,
   IconAlertTriangle,
-  IconCheck,
 } from '@tabler/icons-react';
+import { useActionRunner } from '@/hooks/useActionRunner';
 import {
   createCategoryAction,
   updateCategoryAction,
@@ -41,13 +39,11 @@ interface CategoriesManagerProps {
 export function CategoriesManager({
   initialCategories,
 }: CategoriesManagerProps) {
-  const router = useRouter();
-
   // Create Modal
   const [createOpened, { open: openCreate, close: closeCreate }] =
     useDisclosure(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const { run: runCreate, pending: isCreating } = useActionRunner();
 
   // Edit Modal
   const [editOpened, { open: openEdit, close: closeEdit }] =
@@ -56,45 +52,32 @@ export function CategoriesManager({
     null
   );
   const [editCategoryName, setEditCategoryName] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
+  const { run: runEdit, pending: isEditing } = useActionRunner();
 
   // Delete Modal
   const [deleteOpened, { open: openDelete, close: closeDelete }] =
     useDisclosure(false);
   const [deletingCategory, setDeletingCategory] =
     useState<CategoryWithCount | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { run: runDelete, pending: isDeleting } = useActionRunner();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) return;
 
-    setIsCreating(true);
     const formData = new FormData();
     formData.append('name', newCategoryName);
 
-    const result = await createCategoryAction(null, formData);
-    setIsCreating(false);
-
-    if (result?.error) {
-      notifications.show({
-        color: 'red',
-        title: 'Błąd tworzenia',
-        message: result.error,
-      });
-      return;
-    }
-
-    notifications.show({
-      color: 'teal',
-      title: 'Sukces',
-      message: `Utworzono kategorię "${newCategoryName}".`,
-      icon: <IconCheck size={16} />,
+    await runCreate({
+      action: () => createCategoryAction(null, formData),
+      errorTitle: 'Błąd tworzenia',
+      successTitle: 'Sukces',
+      successMessage: `Utworzono kategorię "${newCategoryName}".`,
+      onSuccess: () => {
+        setNewCategoryName('');
+        closeCreate();
+      },
     });
-
-    setNewCategoryName('');
-    closeCreate();
-    router.refresh();
   };
 
   const handleOpenEdit = (category: CategoryWithCount) => {
@@ -107,32 +90,17 @@ export function CategoriesManager({
     e.preventDefault();
     if (!editingCategory || !editCategoryName.trim()) return;
 
-    setIsEditing(true);
     const formData = new FormData();
     formData.append('id', editingCategory.id);
     formData.append('name', editCategoryName);
 
-    const result = await updateCategoryAction(null, formData);
-    setIsEditing(false);
-
-    if (result?.error) {
-      notifications.show({
-        color: 'red',
-        title: 'Błąd edycji',
-        message: result.error,
-      });
-      return;
-    }
-
-    notifications.show({
-      color: 'teal',
-      title: 'Zaktualizowano kategorię',
-      message: `Nazwa kategorii została zmieniona na "${editCategoryName}".`,
-      icon: <IconCheck size={16} />,
+    await runEdit({
+      action: () => updateCategoryAction(null, formData),
+      errorTitle: 'Błąd edycji',
+      successTitle: 'Zaktualizowano kategorię',
+      successMessage: `Nazwa kategorii została zmieniona na "${editCategoryName}".`,
+      onSuccess: closeEdit,
     });
-
-    closeEdit();
-    router.refresh();
   };
 
   const handleOpenDelete = (category: CategoryWithCount) => {
@@ -143,28 +111,15 @@ export function CategoriesManager({
   const handleDelete = async () => {
     if (!deletingCategory) return;
 
-    setIsDeleting(true);
-    const result = await deleteCategoryAction(deletingCategory.id);
-    setIsDeleting(false);
+    const { id, name } = deletingCategory;
 
-    if (result?.error) {
-      notifications.show({
-        color: 'red',
-        title: 'Błąd usuwania',
-        message: result.error,
-      });
-      return;
-    }
-
-    notifications.show({
-      color: 'teal',
-      title: 'Usunięto kategorię',
-      message: `Kategoria "${deletingCategory.name}" oraz jej przedmioty i zdjęcia zostały usunięte.`,
-      icon: <IconCheck size={16} />,
+    await runDelete({
+      action: () => deleteCategoryAction(id),
+      errorTitle: 'Błąd usuwania',
+      successTitle: 'Usunięto kategorię',
+      successMessage: `Kategoria "${name}" oraz jej przedmioty i zdjęcia zostały usunięte.`,
+      onSuccess: closeDelete,
     });
-
-    closeDelete();
-    router.refresh();
   };
 
   return (

@@ -1,6 +1,6 @@
 import { getDb } from '@/db';
 import { items, categories, Item } from '@/db/schema';
-import { eq, desc, asc, and, like, sql } from 'drizzle-orm';
+import { eq, desc, asc, and, like } from 'drizzle-orm';
 import { deleteImage, deleteItemFiles } from '@/lib/storage';
 import crypto from 'crypto';
 
@@ -28,6 +28,10 @@ export async function getItems(
 
   if (search && search.trim()) {
     const term = `%${search.trim()}%`;
+    // description is nullable. `LIKE` yields NULL against a NULL column, which
+    // excludes description-less items from search results — the intended
+    // behaviour, and what the client-side filter in ItemsCatalog does too.
+    // See the characterisation test in tests/items.test.ts.
     conditions.push(like(items.description, term));
   }
 
@@ -123,7 +127,7 @@ export async function updateItem(
   const db = getDb();
   const existing = await getItem(id);
   if (!existing) {
-    throw new Error('Item not found');
+    throw new Error('Nie znaleziono przedmiotu.');
   }
 
   // If mainImage was changed, delete the old main image

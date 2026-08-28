@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GET } from '@/app/api/images/[type]/[filename]/route';
-import { saveImage, getImagePath } from '@/lib/storage';
+import { saveImage } from '@/lib/storage';
 import * as sessionLib from '@/lib/session';
 import { NextRequest } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { testTmpDir } from './helpers/tmpdir';
 import sharp from 'sharp';
 
-const TEST_DIR = path.resolve(process.cwd(), 'tmp/test-images-route');
+const TEST_DIR = testTmpDir('test-images-route');
 
 describe('Image Serving Route Handler Seam', () => {
   beforeEach(() => {
