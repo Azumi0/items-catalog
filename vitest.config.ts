@@ -5,6 +5,16 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    // Collect only this checkout's suite. Without an explicit scope Vitest also
+    // picks up `tests/` inside nested checkouts (e.g. agent worktrees under
+    // .claude/), which then race against this run over the shared tmp/ fixtures.
+    include: ['tests/**/*.test.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/.claude/**',
+      '**/dist/**',
+      '**/.next/**',
+    ],
   },
   resolve: {
     alias: {

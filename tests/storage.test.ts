@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
+import { testTmpDir } from './helpers/tmpdir';
 import sharp from 'sharp';
 import {
   saveImage,
@@ -10,7 +11,7 @@ import {
   getUploadDirs,
 } from '@/lib/storage';
 
-const TEST_DATA_DIR = path.resolve(process.cwd(), 'tmp/test-storage');
+const TEST_DATA_DIR = testTmpDir('test-storage');
 
 describe('Storage & Media Processing Seam', () => {
   beforeEach(() => {

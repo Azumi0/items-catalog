@@ -14,11 +14,12 @@ import {
 } from '@/lib/services/users';
 import fs from 'fs';
 import path from 'path';
+import { testTmpDir } from './helpers/tmpdir';
 
 import { closeDb, getDb } from '@/db';
 import { eq } from 'drizzle-orm';
 
-const TEST_DB_DIR = path.resolve(process.cwd(), 'tmp/test-users-db');
+const TEST_DB_DIR = testTmpDir('test-users-db');
 const TEST_DB_PATH = path.join(TEST_DB_DIR, 'app.db');
 
 describe('Users Management Seam', () => {

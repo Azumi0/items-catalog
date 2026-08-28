@@ -13,9 +13,10 @@ import { createCategory } from '@/lib/services/categories';
 import { saveImage, getImagePath } from '@/lib/storage';
 import fs from 'fs';
 import path from 'path';
+import { testTmpDir } from './helpers/tmpdir';
 import sharp from 'sharp';
 
-const TEST_DIR = path.resolve(process.cwd(), 'tmp/test-items');
+const TEST_DIR = testTmpDir('test-items');
 const TEST_DB_PATH = path.join(TEST_DIR, 'app.db');
 
 describe('Items Management Seam', () => {
