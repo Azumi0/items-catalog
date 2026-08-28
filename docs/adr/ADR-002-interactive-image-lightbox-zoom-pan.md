@@ -51,7 +51,19 @@ Wybrano **Opcję A** poprzez stworzenie dedykowanego, reużywalnego komponentu [
   - Przybliżenie (`IconZoomIn`)
 - Przełącznik pełnego ekranu (`IconMaximize` / `IconMinimize`, skrót klawiszowy `F`).
 
-### 3.2. Nawigacja po Galerii Wielu Zdjęć
+### 3.2. Zakres Gestu Pinch-to-Zoom (Komponent, Nie Cała Aplikacja)
+
+Powiększanie gestem palców jest celowo **ograniczone do komponentów prezentujących zdjęcia w pełnej rozdzielczości**, a nie włączone globalnie dla całego dokumentu.
+
+- `src/app/layout.tsx` **zachowuje** `maximumScale: 1` oraz `userScalable: false` w eksporcie `viewport`. Natywny zoom przeglądarki pozostaje wyłączony, dzięki czemu `AppShell`, formularze i siatka kafelków zachowują się jak interfejs aplikacji, a nie jak skalowalna strona — przypadkowe rozjechanie layoutu podczas przewijania katalogu na telefonie nie jest możliwe.
+- Gest pinch obsługuje **`react-zoom-pan-pinch` w warstwie JavaScript** (zdarzenia dotykowe + macierz transformacji CSS), a nie mechanizm zoomu przeglądarki. Blokada `user-scalable=no` nie ma na niego wpływu, więc oba ustawienia współistnieją bez konfliktu.
+- Powierzchnie, na których pinch **działa**:
+  - `ImageLightboxModal` — `TransformWrapper` z `pinch={{ step: 5 }}`, w połączeniu z `removeScrollProps={{ allowPinchZoom: true }}` w `Modal` Mantine, które zdejmuje blokadę scroll-locka z gestów dotykowych.
+  - Zdjęcie główne w `/items/[id]` — kafelek jest celowo elementem otwierającym lightbox (`onClick={() => handleOpenLightbox(0)}`). Podgląd w siatce służy do nawigacji, a pełna interakcja zoom/pan odbywa się nad oryginałem (`/api/images/originals/...`) wewnątrz lightboxa.
+
+Nie osadzono drugiego `TransformWrapper` bezpośrednio w widoku szczegółów: kolidowałby z gestem otwarcia lightboxa (dotknięcie musiałoby jednocześnie znaczyć „powiększ w miejscu" i „otwórz podgląd"), a zdjęcie w kolumnie jest i tak ograniczone przez `maxHeight: 450`.
+
+### 3.3. Nawigacja po Galerii Wielu Zdjęć
 - Gdy przedmiot zawiera więcej niż jedno zdjęcie, modal udostępnia boczne przyciski chevronów oraz obsługę klawiszy strzałek (`ArrowLeft` / `ArrowRight`).
 - Każde przełączenie zdjęcia automatycznie resetuje stan powiększenia i przesunięcia do skali początkowej (1.0 - fit), zapobiegając przenoszeniu powiększenia na kolejną fotografię.
 
@@ -66,3 +78,5 @@ Wybrano **Opcję A** poprzez stworzenie dedykowanego, reużywalnego komponentu [
 
 ### Negatywne / Koszty:
 - Dodatkowa zależność w projekcie: `react-zoom-pan-pinch` (~15 kB gzipped).
+- Skoro natywny zoom przeglądarki jest wyłączony globalnie (§3.2), **każda nowa powierzchnia prezentująca zdjęcie w pełnej rozdzielczości musi jawnie zapewnić własny zoom** — przez `ImageLightboxModal` albo własny `TransformWrapper`. Dodanie samego `<img>` z oryginałem da widok, którego użytkownik mobilny nie powiększy w żaden sposób.
+- Wyłączony `user-scalable` zmniejsza dostępność dla osób korzystających z powiększenia systemowego do czytania drobnego tekstu. Rekompensatą jest skalowanie typografii Mantine oraz brak interfejsu opartego na tekście poniżej domyślnych rozmiarów; jeśli pojawią się zgłoszenia, decyzję należy zrewidować.

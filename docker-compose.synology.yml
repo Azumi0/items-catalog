@@ -46,7 +46,12 @@ services:
       - PGID=100
 
       # !!! PODMIEN na wlasny losowy ciag min. 32 znaki !!!
-      # Bez tego aplikacja uzyje wbudowanego sekretu z src/lib/auth.ts.
+      # Wygeneruj przez: openssl rand -base64 32
+      #
+      # Aplikacja ODMOWI startu, jesli ta zmienna jest pusta, krotsza niz 32
+      # znaki albo nadal ma ponizsza wartosc zastepcza — nie ma juz cichego
+      # fallbacku na sekret wbudowany w repozytorium.
+      #
       # Zmiana tej wartosci uniewaznia wszystkie aktywne sesje.
       - SESSION_SECRET=ZMIEN-MNIE-na-losowy-ciag-minimum-32-znaki
 

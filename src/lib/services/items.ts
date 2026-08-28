@@ -28,6 +28,10 @@ export async function getItems(
 
   if (search && search.trim()) {
     const term = `%${search.trim()}%`;
+    // description is nullable. `LIKE` yields NULL against a NULL column, which
+    // excludes description-less items from search results — the intended
+    // behaviour, and what the client-side filter in ItemsCatalog does too.
+    // See the characterisation test in tests/items.test.ts.
     conditions.push(like(items.description, term));
   }
 
