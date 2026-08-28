@@ -6,7 +6,7 @@ const compat = new FlatCompat({
   baseDirectory: dirname(fileURLToPath(import.meta.url)),
 });
 
-export default [
+const config = [
   {
     ignores: [
       '.next/**',
@@ -57,3 +57,5 @@ export default [
     },
   },
 ];
+
+export default config;
