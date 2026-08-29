@@ -11,7 +11,12 @@ export default async function UsersPage() {
   const allUsers = await getUsers();
 
   return (
-    <AppLayout user={user}>
+    <AppLayout
+      user={user}
+      title="Użytkownicy"
+      subtitle="Zarządzanie dostępem"
+      tab="users"
+    >
       <UsersManager initialUsers={allUsers} currentUserId={user.id} />
     </AppLayout>
   );

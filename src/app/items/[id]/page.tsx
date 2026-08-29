@@ -20,8 +20,20 @@ export default async function ItemDetailPage({
     notFound();
   }
 
+  const addedOn = new Date(item.createdAt).toLocaleDateString('pl-PL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
   return (
-    <AppLayout user={user}>
+    <AppLayout
+      user={user}
+      title="Przedmiot"
+      subtitle={addedOn}
+      backHref={`/categories/${item.categoryId}/items`}
+      tab="catalog"
+    >
       <ItemDetailView item={item} />
     </AppLayout>
   );

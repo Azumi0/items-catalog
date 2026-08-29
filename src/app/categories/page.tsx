@@ -11,7 +11,12 @@ export default async function CategoriesPage() {
   const categories = await getCategories();
 
   return (
-    <AppLayout user={user}>
+    <AppLayout
+      user={user}
+      title="Kategorie"
+      subtitle="Zarządzanie kategoriami"
+      tab="categories"
+    >
       <CategoriesManager initialCategories={categories} />
     </AppLayout>
   );
