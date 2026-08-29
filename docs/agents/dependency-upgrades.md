@@ -89,8 +89,23 @@ Work through breakage in place rather than reverting the upgrade:
 ## Done
 
 A commit is done when **all five gates are green**: typecheck, lint, unit tests,
-the `e2e/` suite, and `docker build`. Scripts live in `package.json`.
+the `e2e/` suite, and the container. Scripts live in `package.json`.
 
-`docker build` is not optional. It is the only gate that compiles the native
-dependencies (`better-sqlite3`, `sharp`) against the Node version in the image
-you actually ship — a green `next build` proves nothing about that.
+The container gate is **build and boot**, not `docker build` alone. A build
+proves the native dependencies (`better-sqlite3`, `sharp`) compile against the
+Node in the image you ship — a green `next build` proves nothing about that —
+but it says nothing about whether the image starts. Next 16 shipped a
+standalone-tracing regression that left the runner image without a resolvable
+`better-sqlite3`: it built clean and then died on boot with MODULE_NOT_FOUND.
+
+So run the image and drive it:
+
+```
+docker run -d --name smoke -p 3210:3000 -v /tmp/smoke:/data -e SESSION_SECRET=smoke-test-secret-at-least-32-chars <image>
+E2E_BASE_URL=http://localhost:3210 pnpm test:e2e
+```
+
+`E2E_BASE_URL` makes the suite skip its own server and drive the one already
+running, so the same five flows that guard the source also certify the
+artifact — migrations, sqlite writes, password hashing and thumbnailing all
+exercised inside the container.
