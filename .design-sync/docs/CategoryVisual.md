@@ -10,7 +10,8 @@ in order:
 1. `mainImage` — the picture chosen for the category, `object-fit: cover`;
 2. `icon` — a Tabler glyph, teal on `teal-light` (in `tile` size, inside a
    64px circle the colour of the page);
-3. `firstItemImage` — the newest item's picture, borrowed;
+3. `newestItemImage` — the newest item's picture, borrowed (the design handoff
+   calls this field `firstItemImage`; see ADR-004 §3.7);
 4. nothing — the first letter of the name as a monogram.
 
 Both image arms carry a stored **filename**, not a URL; the component resolves
@@ -19,7 +20,7 @@ catalog tile and `variant="thumb"` for the 52px square in a management card.
 
 ```jsx
 <CategoryVisual
-  category={{ name: 'Elektronika', icon: 'IconDeviceLaptop', mainImage: null, firstItemImage: null }}
+  category={{ name: 'Elektronika', icon: 'IconDeviceLaptop', mainImage: null, newestItemImage: null }}
   variant="tile"
 />
 ```

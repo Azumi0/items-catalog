@@ -16,7 +16,7 @@ instead of the grid.
 <CategoryTiles
   categories={[{
     id: 'c-1', name: 'Elektronika', icon: 'IconDeviceLaptop', mainImage: null,
-    itemCount: 12, firstItemImage: 'laptop.jpg',
+    itemCount: 12, newestItemImage: 'laptop.jpg',
     createdAt: new Date(), updatedAt: new Date(),
   }]}
 />

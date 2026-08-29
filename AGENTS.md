@@ -31,8 +31,9 @@ Single-context repo (`CONTEXT.md` and `docs/adr/` at repo root). See `docs/agent
 
 The UI is built from `docs/design_handoff_mobile_first/`. Seven places
 deliberately differ from it — among them the missing `capture` on the photo
-dropzone, the login screen's absent mode-switch link, and the category picture
-files deleted on update and delete.
+dropzone, the login screen's absent mode-switch link, the category picture
+files deleted on update and delete, and `CategoryWithCount.newestItemImage`,
+which the handoff calls `firstItemImage`.
 
 **Before "fixing" a mismatch between the UI and that handoff, read
 `docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md`.** Each entry is a

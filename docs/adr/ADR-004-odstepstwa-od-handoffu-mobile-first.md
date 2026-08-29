@@ -166,7 +166,7 @@ cofnąć. Siatka ma osiem kafelków i nie ma kafelka „bez ikony".
 
 Pole `categories.icon` jest jawnie opcjonalne („Opcjonalna", kolumna nullable),
 a reguła prezentacji z §„Reguła prezentacji kategorii" ma krok 3
-(`firstItemImage`). Gdyby wyboru nie dało się cofnąć, kategoria, która raz
+(`newestItemImage`, §3.7). Gdyby wyboru nie dało się cofnąć, kategoria, która raz
 dostała ikonę, miałaby ją **na zawsze**, a krok 3 stałby się dla niej
 nieosiągalny. Jedynym wyjściem byłoby usunięcie kategorii razem z jej
 przedmiotami.
@@ -183,16 +183,44 @@ z `IconX` w `rightSection` (`src/components/CategoryItemsList.tsx`) został
 imię wierności projektowi byłoby cichą regresją funkcjonalną. Pojawia się
 dopiero po wpisaniu treści, więc w stanie spoczynku nie zmienia wyglądu pola.
 
-### 3.7. Nazwa `firstItemImage` zostaje, mimo że czyta się myląco
+### 3.7. Pole nazywa się `newestItemImage`, a nie `firstItemImage`
 
-Pole zwraca `main_image` **najnowszego** przedmiotu w kategorii (podzapytanie
-`order by created_at desc limit 1`), więc nazwa sugerująca „pierwszy" jest
-myląca — recenzja Standards słusznie zaproponowała `newestItemImage`.
+`README.md` §„Model danych" zadaje nazwę wprost: „`CategoryWithCount` […]
+dostaje dodatkowo `firstItemImage: string | null`". W kodzie pole nazywa się
+**`newestItemImage`** (`src/lib/services/categories.ts`). To jedyne odstępstwo
+z tej listy dotyczące nazewnictwa, a nie zachowania.
 
-Nazwa zostaje, ponieważ `README.md` zadaje ją wprost („`CategoryWithCount` […]
-dostaje dodatkowo `firstItemImage: string | null`"), a handoff jest źródłem
-prawdy dla nazewnictwa kontraktu. Semantykę opisuje JSDoc przy polu oraz hasło
-**Category Visual** w `CONTEXT.md`.
+**Nazwa z handoffu nie jest błędna — jest niejednoznaczna.** Sam handoff używa
+obu słów o tym samym polu, jeden akapit od siebie:
+
+- linia 49: „`main_image` **najnowszego** przedmiotu w kategorii",
+- linia 56: „3. `category.firstItemImage` → zdjęcie **pierwszego** przedmiotu".
+
+Prototyp mówi to samo — etykieta diagnostyczna tej gałęzi to „źródło:
+**1. przedmiot**", a stojący za nią kod to `own[0].image` nad tablicą ułożoną od
+najnowszego. Oba słowa są synonimami przy założeniu, że „pierwszy" znaczy
+„pierwszy na liście", a lista przedmiotów sortuje się domyślnie od najnowszych
+(`getItems({ sortOrder: 'newest' })`, `useState('newest')`). W tej ramie nazwa
+z handoffu jest poprawna.
+
+Powód zmiany jest węższy i dotyczy trwałości tego założenia: **`first` opisuje
+pozycję w porządku, który użytkownik może odwrócić.** Po kliknięciu
+„Najstarsze" pierwszym przedmiotem na ekranie jest najstarszy — a pole nadal
+zwraca najnowszy, i słusznie, bo kafelek kategorii nie ma zmieniać zdjęcia przez
+przełącznik sortowania. Nazwa opisywałaby więc pozycję w widoku domyślnym,
+podczas gdy wartość realizuje stałą regułę świeżości. `newestItemImage` nazywa
+regułę, a nie widok, i jest zgodna z bogatszym z dwóch sformułowań handoffu
+(linia 49 wyróżnia „najnowszego" pogrubieniem).
+
+Koszt zmiany jest zerowy: to alias wyliczany w `SELECT`, a nie kolumna w
+schemacie — żadnej migracji, pięć wystąpień w `src/`.
+
+**Świadomy koszt uboczny:** `CategoryWithCount` trafia do design systemu jako
+generowany `.d.ts` (`cfg.dtsPropsFor` dla `CategoryTiles`, `CategoriesManager`,
+`CategoryVisual` i `ItemForm`), więc projektant czytający handoff i API
+komponentu zobaczy w tym jednym miejscu dwie różne nazwy. Rozbieżność jest
+zamierzona i odnotowana tutaj oraz w JSDoc przy polu; gdyby handoff był
+kiedyś aktualizowany, to jego linia 49 jest tą, za którą warto pójść.
 
 ---
 

@@ -6,7 +6,7 @@
  *
  *   1. `mainImage`       — the picture chosen for the category
  *   2. `icon`            — a Tabler glyph, teal on a teal-light square
- *   3. `firstItemImage`  — the newest item's picture, borrowed
+ *   3. `newestItemImage`  — the newest item's picture, borrowed
  *   4. nothing           — the monogram, first letter of the name
  *
  * Both image kinds carry a stored *filename*, not a URL: pass the value through
@@ -29,7 +29,7 @@ export interface CategoryVisualSource {
   icon: string | null;
   mainImage: string | null;
   /** Absent on a plain `Category` row; only the list query computes it. */
-  firstItemImage?: string | null;
+  newestItemImage?: string | null;
 }
 
 function present(value: string | null | undefined): string | null {
@@ -48,9 +48,9 @@ export function categoryVisual(category: CategoryVisualSource): CategoryVisual {
     return { kind: 'icon', value: icon };
   }
 
-  const firstItemImage = present(category.firstItemImage);
-  if (firstItemImage) {
-    return { kind: 'derived', value: firstItemImage };
+  const newestItemImage = present(category.newestItemImage);
+  if (newestItemImage) {
+    return { kind: 'derived', value: newestItemImage };
   }
 
   return { kind: 'monogram', value: monogram(category.name) };

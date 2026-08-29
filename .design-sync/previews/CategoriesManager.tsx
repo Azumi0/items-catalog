@@ -9,8 +9,8 @@ const cat = (
   icon: string | null,
   mainImage: string | null,
   itemCount: number,
-  firstItemImage: string | null,
-) => ({ id, name, icon, mainImage, itemCount, firstItemImage, createdAt: created, updatedAt: now });
+  newestItemImage: string | null,
+) => ({ id, name, icon, mainImage, itemCount, newestItemImage, createdAt: created, updatedAt: now });
 
 const categories = [
   cat("c-1", "Elektronika", "IconDeviceLaptop", null, 12, "laptop.jpg"),

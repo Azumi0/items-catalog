@@ -62,7 +62,7 @@ describe('Categories Management Seam', () => {
     expect(all[0].name).toBe('Power Tools');
   });
 
-  it('exposes the newest item main image as firstItemImage', async () => {
+  it('exposes the newest item main image as newestItemImage', async () => {
     const user = await setupFirstUser('admin', 'admin123');
     const cat = await createCategory('Tools');
 
@@ -95,15 +95,15 @@ describe('Categories Management Seam', () => {
 
     const [row] = await getCategories();
     expect(row.itemCount).toBe(2);
-    expect(row.firstItemImage).toBe('newer.jpg');
+    expect(row.newestItemImage).toBe('newer.jpg');
   });
 
-  it('reports firstItemImage as null for an empty category', async () => {
+  it('reports newestItemImage as null for an empty category', async () => {
     await createCategory('Empty');
 
     const [row] = await getCategories();
     expect(row.itemCount).toBe(0);
-    expect(row.firstItemImage).toBeNull();
+    expect(row.newestItemImage).toBeNull();
   });
 
   it('stores the icon and the category image, and exposes them on the list', async () => {
