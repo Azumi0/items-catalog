@@ -2,21 +2,16 @@
 
 import { useActionState } from 'react';
 import { loginAction } from '@/app/actions/auth';
-import {
-  TextInput,
-  PasswordInput,
-  Button,
-  Stack,
-  Alert,
-} from '@mantine/core';
-import { IconAlertCircle, IconLogin } from '@tabler/icons-react';
+import { Alert, Button, PasswordInput, Stack, TextInput } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
+import { AUTH_INPUT_STYLES } from '@/components/FormField';
 
 export default function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
 
   return (
     <form action={formAction}>
-      <Stack gap="md">
+      <Stack gap={16}>
         {state?.error && (
           <Alert
             icon={<IconAlertCircle size={16} />}
@@ -31,27 +26,32 @@ export default function LoginForm() {
         <TextInput
           label="Login"
           name="username"
-          placeholder="Wprowadź swój login"
+          placeholder="Nazwa użytkownika"
+          autoComplete="username"
           required
           autoFocus
           disabled={isPending}
+          styles={AUTH_INPUT_STYLES}
         />
 
         <PasswordInput
           label="Hasło"
           name="password"
-          placeholder="Wprowadź hasło"
+          placeholder="••••••"
+          autoComplete="current-password"
           required
           disabled={isPending}
+          styles={AUTH_INPUT_STYLES}
         />
 
         <Button
           type="submit"
-          fullWidth
-          mt="md"
           color="teal"
+          fullWidth
+          mih={52}
+          fz={16}
+          fw={700}
           loading={isPending}
-          leftSection={<IconLogin size={18} />}
         >
           Zaloguj się
         </Button>
