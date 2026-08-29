@@ -20,7 +20,10 @@ export function AutoGrid({ min, gap = 12, children }: AutoGridProps) {
     <Box
       style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`,
+        // min(…, 100%) rather than a bare minmax floor: on a viewport
+        // narrower than `min` a bare floor makes the track overflow and the
+        // whole page scroll sideways.
+        gridTemplateColumns: `repeat(auto-fill, minmax(min(${min}px, 100%), 1fr))`,
         gap,
       }}
     >
