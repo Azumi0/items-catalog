@@ -260,7 +260,7 @@ export function AppLayout({
                   }}
                 >
                   <Icon size={22} />
-                  <Text fz={11} fw={600} inherit>
+                  <Text fz={11} fw={600} c="inherit" maw="100%" truncate>
                     {entry.label}
                   </Text>
                 </UnstyledButton>

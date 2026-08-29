@@ -5,6 +5,7 @@ import {
   createItem,
   updateItem,
   deleteItem,
+  getItem,
 } from '@/lib/services/items';
 import { saveImage, discardUploads } from '@/lib/storage';
 import { revalidatePath } from 'next/cache';
@@ -60,6 +61,7 @@ export async function createItemAction(prevState: any, formData: FormData) {
 
     revalidatePath('/');
     revalidatePath('/categories');
+    revalidatePath(`/categories/${categoryId}/items`);
     return { success: true, itemId: created.id };
   } catch (err: any) {
     await discardUploads(uploaded);
@@ -118,6 +120,7 @@ export async function updateItemAction(prevState: any, formData: FormData) {
     revalidatePath('/');
     revalidatePath(`/items/${id}`);
     revalidatePath(`/items/${id}/edit`);
+    revalidatePath(`/categories/${categoryId}/items`);
     return { success: true, itemId: id };
   } catch (err: any) {
     // Only the files this request wrote. The item's previous images are still
@@ -132,9 +135,14 @@ export async function deleteItemAction(id: string) {
   await requireAuth();
 
   try {
+    // Read the category before the row goes, so its list can be invalidated.
+    const existing = await getItem(id);
     await deleteItem(id);
     revalidatePath('/');
     revalidatePath('/categories');
+    if (existing) {
+      revalidatePath(`/categories/${existing.categoryId}/items`);
+    }
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Błąd podczas usuwania przedmiotu.' };
