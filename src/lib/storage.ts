@@ -122,3 +122,20 @@ export async function deleteItemFiles(
     }
   }
 }
+
+/**
+ * Remove images written for a request whose database write then failed.
+ *
+ * Uploads land in /data/uploads before the row that references them exists, so
+ * a failure after the write would leave files nothing will ever point at again.
+ * Best-effort by design: a cleanup failure must not mask the original error.
+ */
+export async function discardUploads(filenames: string[]): Promise<void> {
+  for (const filename of filenames) {
+    try {
+      await deleteImage(filename);
+    } catch (err) {
+      console.error('Failed to clean up orphaned upload:', filename, err);
+    }
+  }
+}

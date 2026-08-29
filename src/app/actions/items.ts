@@ -6,7 +6,7 @@ import {
   updateItem,
   deleteItem,
 } from '@/lib/services/items';
-import { saveImage, deleteImage } from '@/lib/storage';
+import { saveImage, discardUploads } from '@/lib/storage';
 import { revalidatePath } from 'next/cache';
 
 async function processImageUploads(files: File[], uploaded: string[]): Promise<string[]> {
@@ -20,19 +20,6 @@ async function processImageUploads(files: File[], uploaded: string[]): Promise<s
     }
   }
   return savedFilenames;
-}
-
-// Files are written to /data/uploads before the row that references them exists.
-// If the write to the database then fails, nothing would ever point at those
-// files again, so they have to be removed explicitly.
-async function discardUploads(filenames: string[]): Promise<void> {
-  for (const filename of filenames) {
-    try {
-      await deleteImage(filename);
-    } catch (err) {
-      console.error('Failed to clean up orphaned upload:', filename, err);
-    }
-  }
 }
 
 export async function createItemAction(prevState: any, formData: FormData) {
