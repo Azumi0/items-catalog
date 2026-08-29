@@ -1,4 +1,4 @@
-import { CategoriesManager } from 'home-item-catalog';
+import { CategoryTiles } from 'home-item-catalog';
 
 const created = new Date("2026-01-12T09:15:00Z");
 const now = new Date("2026-03-14T10:20:00Z");
@@ -21,8 +21,13 @@ const categories = [
   cat("c-6", "Sport", null, null, 0, null),
 ];
 
-/** Every category as a card: visual, name, meta, edit and delete. */
-export const Categories = () => <CategoriesManager initialCategories={categories} />;
+/** The catalog entry screen: every category, each drawn by the fallback rule. */
+export const Tiles = () => <CategoryTiles categories={categories} />;
 
-/** The empty state, before the first category is created. */
-export const NoCategories = () => <CategoriesManager initialCategories={[]} />;
+/** All four arms of the fallback side by side: image, icon, derived, monogram. */
+export const EveryFallback = () => (
+  <CategoryTiles categories={[categories[1], categories[0], categories[2], categories[5]]} />
+);
+
+/** What a fresh install shows before the first category exists. */
+export const NoCategories = () => <CategoryTiles categories={[]} />;

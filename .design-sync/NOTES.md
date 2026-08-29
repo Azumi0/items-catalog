@@ -10,7 +10,7 @@ re-running the sync.
   converter runs in synth-entry mode over `src/components` (`[NO_DIST]` in the
   build log is expected, not a failure).
 - The design system is **Mantine 7 + `src/theme.ts`** (teal ramp,
-  `defaultRadius: 'md'`, system-ui stack) plus eleven of the app's own
+  `defaultRadius: 'md'`, system-ui stack) plus eighteen of the app's own
   components. `cfg.extraEntries` merges `@mantine/core`, `@mantine/hooks`,
   `@mantine/notifications`, `@mantine/dropzone`, `@tabler/icons-react` and the
   theme onto `window.HomeItemCatalog` — ~6,730 exports, ~6.5 MB bundle. Tabler
@@ -19,7 +19,12 @@ re-running the sync.
 - `ServiceWorkerRegistration` is deliberately excluded
   (`componentSrcMap: null`): it renders nothing and calls
   `navigator.serviceWorker.register()` on mount, which should not fire inside
-  every preview.
+  every preview. `AutoGrid` and `FieldBlock` are excluded for the opposite
+  reason — they are invisible layout plumbing (a grid declaration and a
+  label/hint pair), and a card showing either of them teaches nothing that the
+  components using them do not already show.
+- `UserForm` and `PasswordForm` both map to `src/components/UserForm.tsx`:
+  one module, two screens that differ only in how many fields they hold.
 
 ## Run it like this
 

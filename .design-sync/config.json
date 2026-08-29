@@ -17,15 +17,24 @@
   ],
   "componentSrcMap": {
     "ServiceWorkerRegistration": null,
+    "AutoGrid": null,
+    "FieldBlock": null,
     "AppLayout": "src/components/AppLayout.tsx",
-    "ItemsCatalog": "src/components/ItemsCatalog.tsx",
+    "CategoryTiles": "src/components/CategoryTiles.tsx",
+    "CategoryItemsList": "src/components/CategoryItemsList.tsx",
+    "CategoryVisual": "src/components/CategoryVisual.tsx",
     "CategoriesManager": "src/components/CategoriesManager.tsx",
     "UsersManager": "src/components/UsersManager.tsx",
+    "CategoryForm": "src/components/CategoryForm.tsx",
+    "UserForm": "src/components/UserForm.tsx",
+    "PasswordForm": "src/components/UserForm.tsx",
+    "ItemForm": "src/components/ItemForm.tsx",
+    "ConfirmSheet": "src/components/ConfirmSheet.tsx",
+    "FormActionBar": "src/components/FormActionBar.tsx",
+    "AuthScreen": "src/components/AuthScreen.tsx",
     "ImageDropzone": "src/components/ImageDropzone.tsx",
     "ImageLightboxModal": "src/components/ImageLightboxModal.tsx",
     "ItemDetailView": ".design-sync/screens/catalog/ItemDetailView.tsx",
-    "EditItemForm": ".design-sync/screens/item-forms/EditItemForm.tsx",
-    "NewItemForm": ".design-sync/screens/item-forms/NewItemForm.tsx",
     "LoginForm": ".design-sync/screens/auth/LoginForm.tsx",
     "SetupForm": ".design-sync/screens/auth/SetupForm.tsx"
   },
@@ -43,15 +52,22 @@
   },
   "docsDir": ".design-sync/docs",
   "dtsPropsFor": {
-    "AppLayout": "/** Page content, rendered inside the shell's Container. */\n  children: React.ReactNode;\n  /** The signed-in household member, shown in the header. */\n  user: { id: string; username: string };",
-    "ItemsCatalog": "/** Categories offered in the filter Select, with their item counts. */\n  initialCategories: Array<{ id: string; name: string; itemCount: number; createdAt: Date; updatedAt: Date }>;\n  /** Items to render; search, category and sort filtering run client-side over this list. */\n  initialItems: Array<{ id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date }>;",
-    "ItemDetailView": "/** The item to display, including its resolved category name. */\n  item: { id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date };",
-    "CategoriesManager": "/** Categories to list; an empty array renders the empty state. */\n  initialCategories: Array<{ id: string; name: string; itemCount: number; createdAt: Date; updatedAt: Date }>;",
+    "AppLayout": "/** Page content, rendered inside the shell's 1120px main column. */\n  children: React.ReactNode;\n  /** The signed-in household member, named in the top bar. */\n  user: { id: string; username: string };\n  /** 17px/700 line in the top bar. */\n  title: string;\n  /** 12px dimmed line under it — the screen's context. */\n  subtitle?: string;\n  /** Where the back chevron goes. Omit on the three top-level screens. */\n  backHref?: string;\n  /** Which bottom-nav entry is lit, and what the FAB does. */\n  tab?: 'catalog' | 'categories' | 'users';\n  /** false on form screens: hides the bottom bar and the FAB. */\n  chrome?: boolean;\n  /** Overrides the FAB target — the catalog FAB prefills the open category. */\n  fabHref?: string;",
+    "CategoryTiles": "/** Categories to tile, each linking to its own item list. */\n  categories: Array<{ id: string; name: string; icon: string | null; mainImage: string | null; itemCount: number; firstItemImage: string | null; createdAt: Date; updatedAt: Date }>;",
+    "CategoryItemsList": "/** Items of one category; search and sort run client-side over this list. */\n  items: Array<{ id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date }>;",
+    "CategoryVisual": "/** Enough of a category to resolve the fallback. */\n  category: { name: string; icon: string | null; mainImage: string | null; firstItemImage?: string | null };\n  /** `tile` fills a catalog tile's square; `thumb` is the 52px card square. */\n  variant?: 'tile' | 'thumb';",
+    "CategoriesManager": "/** Categories to list; an empty array renders the empty state. */\n  initialCategories: Array<{ id: string; name: string; icon: string | null; mainImage: string | null; itemCount: number; firstItemImage: string | null; createdAt: Date; updatedAt: Date }>;",
     "UsersManager": "/** Household members to list. Never carries passwordHash. */\n  initialUsers: Array<{ id: string; username: string; createdAt: Date }>;\n  /** Id of the signed-in user — that row is badged and cannot be deleted. */\n  currentUserId: string;",
-    "NewItemForm": "/** Categories offered in the Select. */\n  categories: Array<{ id: string; name: string; itemCount: number; createdAt: Date; updatedAt: Date }>;",
-    "EditItemForm": "/** The item being edited; its fields pre-fill the form. */\n  item: { id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date };\n  /** Categories offered in the Select. Must contain item.categoryId. */\n  categories: Array<{ id: string; name: string; itemCount: number; createdAt: Date; updatedAt: Date }>;",
-    "ImageDropzone": "/** Called with the accepted files each time photos are dropped or picked. */\n  onDrop: (files: File[]) => void;\n  /** Bold line inside the dropzone. */\n  title: string;\n  /** Dimmed line under the title. */\n  hint: string;\n  disabled?: boolean;\n  /** Which glyph to show at rest. `photo` for a first image, `plus` to add more. */\n  idleIcon?: 'photo' | 'plus';\n  /** Glyph edge length in px. */\n  iconSize?: number;\n  /** Minimum height of the drop target in px. */\n  minHeight?: number;\n  maxFiles?: number;\n  /** Bottom margin, as a Mantine spacing token. */\n  mb?: string;\n  /** Tighter spacing and smaller copy, for the denser edit-form layout. */\n  compact?: boolean;",
+    "CategoryForm": "/** The category being edited. Omit to render the create form. */\n  category?: { id: string; name: string; icon: string | null; mainImage: string | null };",
+    "UserForm": "",
+    "PasswordForm": "/** Whose password is being changed. */\n  user: { id: string; username: string };",
+    "ItemForm": "/** Categories offered as chips. */\n  categories: Array<{ id: string; name: string; icon: string | null; mainImage: string | null; itemCount: number; firstItemImage: string | null; createdAt: Date; updatedAt: Date }>;\n  /** The item being edited. Omit to render the add form. */\n  item?: { id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date };\n  /** Preselected category when adding from inside one. */\n  initialCategoryId?: string;",
+    "ConfirmSheet": "opened: boolean;\n  onClose: () => void;\n  /** \"Usunąć kategorię?\", \"Usunąć konto?\", … */\n  title: string;\n  /** What disappears and whether it comes back. */\n  message: React.ReactNode;\n  /** Defaults to \"Usuń\". */\n  confirmLabel?: string;\n  onConfirm: () => void;\n  loading?: boolean;",
+    "FormActionBar": "/** Where \"Anuluj\" goes — the same screen the back chevron returns to. */\n  cancelHref: string;\n  /** Copy of the primary action: \"Utwórz kategorię\", \"Zapisz zmiany\", … */\n  submitLabel: string;\n  loading?: boolean;\n  disabled?: boolean;",
+    "AuthScreen": "title: string;\n  subtitle: string;\n  children: React.ReactNode;",
+    "ImageDropzone": "/** Called with the accepted files each time photos are dropped or picked. */\n  onDrop: (files: File[]) => void;\n  /** Bold line inside the dropzone. Omit for a caption-only drop target. */\n  title?: string;\n  /** Dimmed line under the title. */\n  hint?: string;\n  disabled?: boolean;\n  /** Which glyph to show at rest. */\n  idleIcon?: 'photo' | 'plus' | 'camera';\n  /** Glyph edge length in px. */\n  iconSize?: number;\n  /** Minimum height of the drop target in px. */\n  minHeight?: number;\n  maxFiles?: number;\n  /** Bottom margin, as a Mantine spacing token. */\n  mb?: string;\n  /** Hints the rear camera on mobile. */\n  capture?: boolean;\n  /** `panel` is a form field; `tile` is the bare square \"+\" in a photo grid. */\n  variant?: 'panel' | 'tile';",
     "ImageLightboxModal": "opened: boolean;\n  onClose: () => void;\n  /** Stored image filenames, not URLs. */\n  images: string[];\n  /** Which image to open on. Defaults to 0. */\n  initialIndex?: number;\n  /** Shown in the modal header. */\n  title?: string;",
+    "ItemDetailView": "/** The item to display, including its resolved category name. */\n  item: { id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date };",
     "LoginForm": "",
     "SetupForm": ""
   },
@@ -64,7 +80,17 @@
     "AppLayout": {
       "cardMode": "single",
       "primaryStory": "HomePage",
-      "viewport": "1280x900"
+      "viewport": "430x932"
+    },
+    "ConfirmSheet": {
+      "cardMode": "single",
+      "primaryStory": "DeleteCategory",
+      "viewport": "430x600"
+    },
+    "FormActionBar": {
+      "cardMode": "single",
+      "primaryStory": "Create",
+      "viewport": "430x200"
     },
     "ItemDetailView": {
       "cardMode": "column"

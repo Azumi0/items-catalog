@@ -1,15 +1,31 @@
 # Building with this design system
 
-This is **Mantine 7** wearing the Katalog theme, plus the eleven screen
-components of the Home Item Catalog app. `window.HomeItemCatalog` carries all
-of it — every `@mantine/core` component and hook, `@mantine/notifications`,
-`@mantine/dropzone`, every `@tabler/icons-react` icon, the app's `theme`
-object, and the eleven components documented under `components/`.
+This is **Mantine 7** wearing the Katalog theme, plus the eighteen screen and
+control components of the Home Item Catalog app. `window.HomeItemCatalog`
+carries all of it — every `@mantine/core` component and hook,
+`@mantine/notifications`, `@mantine/dropzone`, every `@tabler/icons-react`
+icon, the app's `theme` object, and the eighteen components documented under
+`components/`.
 
-So you are not limited to the eleven cards: reach for `Container`, `Paper`,
-`Stack`, `Group`, `Card`, `Badge`, `Table`, `Modal`, `TextInput`, `Select`,
-`Textarea`, `Button`, `ActionIcon`, `Title`, `Text` and any Tabler icon
-(`IconPlus`, `IconTrash`, …) directly from the same global.
+So you are not limited to those cards: reach for `Container`, `Paper`,
+`Stack`, `Group`, `Card`, `Badge`, `Drawer`, `TextInput`, `Textarea`,
+`Button`, `ActionIcon`, `UnstyledButton`, `SegmentedControl`, `Title`, `Text`
+and any Tabler icon (`IconPlus`, `IconTrash`, …) directly from the same global.
+
+## The app is mobile-first
+
+Design the 390px column first; the desktop is the same code, wider. Two rules
+carry most of it:
+
+- **No breakpoints where `auto-fill` will do.** Every grid is
+  `repeat(auto-fill, minmax(min(<n>px, 100%), 1fr))` — 150px for category
+  tiles, 260px for item cards, 320px for management cards, 88px for photo
+  squares, 72px for detail thumbnails. They reflow on width alone. The main
+  column caps at 1120px, the bottom bar at 600px, forms and the item detail at
+  640px, the auth screens at 420px.
+- **Touch targets:** at least 44×44 for any action, 52px for primary buttons,
+  fields and nav entries, 64px for the FAB. Form fields are 16px text — under
+  16px, iOS Safari zooms the page when a field takes focus.
 
 ## Wrapping — required
 
@@ -27,7 +43,7 @@ const { MantineProvider, Notifications, theme, AppLayout } = window.HomeItemCata
 ```
 
 `Notifications` is only needed if something calls `notifications.show()` — the
-management screens do, on every create, rename and delete.
+management screens and every form do, on each create, rename and delete.
 
 ## Styling idiom — props and tokens, never utility classes
 
@@ -43,7 +59,7 @@ only inside `style={{…}}`.
 - **Surface**: `withBorder`, `shadow="md"`, `radius="md"` on `Paper` / `Card`.
 - **Type**: `<Title order={2}>`, `size="sm"`, `fw={600}`, `ta="center"`.
 - **Layout**: `Group` for a row (`justify="space-between"`, `align="center"`),
-  `Stack` for a column, `Container size="xs|sm|md"` to bound width.
+  `Stack` for a column, `maw` to bound width.
 - **Tokens**, when a prop cannot express it:
   `var(--mantine-color-teal-filled)`, `var(--mantine-color-teal-light)`,
   `var(--mantine-primary-color-filled)`, `var(--mantine-spacing-md)`,
@@ -52,6 +68,10 @@ only inside `style={{…}}`.
 The theme sets `primaryColor: 'teal'` and `defaultRadius: 'md'`, so an
 unadorned `<Button>` is already teal with medium corners — do not restate it.
 The font is the system UI stack; no webfont ships or is wanted.
+
+Radii beyond the default: `radius="sm"` for thumbnails, `20` for the bottom
+nav and the confirmation sheet, `999` for pills and chips, `'50%'` for the FAB
+and avatars.
 
 ## Where the truth lives
 
@@ -66,17 +86,22 @@ Every route in this app is `AppLayout` wrapping exactly one screen component,
 and that is how to build a new one:
 
 ```jsx
-const { AppLayout, ItemsCatalog } = window.HomeItemCatalog;
+const { AppLayout, CategoryTiles } = window.HomeItemCatalog;
 
-<AppLayout user={{ id: 'u-1', username: 'kasia' }}>
-  <ItemsCatalog initialCategories={categories} initialItems={items} />
+<AppLayout user={{ id: 'u-1', username: 'kasia' }} title="Katalog" subtitle="Wybierz kategorię" tab="catalog">
+  <CategoryTiles categories={categories} />
 </AppLayout>
 ```
 
-All six existing pages are previewed on `AppLayout` as `HomePage`,
-`CategoriesPage`, `UsersPage`, `ItemPage`, `AddItemPage` and `EditItemPage`.
-`LoginForm` and `SetupForm` sit outside the shell, centred in a
-`Container size="xs"` inside a `Paper withBorder shadow="md" p={30} radius="md"`.
+`title` and `subtitle` are the screen's context, `tab` lights a nav entry and
+decides what the FAB does, and `backHref` adds the chevron on a nested screen.
+A **form** screen passes `chrome={false}` and ends its `<form>` with
+`FormActionBar` instead of relying on the FAB.
+
+All nine existing pages are previewed on `AppLayout` as `HomePage`,
+`CategoryItemsPage`, `ItemPage`, `CategoriesPage`, `UsersPage`, `AddItemPage`,
+`NewCategoryPage`, `NewUserPage` and `ChangePasswordPage`. `LoginForm` and
+`SetupForm` sit outside the shell, inside `AuthScreen`.
 
 ## Two things that do not work in a design, by construction
 
