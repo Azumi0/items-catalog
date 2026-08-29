@@ -19,6 +19,7 @@
     "ServiceWorkerRegistration": null,
     "AutoGrid": null,
     "FieldBlock": null,
+    "CategoryIcon": null,
     "AppLayout": "src/components/AppLayout.tsx",
     "CategoryTiles": "src/components/CategoryTiles.tsx",
     "CategoryItemsList": "src/components/CategoryItemsList.tsx",
