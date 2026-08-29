@@ -15,7 +15,9 @@ import { IconSearch, IconX } from '@tabler/icons-react';
 import Link from 'next/link';
 import type { ItemWithCategory } from '@/lib/services/items';
 import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
+import { formatDate } from '@/lib/formatDate';
 import { AutoGrid } from './AutoGrid';
+import { EmptyState } from './EmptyState';
 
 interface CategoryItemsListProps {
   items: ItemWithCategory[];
@@ -101,31 +103,13 @@ export function CategoryItemsList({ items }: CategoryItemsListProps) {
       </Group>
 
       {visibleItems.length === 0 ? (
-        <Box
-          py={48}
-          px={24}
-          ta="center"
-          style={{
-            border: '1px solid var(--mantine-color-default-border)',
-            borderRadius: 'var(--mantine-radius-md)',
-          }}
-        >
-          <Text fw={700} mb={6}>
-            Brak przedmiotów
-          </Text>
-          <Text fz={14} c="dimmed">
-            Nie znaleziono przedmiotów spełniających kryteria.
-          </Text>
-        </Box>
+        <EmptyState
+          title="Brak przedmiotów"
+          message="Nie znaleziono przedmiotów spełniających kryteria."
+        />
       ) : (
         <AutoGrid min={260}>
-          {visibleItems.map((item) => {
-            const dateStr = new Date(item.createdAt).toLocaleDateString(
-              'pl-PL',
-              { day: '2-digit', month: '2-digit', year: 'numeric' }
-            );
-
-            return (
+          {visibleItems.map((item) => (
               <Card
                 key={item.id}
                 component={Link}
@@ -169,13 +153,12 @@ export function CategoryItemsList({ items }: CategoryItemsListProps) {
                       {item.createdByName}
                     </Text>
                     <Text fz={12} c="dimmed" style={{ flex: 'none' }}>
-                      {dateStr}
+                      {formatDate(item.createdAt)}
                     </Text>
                   </Group>
                 </Box>
               </Card>
-            );
-          })}
+          ))}
         </AutoGrid>
       )}
     </>

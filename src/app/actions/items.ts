@@ -9,6 +9,7 @@ import {
 } from '@/lib/services/items';
 import { saveImage, discardUploads } from '@/lib/storage';
 import { revalidatePath } from 'next/cache';
+import { revalidateCategoryScreens } from '@/lib/revalidate';
 
 async function processImageUploads(files: File[], uploaded: string[]): Promise<string[]> {
   const savedFilenames: string[] = [];
@@ -59,9 +60,7 @@ export async function createItemAction(prevState: any, formData: FormData) {
       createdByName: user.username,
     });
 
-    revalidatePath('/');
-    revalidatePath('/categories');
-    revalidatePath(`/categories/${categoryId}/items`);
+    revalidateCategoryScreens(categoryId);
     return { success: true, itemId: created.id };
   } catch (err: any) {
     await discardUploads(uploaded);
@@ -117,10 +116,9 @@ export async function updateItemAction(prevState: any, formData: FormData) {
       additionalImages: finalAdditionalImages,
     });
 
-    revalidatePath('/');
     revalidatePath(`/items/${id}`);
     revalidatePath(`/items/${id}/edit`);
-    revalidatePath(`/categories/${categoryId}/items`);
+    revalidateCategoryScreens(categoryId);
     return { success: true, itemId: id };
   } catch (err: any) {
     // Only the files this request wrote. The item's previous images are still
@@ -138,11 +136,7 @@ export async function deleteItemAction(id: string) {
     // Read the category before the row goes, so its list can be invalidated.
     const existing = await getItem(id);
     await deleteItem(id);
-    revalidatePath('/');
-    revalidatePath('/categories');
-    if (existing) {
-      revalidatePath(`/categories/${existing.categoryId}/items`);
-    }
+    revalidateCategoryScreens(existing?.categoryId);
     return { success: true };
   } catch (err: any) {
     return { error: err.message || 'Błąd podczas usuwania przedmiotu.' };

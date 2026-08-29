@@ -3,6 +3,7 @@ import { getItem } from '@/lib/services/items';
 import { notFound } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { ItemDetailView } from './ItemDetailView';
+import { formatDate } from '@/lib/formatDate';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,19 +21,15 @@ export default async function ItemDetailPage({
     notFound();
   }
 
-  const addedOn = new Date(item.createdAt).toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
 
   return (
     <AppLayout
       user={user}
       title="Przedmiot"
-      subtitle={addedOn}
+      subtitle={formatDate(item.createdAt)}
       backHref={`/categories/${item.categoryId}/items`}
       tab="catalog"
+      fabHref={`/items/new?categoryId=${item.categoryId}`}
     >
       <ItemDetailView item={item} />
     </AppLayout>

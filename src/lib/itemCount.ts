@@ -8,3 +8,13 @@
 export function itemCountLabel(count: number): string {
   return count === 1 ? '1 przedmiot' : `${count} przedmiotów`;
 }
+
+/**
+ * The same count in the instrumental case, for "zniknie razem z N
+ * przedmiotami" — the delete-category sheet is the one sentence that governs
+ * the noun rather than just stating it, and the nominative reads as broken
+ * Polish there.
+ */
+export function itemCountInstrumental(count: number): string {
+  return count === 1 ? '1 przedmiotem' : `${count} przedmiotami`;
+}

@@ -34,7 +34,7 @@ export function ConfirmSheet({
       onClose={onClose}
       position="bottom"
       withCloseButton={false}
-      overlayProps={{ backgroundOpacity: 0.45, color: '#000' }}
+      overlayProps={{ backgroundOpacity: 0.45 }}
       styles={{
         inner: { justifyContent: 'center' },
         content: {

@@ -16,6 +16,8 @@
  * the caller shows one as the category's own picture and the other as a
  * stand-in, and the distinction is what the fallback rule is about.
  */
+import { monogram } from './formatDate';
+
 export type CategoryVisual =
   | { kind: 'image'; value: string }
   | { kind: 'icon'; value: string }
@@ -51,6 +53,5 @@ export function categoryVisual(category: CategoryVisualSource): CategoryVisual {
     return { kind: 'derived', value: firstItemImage };
   }
 
-  const name = present(category.name);
-  return { kind: 'monogram', value: name ? name[0].toUpperCase() : '?' };
+  return { kind: 'monogram', value: monogram(category.name) };
 }

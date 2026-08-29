@@ -36,7 +36,9 @@
     "ImageLightboxModal": "src/components/ImageLightboxModal.tsx",
     "ItemDetailView": ".design-sync/screens/catalog/ItemDetailView.tsx",
     "LoginForm": ".design-sync/screens/auth/LoginForm.tsx",
-    "SetupForm": ".design-sync/screens/auth/SetupForm.tsx"
+    "SetupForm": ".design-sync/screens/auth/SetupForm.tsx",
+    "EmptyState": "src/components/EmptyState.tsx",
+    "RemovableImage": "src/components/RemovableImage.tsx"
   },
   "libOverrides": {
     "dts.mjs": "CategoriesManager/UsersManager are real screen components; upstream isComponentName drops any *Manager suffix"
@@ -69,7 +71,9 @@
     "ImageLightboxModal": "opened: boolean;\n  onClose: () => void;\n  /** Stored image filenames, not URLs. */\n  images: string[];\n  /** Which image to open on. Defaults to 0. */\n  initialIndex?: number;\n  /** Shown in the modal header. */\n  title?: string;",
     "ItemDetailView": "/** The item to display, including its resolved category name. */\n  item: { id: string; categoryId: string; categoryName: string; description: string | null; mainImage: string; additionalImages: string[]; createdById: string | null; createdByName: string; createdAt: Date; updatedAt: Date };",
     "LoginForm": "",
-    "SetupForm": ""
+    "SetupForm": "",
+    "EmptyState": "/** Bold line: what is missing. */\n  title: string;\n  /** Dimmed line under it: why, or what to do about it. */\n  message: string;",
+    "RemovableImage": "/** A stored image URL or a local object URL — both render the same. */\n  src: string;\n  alt: string;\n  onRemove: () => void;\n  /** aria-label and title of the remove button. */\n  removeLabel: string;\n  disabled?: boolean;\n  /** `hero` is a form's main 4:3 photo; `square` is one cell of a photo grid. */\n  variant?: 'hero' | 'square';\n  /** Fixed edge length, for a square not sized by a grid cell. */\n  w?: number;"
   },
   "overrides": {
     "ImageLightboxModal": {

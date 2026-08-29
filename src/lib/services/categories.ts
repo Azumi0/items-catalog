@@ -144,6 +144,12 @@ export async function updateCategory(
     .where(eq(categories.id, id))
     .returning();
 
+  // The read above is not a lock: a concurrent delete between it and this
+  // write leaves nothing to return.
+  if (!updated) {
+    throw new Error('Nie znaleziono kategorii.');
+  }
+
   // Only after the row stopped pointing at it. A file removed before a failed
   // write would leave the category referencing a picture that is gone.
   if (

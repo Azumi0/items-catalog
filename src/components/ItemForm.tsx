@@ -3,30 +3,31 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ActionIcon,
-  Box,
   Group,
-  Image,
   Stack,
   Text,
   Textarea,
   UnstyledButton,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconX } from '@tabler/icons-react';
 import { createItemAction, updateItemAction } from '@/app/actions/items';
 import type { CategoryWithCount } from '@/lib/services/categories';
 import type { ItemWithCategory } from '@/lib/services/items';
-import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
+import { thumbUrl } from '@/lib/images';
 import { useActionRunner } from '@/hooks/useActionRunner';
 import {
   useMultiImagePreviews,
   useSingleImagePreview,
 } from '@/hooks/useImagePreviews';
 import { AutoGrid } from './AutoGrid';
-import { FieldBlock } from './FormField';
+import {
+  FieldBlock,
+  FIELD_LABEL_STYLES,
+  selectableSurface,
+} from './FormField';
 import { FormActionBar } from './FormActionBar';
 import { ImageDropzone } from './ImageDropzone';
+import { RemovableImage } from './RemovableImage';
 
 interface ItemFormProps {
   categories: CategoryWithCount[];
@@ -110,7 +111,9 @@ export function ItemForm({
         errorTitle: 'Błąd edycji',
         successTitle: 'Zapisano zmiany',
         successMessage: 'Przedmiot został zaktualizowany.',
-        onSuccess: () => router.push(`/items/${item.id}`),
+        // The list of the category the item is in *now* — which is not
+        // necessarily the one it was opened from.
+        onSuccess: () => router.push(`/categories/${categoryId}/items`),
       });
       return;
     }
@@ -120,17 +123,12 @@ export function ItemForm({
       formData.append('additionalImages', file);
     }
 
-    let createdId: string | null = null;
     await run({
-      action: async () => {
-        const result = await createItemAction(null, formData);
-        createdId = result?.itemId ?? null;
-        return result;
-      },
+      action: () => createItemAction(null, formData),
       errorTitle: 'Błąd dodawania',
       successTitle: 'Sukces',
       successMessage: 'Przedmiot został dodany do katalogu.',
-      onSuccess: () => router.push(createdId ? `/items/${createdId}` : '/'),
+      onSuccess: () => router.push(`/categories/${categoryId}/items`),
     });
   };
 
@@ -139,32 +137,17 @@ export function ItemForm({
       <Stack gap={20} maw={640} mx="auto">
         <FieldBlock label="Zdjęcie główne">
           {mainPreview ? (
-            <Box pos="relative">
-              <Image
-                src={mainPreview}
-                alt="Zdjęcie główne"
-                fallbackSrc={THUMB_PLACEHOLDER}
-                radius="md"
-                style={{ aspectRatio: '4 / 3', objectFit: 'cover' }}
-              />
-              <ActionIcon
-                color="red"
-                variant="filled"
-                size="md"
-                pos="absolute"
-                top={8}
-                right={8}
-                onClick={() => {
-                  newMain.clear();
-                  setKeptMain(null);
-                }}
-                disabled={pending}
-                aria-label="Usuń zdjęcie główne"
-                title="Usuń zdjęcie główne"
-              >
-                <IconX size={16} />
-              </ActionIcon>
-            </Box>
+            <RemovableImage
+              variant="hero"
+              src={mainPreview}
+              alt="Zdjęcie główne"
+              removeLabel="Usuń zdjęcie główne"
+              disabled={pending}
+              onRemove={() => {
+                newMain.clear();
+                setKeptMain(null);
+              }}
+            />
           ) : (
             <ImageDropzone
               onDrop={newMain.select}
@@ -183,58 +166,29 @@ export function ItemForm({
         <FieldBlock label="Zdjęcia dodatkowe">
           <AutoGrid min={88} gap={8}>
             {keptAdditional.map((filename) => (
-              <Box key={filename} pos="relative">
-                <Image
-                  src={thumbUrl(filename)}
-                  alt="Zdjęcie dodatkowe"
-                  fallbackSrc={THUMB_PLACEHOLDER}
-                  radius="sm"
-                  style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
-                />
-                <ActionIcon
-                  color="red"
-                  variant="filled"
-                  size="xs"
-                  pos="absolute"
-                  top={4}
-                  right={4}
-                  onClick={() =>
-                    setKeptAdditional((current) =>
-                      current.filter((name) => name !== filename)
-                    )
-                  }
-                  disabled={pending}
-                  aria-label="Usuń zdjęcie"
-                  title="Usuń zdjęcie"
-                >
-                  <IconX size={12} />
-                </ActionIcon>
-              </Box>
+              <RemovableImage
+                key={filename}
+                src={thumbUrl(filename)}
+                alt="Zdjęcie dodatkowe"
+                removeLabel="Usuń zdjęcie"
+                disabled={pending}
+                onRemove={() =>
+                  setKeptAdditional((current) =>
+                    current.filter((name) => name !== filename)
+                  )
+                }
+              />
             ))}
 
             {newAdditional.previews.map((preview, index) => (
-              <Box key={preview} pos="relative">
-                <Image
-                  src={preview}
-                  alt={`Nowe zdjęcie ${index + 1}`}
-                  radius="sm"
-                  style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
-                />
-                <ActionIcon
-                  color="red"
-                  variant="filled"
-                  size="xs"
-                  pos="absolute"
-                  top={4}
-                  right={4}
-                  onClick={() => newAdditional.removeAt(index)}
-                  disabled={pending}
-                  aria-label="Usuń zdjęcie"
-                  title="Usuń zdjęcie"
-                >
-                  <IconX size={12} />
-                </ActionIcon>
-              </Box>
+              <RemovableImage
+                key={preview}
+                src={preview}
+                alt={`Nowe zdjęcie ${index + 1}`}
+                removeLabel="Usuń zdjęcie"
+                disabled={pending}
+                onRemove={() => newAdditional.removeAt(index)}
+              />
             ))}
 
             <ImageDropzone
@@ -266,17 +220,7 @@ export function ItemForm({
                     borderRadius: 999,
                     fontSize: 14,
                     fontWeight: isSelected ? 600 : 400,
-                    border: `1px solid ${
-                      isSelected
-                        ? 'var(--mantine-color-teal-filled)'
-                        : 'var(--mantine-color-default-border)'
-                    }`,
-                    background: isSelected
-                      ? 'var(--mantine-color-teal-light)'
-                      : 'var(--mantine-color-body)',
-                    color: isSelected
-                      ? 'var(--mantine-color-teal-filled)'
-                      : 'var(--mantine-color-text)',
+                    ...selectableSurface(isSelected),
                   }}
                 >
                   {category.name}
@@ -298,7 +242,7 @@ export function ItemForm({
           onChange={(event) => setDescription(event.currentTarget.value)}
           disabled={pending}
           styles={{
-            label: { fontSize: 13, fontWeight: 600, marginBottom: 6 },
+            ...FIELD_LABEL_STYLES,
             input: { minHeight: 120, fontSize: 16, resize: 'vertical' },
           }}
         />

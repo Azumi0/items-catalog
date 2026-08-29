@@ -9,7 +9,7 @@ import {
 } from '@/lib/services/categories';
 import { saveImage, discardUploads } from '@/lib/storage';
 import { categoryVisualPatch } from '@/lib/categoryVisualPatch';
-import { revalidatePath } from 'next/cache';
+import { revalidateCategoryScreens } from '@/lib/revalidate';
 
 /**
  * Reads the presentation half of a category form and saves any uploaded
@@ -20,7 +20,7 @@ import { revalidatePath } from 'next/cache';
  */
 async function readVisual(
   formData: FormData,
-  { forUpdate }: { forUpdate: boolean }
+  mode: 'create' | 'update'
 ): Promise<{ visual: CategoryVisualInput; uploaded: string[] }> {
   const imageFile = formData.get('mainImage') as File | null;
   const uploaded: string[] = [];
@@ -35,18 +35,10 @@ async function readVisual(
     icon: (formData.get('icon') as string) || '',
     uploadedImage: uploaded[0] ?? null,
     removeImage: formData.get('removeMainImage') === '1',
-    forUpdate,
+    mode,
   });
 
   return { visual, uploaded };
-}
-
-function revalidateCategoryScreens(id?: string) {
-  revalidatePath('/categories');
-  revalidatePath('/');
-  if (id) {
-    revalidatePath(`/categories/${id}/items`);
-  }
 }
 
 export async function createCategoryAction(prevState: any, formData: FormData) {
@@ -59,7 +51,7 @@ export async function createCategoryAction(prevState: any, formData: FormData) {
 
   let uploaded: string[] = [];
   try {
-    const read = await readVisual(formData, { forUpdate: false });
+    const read = await readVisual(formData, 'create');
     uploaded = read.uploaded;
 
     await createCategory(name, read.visual);
@@ -82,7 +74,7 @@ export async function updateCategoryAction(prevState: any, formData: FormData) {
 
   let uploaded: string[] = [];
   try {
-    const read = await readVisual(formData, { forUpdate: true });
+    const read = await readVisual(formData, 'update');
     uploaded = read.uploaded;
 
     await updateCategory(id, name, read.visual);

@@ -7,8 +7,8 @@ export interface CategoryVisualFields {
   uploadedImage: string | null;
   /** The form's "remove the picture" flag. */
   removeImage: boolean;
-  /** False for create, where "unchanged" has no meaning. */
-  forUpdate: boolean;
+  /** "create" has no "unchanged" state — a new row is always written whole. */
+  mode: 'create' | 'update';
 }
 
 /**
@@ -23,13 +23,13 @@ export function categoryVisualPatch({
   icon,
   uploadedImage,
   removeImage,
-  forUpdate,
+  mode,
 }: CategoryVisualFields): CategoryVisualInput {
   const patch: CategoryVisualInput = { icon: icon.trim() || null };
 
   if (uploadedImage) {
     patch.mainImage = uploadedImage;
-  } else if (removeImage || !forUpdate) {
+  } else if (removeImage || mode === 'create') {
     patch.mainImage = null;
   }
 
