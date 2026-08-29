@@ -2,25 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Stack, TextInput, UnstyledButton } from '@mantine/core';
+import { Stack, TextInput } from '@mantine/core';
 import { useActionRunner } from '@/hooks/useActionRunner';
 import {
   createCategoryAction,
   updateCategoryAction,
 } from '@/app/actions/categories';
-import {
-  CATEGORY_ICON_NAMES,
-  categoryIconComponent,
-  categoryIconLabel,
-} from '@/lib/categoryIcons';
 import { thumbUrl } from '@/lib/images';
 import { useSingleImagePreview } from '@/hooks/useImagePreviews';
-import { AutoGrid } from './AutoGrid';
-import {
-  FieldBlock,
-  TALL_INPUT_STYLES,
-  selectableSurface,
-} from './FormField';
+import { FieldBlock, TALL_INPUT_STYLES } from './FormField';
+import { IconPickerField } from './IconPickerField';
 import { FormActionBar } from './FormActionBar';
 import { ImageDropzone } from './ImageDropzone';
 import { RemovableImage } from './RemovableImage';
@@ -99,47 +90,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
           styles={TALL_INPUT_STYLES}
         />
 
-        <FieldBlock
-          label="Ikona"
-          hint="Opcjonalna. Bez ikony i zdjęcia użyjemy zdjęcia pierwszego przedmiotu."
-        >
-          <AutoGrid min={56} gap={8}>
-            {CATEGORY_ICON_NAMES.map((iconName) => {
-              const Icon = categoryIconComponent(iconName);
-              const isSelected = icon === iconName;
-
-              return (
-                <UnstyledButton
-                  key={iconName}
-                  type="button"
-                  h={56}
-                  aria-label={categoryIconLabel(iconName)}
-                  aria-pressed={isSelected}
-                  title={categoryIconLabel(iconName)}
-                  // Pressing the selected icon clears it — the field is optional
-                  // and there is nowhere else to say "actually, no icon". Without
-                  // this, step 3 of the fallback rule (the newest item's photo)
-                  // is unreachable for any category that ever had an icon.
-                  // See ADR-004 §3.5.
-                  onClick={() => setIcon(isSelected ? null : iconName)}
-                  disabled={pending}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 'var(--mantine-radius-md)',
-                    ...selectableSurface(
-                      isSelected,
-                      'var(--mantine-color-dimmed)'
-                    ),
-                  }}
-                >
-                  <Icon size={24} />
-                </UnstyledButton>
-              );
-            })}
-          </AutoGrid>
-        </FieldBlock>
+        <IconPickerField value={icon} onChange={setIcon} disabled={pending} />
 
         <FieldBlock label="Zdjęcie kategorii">
           {previewSrc ? (

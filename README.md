@@ -8,6 +8,7 @@ Self-hosted home inventory and item catalog progressive web application (PWA) de
 
 - **Mobile-first Progressive Web App (PWA):** One single-column design that reflows to desktop without breakpoints, built with Mantine UI v9, with Light and Dark mode support. Navigation is a floating bottom bar with a contextual "+" button; every touch target is at least 44px.
 - **Two-screen catalog:** Category tiles are the entry screen; picking one opens that category's items, where search and sorting live. Each category shows its own picture or icon, falling back to its newest item's photo and then to a monogram.
+- **Icon picker over the whole Tabler library:** A category's icon is chosen from all ~6250 Tabler glyphs through a searchable modal, and the search understands Polish — `rower` finds the bike, `lampa` the lamp. The grid is windowed, and the library is code-split into a chunk of its own, so it stays out of every screen's initial JavaScript and is fetched only by the screens that actually draw an icon.
 - **Item & Category Management:** Organize household items into categories, search instantly by description, and sort chronologically. Adding and editing happen on full screens with a sticky action bar; deletions confirm in a bottom sheet.
 - **Optimized Media Pipeline:** Upload original images with automatic WebP thumbnail generation using `sharp`, served through authenticated endpoints.
 - **Flat Authentication & Onboarding:** Simple multi-user household access secured with `iron-session` cookies and `bcryptjs`. Automatically redirects to `/setup` on initial launch.
@@ -131,8 +132,9 @@ src/
   components/         AppLayout (top bar, bottom nav, FAB), CategoryTiles,
                       CategoryItemsList, CategoriesManager, UsersManager,
                       CategoryForm, UserForm, ItemForm, CategoryVisual,
-                      ConfirmSheet, FormActionBar, FormField, AutoGrid,
-                      ImageDropzone, ImageLightboxModal, AuthScreen,
+                      IconPickerField, IconPickerModal, CategoryIcon,
+                      TablerGlyph, ConfirmSheet, FormActionBar, FormField,
+                      AutoGrid, ImageDropzone, ImageLightboxModal, AuthScreen,
                       ServiceWorkerRegistration
   hooks/              useActionRunner, useImagePreviews
   lib/
@@ -142,7 +144,9 @@ src/
     images.ts         Image URL builders and inline placeholders
     categoryVisual.ts   The category image/icon/derived/monogram fallback
     categoryVisualPatch.ts  What a category form submission changes
-    categoryIcons.ts  The Tabler glyphs a category can be given
+    iconPicker.ts     Icon labels, search ranking and the grid's windowing
+    iconAliases.ts    Polish search terms for the English icon library
+    tablerIcons.ts    The whole Tabler library by name (~2.6 MB — see the file)
     itemCount.ts      "1 przedmiot" / "N przedmiotów"
     services/         Data access: categories, items, users
   db/                 Drizzle schema, connection, migrator
@@ -162,6 +166,8 @@ docs/
   initial-prompt.md   The originating specification (archived, Polish)
   design_handoff_mobile_first/  The mobile-first redesign handoff: screen
                       specifications, prototypes and screenshots
+  design_handoff_icon_picker/   The icon picker handoff: the category form's
+                      icon field and its search modal
   adr/                Architecture decision records
   agents/             Agent conventions: issue tracker, triage labels, domain
   deployment-synology.md

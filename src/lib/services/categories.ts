@@ -2,6 +2,7 @@ import { getDb } from '@/db';
 import { categories, items, Category } from '@/db/schema';
 import { eq, sql, count } from 'drizzle-orm';
 import { deleteImage, deleteItemFiles } from '@/lib/storage';
+import { isTablerIconName } from '@/lib/tablerIcons';
 import crypto from 'crypto';
 
 export interface CategoryWithCount extends Category {
@@ -24,6 +25,38 @@ export interface CategoryWithCount extends Category {
 export interface CategoryVisualInput {
   icon?: string | null;
   mainImage?: string | null;
+}
+
+/**
+ * The icon column holds a `@tabler/icons-react` export name, and since the
+ * picker opened onto the whole library that name arrives straight from a
+ * browser. Two things have to hold, and they hold at different times:
+ *
+ *   - on the way in, the name must be one this build can render, or the row
+ *     stores a square that will never draw;
+ *   - on the way out, it must *still* be one, because Tabler retires and
+ *     renames icons between minor versions and the row outlives the upgrade.
+ *
+ * So writes reject an unknown name and reads forget one. A forgotten icon is
+ * not an error for the reader — it drops the category to the next step of the
+ * visual rule (see @/lib/categoryVisual), which is exactly what a category
+ * with no icon does.
+ */
+function validIcon(icon: string | null | undefined): string | null {
+  if (icon === null || icon === undefined) return null;
+
+  const trimmed = icon.trim();
+  if (!trimmed) return null;
+  if (!isTablerIconName(trimmed)) {
+    throw new Error(`Nie znamy takiej ikony: "${trimmed}".`);
+  }
+
+  return trimmed;
+}
+
+/** Reader's half of the rule above — drops a name this build cannot draw. */
+function withRenderableIcon<T extends { icon: string | null }>(row: T): T {
+  return row.icon && isTablerIconName(row.icon) ? row : { ...row, icon: null };
 }
 
 /**
@@ -53,7 +86,7 @@ export async function getCategories(): Promise<CategoryWithCount[]> {
     .groupBy(categories.id)
     .orderBy(categories.name);
 
-  return rows;
+  return rows.map(withRenderableIcon);
 }
 
 export async function getCategory(id: string): Promise<Category | null> {
@@ -64,7 +97,7 @@ export async function getCategory(id: string): Promise<Category | null> {
     .where(eq(categories.id, id))
     .limit(1);
 
-  return row || null;
+  return row ? withRenderableIcon(row) : null;
 }
 
 export async function createCategory(
@@ -93,7 +126,7 @@ export async function createCategory(
     .values({
       id: crypto.randomUUID(),
       name: trimmed,
-      icon: visual.icon ?? null,
+      icon: validIcon(visual.icon),
       mainImage: visual.mainImage ?? null,
       createdAt: now,
       updatedAt: now,
@@ -136,7 +169,7 @@ export async function updateCategory(
   };
 
   if (visual.icon !== undefined) {
-    patch.icon = visual.icon;
+    patch.icon = validIcon(visual.icon);
   }
   if (visual.mainImage !== undefined) {
     patch.mainImage = visual.mainImage;

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Category Form — Icon Picker" description="Category form with a searchable modal for picking any Tabler icon" -->
+<helmet><script src="./ds-base.js"></script><style>body{margin:0;background:var(--mantine-color-body)}*{box-sizing:border-box}</style></helmet>
+<div style="min-height:100%;color:var(--mantine-color-text);background:var(--mantine-color-body)">
+<div style="max-width:640px;margin:0 auto;padding:24px 24px 100px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Nazwa kategorii</div>
+<input value="{{ name }}" onChange="{{ onName }}" placeholder="np. Elektronika, Narzędzia" style="width:100%;height:48px;padding:0 12px;font-family:inherit;font-size:16px;color:inherit;background:var(--mantine-color-body);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none;box-sizing:border-box" />
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:2px">Ikona</div>
+<div style="font-size:12px;color:var(--mantine-color-dimmed);margin-bottom:8px">Opcjonalna. Wybierz z pełnej biblioteki ikon Tabler.</div>
+<div style="display:flex;align-items:center;gap:12px">
+<button type="button" onClick="{{ openPicker }}" aria-label="Wybierz ikonę" style="width:56px;height:56px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:var(--mantine-radius-md);cursor:pointer;border:1px solid var(--mantine-color-default-border);background:var(--mantine-color-body);color:var(--mantine-color-dimmed)">
+<sc-if value="{{ hasIcon }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="{{ selectedGlobal }}" size="{{ 28 }}" hint-size="28px,28px"></x-import></sc-if>
+<sc-if value="{{ !hasIcon }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="HomeItemCatalog.IconPlus" size="{{ 24 }}" hint-size="24px,24px"></x-import></sc-if>
+</button>
+<div style="display:flex;flex-direction:column;gap:6px">
+<button type="button" onClick="{{ openPicker }}" style="height:36px;padding:0 14px;border-radius:var(--mantine-radius-md);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--mantine-color-default-border);background:var(--mantine-color-body);color:var(--mantine-color-text)">
+<sc-if value="{{ hasIcon }}" hint-placeholder-val="{{ false }}">Zmień ikonę</sc-if>
+<sc-if value="{{ !hasIcon }}" hint-placeholder-val="{{ true }}">Wybierz ikonę</sc-if>
+</button>
+<sc-if value="{{ hasIcon }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ clearIcon }}" style="height:20px;padding:0;border:0;background:none;font-size:12px;text-align:left;color:var(--mantine-color-dimmed);cursor:pointer;text-decoration:underline">Usuń ({{ selectedLabel }})</button></sc-if>
+</div>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Zdjęcie kategorii</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:140px;padding:20px;border:2px dashed var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-gray-light);text-align:center">
+<span style="display:flex;color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconPhoto" size="{{ 28 }}" hint-size="28px,28px"></x-import></span>
+<div style="font-size:13px;color:var(--mantine-color-dimmed)">Zdjęcie ma pierwszeństwo przed ikoną</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)" onClick="{{ closePicker }}">
+<div style="width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;background:var(--mantine-color-body);border-radius:var(--mantine-radius-lg);box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden" onClick="{{ stopClick }}">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 12px;border-bottom:1px solid var(--mantine-color-default-border)">
+<div style="font-size:16px;font-weight:700">Wybierz ikonę</div>
+<button type="button" onClick="{{ closePicker }}" aria-label="Zamknij" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-sm);background:none;color:var(--mantine-color-dimmed);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconX" size="{{ 18 }}" hint-size="18px,18px"></x-import></button>
+</div>
+<div style="padding:12px 16px;border-bottom:1px solid var(--mantine-color-default-border)">
+<div style="position:relative">
+<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mantine-color-dimmed);display:flex"><x-import component-from-global-scope="HomeItemCatalog.IconSearch" size="{{ 18 }}" hint-size="18px,18px"></x-import></span>
+<input value="{{ search }}" onChange="{{ onSearch }}" autoFocus="{{ true }}" placeholder="Szukaj ikony… np. lampa, dom, rower" style="width:100%;height:44px;padding:0 12px 0 38px;font-family:inherit;font-size:15px;color:inherit;background:var(--mantine-color-gray-light);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none;box-sizing:border-box" />
+</div>
+</div>
+<div ref="{{ scrollRef }}" onScroll="{{ onScroll }}" style="height:420px;overflow-y:auto;padding:14px 16px;position:relative">
+<div style="position:relative;height:{{ contentHeight }}px">
+<sc-for list="{{ iconRows }}" as="i" hint-placeholder-count="24">
+<div style="position:absolute;top:{{ i.top }}px;left:{{ i.left }}px;width:52px;height:52px">
+<button type="button" title="{{ i.label }}" aria-label="{{ i.label }}" onClick="{{ i.pick }}" style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:var(--mantine-radius-md);cursor:pointer;border:1px solid var(--mantine-color-default-border);background:var(--mantine-color-body);color:var(--mantine-color-dimmed)" style-hover="{&quot;background&quot;:&quot;var(--mantine-color-gray-light)&quot;}"><x-import component-from-global-scope="{{ i.global }}" size="{{ 22 }}" hint-size="22px,22px"></x-import></button>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ noMatches }}" hint-placeholder-val="{{ false }}"><div style="padding:32px 8px;text-align:center;font-size:13px;color:var(--mantine-color-dimmed)">Brak ikon dla „{{ search }}”</div></sc-if>
+</div>
+<div style="padding:10px 16px;border-top:1px solid var(--mantine-color-default-border);font-size:12px;color:var(--mantine-color-dimmed)">
+<sc-if value="{{ isFiltered }}" hint-placeholder-val="{{ false }}">Znaleziono {{ totalMatches }} z {{ totalCount }} ikon Tabler. </sc-if>
+<sc-if value="{{ !isFiltered }}" hint-placeholder-val="{{ true }}">Biblioteka: {{ totalCount }} ikon Tabler. </sc-if>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;gap:8px;padding:12px 16px;padding-bottom:20px;background:var(--mantine-color-body);border-top:1px solid var(--mantine-color-default-border)">
+<div style="display:flex;gap:8px;width:100%;max-width:640px;margin:0 auto">
+<button type="button" style="flex:1;min-height:52px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--mantine-color-body);color:var(--mantine-color-text)">Anuluj</button>
+<button type="button" disabled="{{ !name }}" style="flex:2;min-height:52px;border:0;border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--mantine-color-teal-filled);color:var(--mantine-color-white)">{{ submitLabel }}</button>
+</div>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:640,&quot;height&quot;:760},&quot;initialName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initialIcon&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;IconDeviceLaptop&quot;,&quot;tsType&quot;:&quot;string | null&quot;}}">
+class Component extends DCLogic {
+  state = { name: '', icon: null, pickerOpen: false, search: '', scrollTop: 0 };
+  iconNames = null;
+  _cache = {};
+  _scrollEl = null;
+  COLS = 8;
+  ROW_H = 60;
+  COL_W = 60;
+  VIEW_H = 420;
+  OVERSCAN = 6;
+
+  componentDidMount() {
+    document.documentElement.setAttribute('data-mantine-color-scheme', 'light');
+    const initial = this.props.initialName;
+    if (initial) this.setState({ name: initial });
+    const initialIcon = this.props.initialIcon;
+    if (initialIcon) this.setState({ icon: initialIcon });
+    const wait = () => {
+      if (window.HomeItemCatalog) {
+        this.iconNames = Object.keys(window.HomeItemCatalog).filter((k) => {
+          if (!/^Icon[A-Z0-9]/.test(k)) return false;
+          const v = window.HomeItemCatalog[k];
+          return typeof v === 'function' || (v && typeof v === 'object');
+        });
+        this.forceUpdate();
+      } else {
+        setTimeout(wait, 50);
+      }
+    };
+    wait();
+  }
+
+  labelFor(n) {
+    if (this._cache[n]) return this._cache[n];
+    const l = n.replace(/^Icon/, '').replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+    this._cache[n] = l;
+    return l;
+  }
+
+  renderVals() {
+    const CURATED = ['IconDeviceLaptop', 'IconTool', 'IconBook', 'IconToolsKitchen2', 'IconPlant', 'IconBallFootball', 'IconArmchair', 'IconBike'];
+    const all = this.iconNames || [];
+    const search = this.state.search.trim().toLowerCase();
+    let pool;
+    if (search) {
+      pool = all.filter((n) => this.labelFor(n).toLowerCase().includes(search));
+    } else {
+      const curated = CURATED.filter((n) => all.includes(n));
+      const rest = all.filter((n) => !CURATED.includes(n));
+      pool = curated.concat(rest);
+    }
+    const COLS = this.COLS, ROW_H = this.ROW_H, COL_W = this.COL_W;
+    const totalRows = Math.ceil(pool.length / COLS);
+    const contentHeight = Math.max(totalRows * ROW_H, this.VIEW_H);
+    const scrollTop = this.state.scrollTop;
+    const startRow = Math.max(0, Math.floor(scrollTop / ROW_H) - this.OVERSCAN);
+    const endRow = Math.min(totalRows, Math.ceil((scrollTop + this.VIEW_H) / ROW_H) + this.OVERSCAN);
+    const startIdx = startRow * COLS;
+    const endIdx = Math.min(pool.length, endRow * COLS);
+    const icon = this.state.icon;
+    return {
+      theme: (window.HomeItemCatalog || {}).theme,
+      contentHeight,
+      name: this.state.name,
+      onName: (e) => this.setState({ name: e.currentTarget.value }),
+      hasIcon: !!icon,
+      selectedGlobal: icon ? 'HomeItemCatalog.' + icon : '',
+      selectedLabel: icon ? this.labelFor(icon) : '',
+      clearIcon: () => this.setState({ icon: null }),
+      pickerOpen: this.state.pickerOpen,
+      openPicker: () => this.setState({ pickerOpen: true, search: '', scrollTop: 0 }),
+      closePicker: () => this.setState({ pickerOpen: false }),
+      stopClick: (e) => e.stopPropagation(),
+      search: this.state.search,
+      onSearch: (e) => {
+        if (this._scrollEl) this._scrollEl.scrollTop = 0;
+        this.setState({ search: e.currentTarget.value, scrollTop: 0 });
+      },
+      scrollRef: (el) => { this._scrollEl = el; },
+      onScroll: (e) => this.setState({ scrollTop: e.currentTarget.scrollTop }),
+      totalCount: all.length,
+      totalMatches: pool.length,
+      isFiltered: !!search,
+      noMatches: !!search && pool.length === 0,
+      iconRows: pool.slice(startIdx, endIdx).map((n, i) => {
+        const idx = startIdx + i;
+        const row = Math.floor(idx / COLS), col = idx % COLS;
+        return {
+          name: n,
+          global: 'HomeItemCatalog.' + n,
+          label: this.labelFor(n),
+          top: row * ROW_H,
+          left: col * COL_W,
+          pick: () => this.setState({ icon: n, pickerOpen: false }),
+        };
+      }),
+      submitLabel: this.props.category ? 'Zapisz zmiany' : 'Utwórz kategorię',
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -19,6 +19,11 @@ const config = [
       // generated, gitignored, and full of vendored code.
       '.ds-sync/**',
       'ds-bundle/**',
+      // Design handoffs ship their prototypes as runnable HTML plus the design
+      // tool's own runtime (support.js, ds-base.js). Vendored, not ours, and
+      // written against React 17 — linting it reports deprecations in someone
+      // else's code. The prototypes are read as specifications, never built.
+      'docs/**/design/**',
       'next-env.d.ts',
       'tsconfig.tsbuildinfo',
     ],
