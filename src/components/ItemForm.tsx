@@ -156,7 +156,9 @@ export function ItemForm({
               idleIcon="camera"
               iconSize={32}
               minHeight={180}
-              capture
+              // Deliberately no `capture` — it would open the camera directly
+              // and close off the gallery this field's own label promises.
+              // See ADR-004 §3.1.
               title="Zrób zdjęcie lub wybierz z galerii"
               hint="JPG, PNG — maks. 10 MB"
             />

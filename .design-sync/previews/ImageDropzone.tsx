@@ -7,7 +7,6 @@ export const MainPhoto = () => (
   <ImageDropzone
     onDrop={noop}
     idleIcon="camera"
-    capture
     title="Zrób zdjęcie lub wybierz z galerii"
     hint="JPG, PNG — maks. 10 MB"
   />
