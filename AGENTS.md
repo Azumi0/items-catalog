@@ -26,3 +26,15 @@ Default canonical roles (`needs-triage`, `needs-info`, `ready-for-agent`, `ready
 ### Domain docs
 
 Single-context repo (`CONTEXT.md` and `docs/adr/` at repo root). See `docs/agents/domain.md`.
+
+### Deliberate departures from the design handoff
+
+The UI is built from `docs/design_handoff_mobile_first/`. Seven places
+deliberately differ from it — among them the missing `capture` on the photo
+dropzone, the login screen's absent mode-switch link, and the category picture
+files deleted on update and delete.
+
+**Before "fixing" a mismatch between the UI and that handoff, read
+`docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md`.** Each entry is a
+recorded decision with its reasoning; several of them undo a real defect that
+literal compliance would reintroduce.

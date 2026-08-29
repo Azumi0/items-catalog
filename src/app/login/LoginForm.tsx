@@ -6,6 +6,12 @@ import { Alert, Button, PasswordInput, Stack, TextInput } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { AUTH_INPUT_STYLES } from '@/components/FormField';
 
+/**
+ * No "Pierwsze uruchomienie — załóż konto" link, though the handoff shows one:
+ * /login is only reachable once an account exists, and the count never returns
+ * to zero, so the link could never do anything. SetupForm carries the reverse
+ * direction, which can come alive. See ADR-004 §3.2.
+ */
 export default function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
 

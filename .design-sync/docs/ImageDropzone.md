@@ -11,7 +11,6 @@ from `@mantine/dropzone`. It takes its whole appearance from props.
 ```jsx
 <ImageDropzone
   idleIcon="camera"
-  capture
   title="Zrób zdjęcie lub wybierz z galerii"
   hint="JPG, PNG — maks. 10 MB"
   onDrop={(files) => setFiles(files)}
@@ -24,7 +23,9 @@ from `@mantine/dropzone`. It takes its whole appearance from props.
   picture field does.
 - `variant="tile"` drops the background and copy and makes the target a bare
   square, which is the "+" cell at the end of the additional-photos grid.
-- `capture` hints the rear camera on mobile; desktop browsers ignore it.
+- `capture` hints the rear camera on mobile, but *replaces* the picker rather
+  than pre-selecting a tab in it, so the gallery becomes unreachable. No
+  screen sets it; see ADR-004.
 - `minHeight`, `iconSize` and `mb` size the target; `disabled` greys it out.
 - `maxFiles` bounds a multi-photo zone.
 

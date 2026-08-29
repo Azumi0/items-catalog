@@ -364,5 +364,7 @@ SQLite runs in WAL mode (`journal_mode = WAL`), so a live copy can capture a par
 - [docs/adr/ADR-001-item-catalog-pwa-architecture.md](docs/adr/ADR-001-item-catalog-pwa-architecture.md) – Architecture decision record covering data model, security, and Synology deployment.
 - [docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md](docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md) – Lightbox zoom and pan behaviour, and why pinch-to-zoom is component-scoped rather than global.
 - [docs/adr/ADR-003-page-level-authorization-invariant.md](docs/adr/ADR-003-page-level-authorization-invariant.md) – Why `requireAuthPage()` is the real access guard and middleware is not a security boundary.
+- [docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md](docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md) – The closed list of places where the mobile-first redesign deliberately departs from its design handoff, and why each one is not a bug.
+- [docs/design_handoff_mobile_first/README.md](docs/design_handoff_mobile_first/README.md) – The mobile-first design handoff: screen specifications, prototypes and screenshots (Polish).
 - [AGENTS.md](AGENTS.md) – Rules agents must follow when working in this repository.
 - [docs/initial-prompt.md](docs/initial-prompt.md) – The originating specification (Polish, archived).

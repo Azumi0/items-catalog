@@ -117,7 +117,10 @@ export function CategoryForm({ category }: CategoryFormProps) {
                   aria-pressed={isSelected}
                   title={categoryIconLabel(iconName)}
                   // Pressing the selected icon clears it — the field is optional
-                  // and there is nowhere else to say "actually, no icon".
+                  // and there is nowhere else to say "actually, no icon". Without
+                  // this, step 3 of the fallback rule (the newest item's photo)
+                  // is unreachable for any category that ever had an icon.
+                  // See ADR-004 §3.5.
                   onClick={() => setIcon(isSelected ? null : iconName)}
                   disabled={pending}
                   style={{

@@ -42,8 +42,12 @@ export interface ImageDropzoneProps {
   maxFiles?: number;
   mb?: string;
   /**
-   * Hints the browser to open the rear camera instead of the file picker.
+   * Hints the browser to open the rear camera *instead of* the file picker.
    * Mobile only — desktop browsers ignore it.
+   *
+   * No call site sets this today: on a phone it replaces the picker rather
+   * than pre-selecting a tab in it, so the gallery becomes unreachable. Only
+   * turn it on for a zone whose copy promises the camera alone. See ADR-004.
    */
   capture?: boolean;
   /**
