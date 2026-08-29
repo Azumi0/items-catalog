@@ -4,6 +4,13 @@
 
 Use `pnpm` exclusively for all package operations and scripts (`pnpm install`, `pnpm <script>`, `pnpm test`, `pnpm dlx`). Never use `npm`, `yarn`, or `bun`.
 
+### Dependency and Node upgrades
+
+Bumping Node, pnpm, or any dependency — and adapting the codebase to a major —
+follows a fixed procedure. Version strictness differs per surface, upgrades land
+one per commit, and the baseline suite is written before anything moves. See
+`docs/agents/dependency-upgrades.md`.
+
 ### Authorization invariant
 
 **Every `page.tsx` rendering protected content MUST call `await requireAuthPage()` first**, and **every Server Action MUST call `requireAuth()`**.
