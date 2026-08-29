@@ -10,7 +10,9 @@ import { useState, useRef, useEffect, useCallback } from 'react';
  * additional ones.
  *
  * The ref mirrors the current URLs so the unmount cleanup can read them without
- * re-subscribing the effect on every change.
+ * re-subscribing the effect on every change. The mirror is written in an effect
+ * rather than during render: a render-phase ref write is a side effect during
+ * render, which React (and react-hooks/refs) rejects.
  */
 
 /** A single selected image and its preview URL — the main photo of an item. */
@@ -19,7 +21,9 @@ export function useSingleImagePreview() {
   const [preview, setPreview] = useState<string | null>(null);
 
   const previewRef = useRef<string | null>(null);
-  previewRef.current = preview;
+  useEffect(() => {
+    previewRef.current = preview;
+  }, [preview]);
 
   useEffect(() => {
     return () => {
@@ -57,7 +61,9 @@ export function useMultiImagePreviews() {
   const [previews, setPreviews] = useState<string[]>([]);
 
   const previewsRef = useRef<string[]>([]);
-  previewsRef.current = previews;
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
 
   useEffect(() => {
     return () => {

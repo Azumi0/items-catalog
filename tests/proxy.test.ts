@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { middleware } from '@/middleware';
+import { proxy } from '@/proxy';
 import { NextRequest } from 'next/server';
 
-describe('Next.js Route Middleware Seam', () => {
+describe('Next.js Route Proxy Seam', () => {
   it('allows public routes without session cookie', () => {
     const publicUrls = [
       'http://localhost:3000/login',
@@ -15,7 +15,7 @@ describe('Next.js Route Middleware Seam', () => {
 
     for (const url of publicUrls) {
       const req = new NextRequest(url);
-      const res = middleware(req);
+      const res = proxy(req);
       expect(res.headers.get('location')).toBeNull();
     }
   });
@@ -32,7 +32,7 @@ describe('Next.js Route Middleware Seam', () => {
 
     for (const url of protectedUrls) {
       const req = new NextRequest(url);
-      const res = middleware(req);
+      const res = proxy(req);
       expect(res.headers.get('location')).toBe('http://localhost:3000/login');
     }
   });
@@ -44,7 +44,7 @@ describe('Next.js Route Middleware Seam', () => {
       },
     });
 
-    const res = middleware(req);
+    const res = proxy(req);
     expect(res.headers.get('location')).toBeNull();
   });
 });

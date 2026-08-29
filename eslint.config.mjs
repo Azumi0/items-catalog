@@ -1,10 +1,11 @@
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
-
-const compat = new FlatCompat({
-  baseDirectory: dirname(fileURLToPath(import.meta.url)),
-});
+// eslint-config-next 16 publishes real flat configs, so they are spread
+// straight in. The @eslint/eslintrc FlatCompat shim that used to bridge the
+// old eslintrc format cannot consume them and has been dropped.
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
+// eslint-config-next 16 no longer registers eslint-plugin-import for us, and
+// import/first below is a rule this repo relies on, so it is declared here.
+import importPlugin from 'eslint-plugin-import';
 
 const config = [
   {
@@ -23,9 +24,11 @@ const config = [
     ],
   },
 
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
 
   {
+    plugins: { import: importPlugin },
     rules: {
       // Imports belong at the top of the module. src/lib/session.ts had two
       // sitting mid-file, which hid a cycle risk against the users service.

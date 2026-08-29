@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const PUBLIC_PATHS = ['/login', '/setup', '/manifest.json', '/favicon.ico'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow static files, api routes, icons, and explicit public paths

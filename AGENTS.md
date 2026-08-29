@@ -17,7 +17,7 @@ one per commit, and the baseline suite is written before anything moves. See
 
 The only exceptions are `/login`, `/setup`, and the auth actions that back them.
 
-`src/middleware.ts` is not a security boundary. It only checks that a session cookie is *present* — it never decrypts or validates one, and it cannot query the database because the Edge runtime cannot load `better-sqlite3`. A page that omits `requireAuthPage()` is therefore effectively public: middleware waves through any request carrying any cookie value.
+`src/proxy.ts` (Next 16's rename of `middleware.ts`) is not a security boundary. It only checks that a session cookie is *present* — it never decrypts or validates one, and it cannot query the database because the Edge runtime cannot load `better-sqlite3`. A page that omits `requireAuthPage()` is therefore effectively public: the proxy waves through any request carrying any cookie value.
 
 Nothing enforces this mechanically. See `docs/adr/ADR-003-page-level-authorization-invariant.md`.
 

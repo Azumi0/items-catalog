@@ -1,3 +1,12 @@
+'use client';
+
+// Client component because of `component={Link}` below: React 19.2, as shipped
+// with Next 16, refuses to pass a function across the server/client boundary,
+// and Mantine's Card is itself a client component. Rendered from a server
+// component this threw "Functions cannot be passed directly to Client
+// Components" at request time — the catalog would not load at all once it had
+// a category to show.
+
 import { Box, Card, Text } from '@mantine/core';
 import Link from 'next/link';
 import type { CategoryWithCount } from '@/lib/services/categories';
