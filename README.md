@@ -190,6 +190,9 @@ All scripts are executed via `pnpm`:
 | `pnpm start` | Runs the compiled Next.js production server |
 | `pnpm test` | Runs the test suite once via Vitest |
 | `pnpm test:watch` | Runs Vitest in watch mode |
+| `pnpm test:e2e` | Runs the Playwright end-to-end suite against a production build |
+| `pnpm test:e2e:ui` | Opens the Playwright UI runner |
+| `pnpm test:all` | Runs typecheck, lint, unit tests and the e2e suite |
 | `pnpm lint` | Runs ESLint across the project |
 | `pnpm lint:fix` | Runs ESLint and applies fixable changes |
 | `pnpm typecheck` | Validates TypeScript types (`tsc --noEmit`) |
