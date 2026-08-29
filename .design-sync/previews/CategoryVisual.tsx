@@ -1,4 +1,4 @@
-import { CategoriesManager } from 'home-item-catalog';
+import { CategoryVisual } from 'home-item-catalog';
 
 const created = new Date("2026-01-12T09:15:00Z");
 const now = new Date("2026-03-14T10:20:00Z");
@@ -21,8 +21,18 @@ const categories = [
   cat("c-6", "Sport", null, null, 0, null),
 ];
 
-/** Every category as a card: visual, name, meta, edit and delete. */
-export const Categories = () => <CategoriesManager initialCategories={categories} />;
+const Row = ({ variant }: { variant: 'tile' | 'thumb' }) => (
+  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', width: variant === 'tile' ? 640 : undefined }}>
+    {[categories[1], categories[0], categories[2], categories[5]].map((c) => (
+      <div key={c.id} style={{ width: variant === 'tile' ? 150 : 52 }}>
+        <CategoryVisual category={c} variant={variant} />
+      </div>
+    ))}
+  </div>
+);
 
-/** The empty state, before the first category is created. */
-export const NoCategories = () => <CategoriesManager initialCategories={[]} />;
+/** Tile size — the square media area of a catalog tile. */
+export const Tile = () => <Row variant="tile" />;
+
+/** Thumb size — the 52px square in a management card. */
+export const Thumb = () => <Row variant="thumb" />;

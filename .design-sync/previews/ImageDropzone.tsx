@@ -2,40 +2,41 @@ import { ImageDropzone } from 'home-item-catalog';
 
 const noop = () => {};
 
-/** The main-photo zone as NewItemForm shows it. */
+/** The main-photo zone as ItemForm shows it — the camera glyph, 180px tall. */
 export const MainPhoto = () => (
   <ImageDropzone
     onDrop={noop}
-    title="Przeciągnij zdjęcie główne lub kliknij, aby wybrać plik"
-    hint="Obsługiwane formaty: PNG, JPEG, WebP, GIF, HEIC"
+    idleIcon="camera"
+    capture
+    title="Zrób zdjęcie lub wybierz z galerii"
+    hint="JPG, PNG — maks. 10 MB"
   />
 );
 
-/** The add-more zone, which uses the plus glyph instead of the photo one. */
-export const AdditionalPhotos = () => (
+/** The category picture zone: a caption, no title, 140px tall. */
+export const CategoryPhoto = () => (
   <ImageDropzone
     onDrop={noop}
-    idleIcon="plus"
-    title="Dodaj zdjęcia dodatkowe (przeciągnij lub kliknij)"
-    hint="Możesz wybrać wiele plików jednocześnie"
+    idleIcon="photo"
+    iconSize={28}
+    minHeight={140}
+    hint="Zdjęcie ma pierwszeństwo przed ikoną"
   />
 );
 
-/** Compact mode: tighter spacing and smaller copy, used by the edit form. */
-export const Compact = () => (
-  <ImageDropzone
-    onDrop={noop}
-    compact
-    title="Podmień zdjęcie główne (przeciągnij lub kliknij)"
-    hint="Obsługiwane formaty: PNG, JPEG, WebP, GIF, HEIC"
-  />
+/** The bare "+" square that sits in the additional-photos grid. */
+export const AddTile = () => (
+  <div style={{ width: 88 }}>
+    <ImageDropzone onDrop={noop} idleIcon="plus" iconSize={22} variant="tile" />
+  </div>
 );
 
-/** Disabled while an upload is in flight. */
+/** Disabled while a save is in flight. */
 export const Disabled = () => (
   <ImageDropzone
     onDrop={noop}
     disabled
+    idleIcon="camera"
     title="Trwa zapisywanie przedmiotu…"
     hint="Dodawanie zdjęć będzie możliwe po zapisaniu"
   />
