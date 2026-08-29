@@ -14,7 +14,14 @@ export default async function NewItemPage() {
   const categories = await getCategories();
 
   return (
-    <AppLayout user={user}>
+    <AppLayout
+      user={user}
+      title="Nowy przedmiot"
+      subtitle="Wybierz kategorię"
+      backHref="/"
+      tab="catalog"
+      chrome={false}
+    >
       <Container size="md">
         <Breadcrumbs mb="md">
           <Anchor component={Link} href="/" size="sm">

@@ -27,7 +27,14 @@ export default async function EditItemPage({
   }
 
   return (
-    <AppLayout user={user}>
+    <AppLayout
+      user={user}
+      title="Edytuj przedmiot"
+      subtitle={item.categoryName}
+      backHref={`/items/${item.id}`}
+      tab="catalog"
+      chrome={false}
+    >
       <Container size="md">
         <Breadcrumbs mb="md">
           <Anchor component={Link} href="/" size="sm">

@@ -15,7 +15,12 @@ export default async function HomePage() {
   ]);
 
   return (
-    <AppLayout user={user}>
+    <AppLayout
+      user={user}
+      title="Katalog"
+      subtitle="Wybierz kategorię"
+      tab="catalog"
+    >
       <ItemsCatalog initialCategories={categories} initialItems={items} />
     </AppLayout>
   );
