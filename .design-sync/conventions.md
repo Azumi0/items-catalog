@@ -1,6 +1,6 @@
 # Building with this design system
 
-This is **Mantine 7** wearing the Katalog theme, plus the twenty screen and
+This is **Mantine 9** wearing the Katalog theme, plus the twenty screen and
 control components of the Home Item Catalog app. `window.HomeItemCatalog`
 carries all of it — every `@mantine/core` component and hook,
 `@mantine/notifications`, `@mantine/dropzone`, every `@tabler/icons-react`
@@ -75,9 +75,9 @@ and avatars.
 
 ## Where the truth lives
 
-`_ds/<folder>/styles.css` and its imports are the full compiled stylesheet
-(Mantine core, notifications and dropzone) — read it before inventing a colour
-or a scale. Per-component API and examples are in
+`styles.css` at the project root and its imports are the full compiled
+stylesheet (Mantine core, notifications and dropzone) — read it before
+inventing a colour or a scale. Per-component API and examples are in
 `components/<group>/<Name>/<Name>.prompt.md` and `<Name>.d.ts`.
 
 ## Building a page
@@ -109,10 +109,10 @@ All nine existing pages are previewed on `AppLayout` as `HomePage`,
   renaming or deleting shows its notification and closes its modal but persists
   nothing. Design around the optimistic result, not around failure states.
 - **Photos do not resolve.** Image props take stored filenames, never URLs, and
-  the app's image route does not exist here. `ItemsCatalog` and
-  `ItemDetailView` degrade to their own "Brak zdjęcia" placeholder; the
-  lightbox and the edit form show alt text. That is the real fallback, not a
-  bug to work around.
+  the app's image route does not exist here. `CategoryTiles`,
+  `CategoryItemsList` and `ItemDetailView` degrade to their own "Brak zdjęcia"
+  placeholder; the lightbox and the item form show alt text. That is the real
+  fallback, not a bug to work around.
 
 ## Copy
 
