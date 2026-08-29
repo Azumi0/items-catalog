@@ -10,6 +10,11 @@ tmp/
 tsconfig.tsbuildinfo
 *.tar
 
+# playwright
+test-results/
+playwright-report/
+.playwright/
+
 # design-sync (staged converter, build output, machine state)
 .ds-sync/
 ds-bundle/
