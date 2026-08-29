@@ -11,7 +11,14 @@ import { AUTH_FILE, E2E_DATA_DIR } from './e2e/constants';
  * wipe below and leave the first-run flow with an account already in place.
  */
 const PORT = 3100;
-const BASE_URL = `http://localhost:${PORT}`;
+
+/**
+ * Point the suite at an already-running server instead of building one — set
+ * it to a running container to check the image actually boots and serves,
+ * which `docker build` alone does not prove.
+ */
+const EXTERNAL_URL = process.env.E2E_BASE_URL;
+const BASE_URL = EXTERNAL_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
@@ -46,7 +53,7 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
+  webServer: EXTERNAL_URL ? undefined : {
     // The wipe belongs in the server command: it then runs exactly once per
     // run, immediately before the server that reads the directory boots.
     //
