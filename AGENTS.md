@@ -42,7 +42,14 @@ dropzone, the login screen's absent mode-switch link, the category picture
 files deleted on update and delete, and `CategoryWithCount.newestItemImage`,
 which the handoff calls `firstItemImage`.
 
-**Before "fixing" a mismatch between the UI and that handoff, read
-`docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md`.** Each entry is a
+The category form's icon field comes from a second handoff,
+`docs/design_handoff_icon_picker/`, which six places deliberately differ from —
+among them the icon grid's column count, which adapts to the viewport instead
+of staying at eight, and the icon library, which is code-split on the render
+path and not only in the modal.
+
+**Before "fixing" a mismatch between the UI and either handoff, read
+`docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md` and
+`docs/adr/ADR-005-odstepstwa-od-handoffu-icon-picker.md`.** Each entry is a
 recorded decision with its reasoning; several of them undo a real defect that
 literal compliance would reintroduce.

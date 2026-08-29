@@ -3,17 +3,20 @@ import { runMigrations } from '@/db/migrate';
 import { closeDb, getDb } from '@/db';
 import {
   getCategories,
+  getCategory,
   createCategory,
   updateCategory,
   deleteCategory,
 } from '@/lib/services/categories';
+import { categoryVisual } from '@/lib/categoryVisual';
+import { categories, items } from '@/db/schema';
 import { setupFirstUser } from '@/lib/services/users';
 import { saveImage, getImagePath } from '@/lib/storage';
-import { items } from '@/db/schema';
 import fs from 'fs';
 import path from 'path';
 import { testTmpDir } from './helpers/tmpdir';
 import sharp from 'sharp';
+import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 
 const TEST_DIR = testTmpDir('test-categories');
@@ -135,6 +138,65 @@ describe('Categories Management Seam', () => {
     const updated = await updateCategory(cat.id, 'Ksiazki', { icon: null });
 
     expect(updated.icon).toBeNull();
+  });
+
+  it('accepts any icon the installed Tabler library has', async () => {
+    const created = await createCategory('Rowery', { icon: 'IconBike' });
+
+    expect(created.icon).toBe('IconBike');
+  });
+
+  it('refuses an icon name the library does not have', async () => {
+    await expect(
+      createCategory('Zmyslona', { icon: 'IconNotARealTablerIcon' })
+    ).rejects.toThrow(/ikon/i);
+
+    await expect(
+      updateCategory(
+        (await createCategory('Realna', { icon: 'IconBike' })).id,
+        'Realna',
+        { icon: 'IconNotARealTablerIcon' }
+      )
+    ).rejects.toThrow(/ikon/i);
+  });
+
+  it('refuses an icon name that is not shaped like one at all', async () => {
+    for (const icon of ['../../etc/passwd', '<script>', 'bike', 'Icon']) {
+      await expect(createCategory(`Kat ${icon}`, { icon })).rejects.toThrow(/ikon/i);
+    }
+  });
+
+  // A name written by an older build stays in the column after the library
+  // drops or renames that icon — a routine `pnpm update` away. Reading it back
+  // as null is what lets the visual rule move on to the next step instead of
+  // rendering an empty square.
+  it('reads an icon the library no longer has as no icon at all', async () => {
+    const user = await setupFirstUser('admin', 'admin123');
+    const cat = await createCategory('Retro', { icon: 'IconBike' });
+
+    const db = getDb();
+    await db
+      .update(categories)
+      .set({ icon: 'IconRetiredInVersion4' })
+      .where(eq(categories.id, cat.id));
+
+    expect((await getCategory(cat.id))?.icon).toBeNull();
+
+    await db.insert(items).values({
+      id: crypto.randomUUID(),
+      categoryId: cat.id,
+      description: 'stary',
+      mainImage: 'stary.jpg',
+      additionalImages: [],
+      createdById: user.id,
+      createdByName: user.username,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const [row] = await getCategories();
+    expect(row.icon).toBeNull();
+    expect(categoryVisual(row)).toEqual({ kind: 'derived', value: 'stary.jpg' });
   });
 
   it('deletes the replaced category image from disk', async () => {

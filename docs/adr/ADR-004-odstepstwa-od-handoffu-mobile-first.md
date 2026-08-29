@@ -175,6 +175,16 @@ Ponowne kliknięcie wybranej ikony ustawia więc `icon` na `null`
 (`src/components/CategoryForm.tsx`). To nie jest dodatkowa funkcja, tylko jedyna
 droga do stanu, którego wymaga specyfikacja.
 
+> **Nieaktualne od 2026-08-29 — potrzeba zaspokojona wprost przez specyfikację.**
+> Handoff `docs/design_handoff_icon_picker/` zastąpił siatkę ośmiu kafelków
+> przyciskiem podglądu i modalem z wyszukiwarką po całej bibliotece Tabler, i
+> **sam** przewiduje jawny sposób cofnięcia wyboru: link „Usuń (<Etykieta>)"
+> pod przyciskiem „Zmień ikonę" (`src/components/IconPickerField.tsx`).
+> Odznaczanie ponownym kliknięciem zniknęło razem z siatką — nie było już
+> czego klikać ponownie, a krok 3 reguły prezentacji pozostaje osiągalny.
+> Wpis zostaje w tym ADR, bo wyjaśnia, dlaczego pole „Ikona" w ogóle musi mieć
+> drogę powrotu do stanu pustego; sam mechanizm nie jest już odstępstwem.
+
 ### 3.6. Przycisk czyszczenia wyszukiwarki
 
 `README.md` §02 opisuje wyszukiwarkę bez przycisku czyszczenia. `ActionIcon`
