@@ -2,15 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ActionIcon,
-  Box,
-  Image,
-  Stack,
-  TextInput,
-  UnstyledButton,
-} from '@mantine/core';
-import { IconX } from '@tabler/icons-react';
+import { Stack, TextInput, UnstyledButton } from '@mantine/core';
 import { useActionRunner } from '@/hooks/useActionRunner';
 import {
   createCategoryAction,
@@ -21,12 +13,17 @@ import {
   categoryIconComponent,
   categoryIconLabel,
 } from '@/lib/categoryIcons';
-import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
+import { thumbUrl } from '@/lib/images';
 import { useSingleImagePreview } from '@/hooks/useImagePreviews';
 import { AutoGrid } from './AutoGrid';
-import { FieldBlock, TALL_INPUT_STYLES } from './FormField';
+import {
+  FieldBlock,
+  TALL_INPUT_STYLES,
+  selectableSurface,
+} from './FormField';
 import { FormActionBar } from './FormActionBar';
 import { ImageDropzone } from './ImageDropzone';
+import { RemovableImage } from './RemovableImage';
 
 interface CategoryFormProps {
   /** Absent when creating. */
@@ -128,17 +125,10 @@ export function CategoryForm({ category }: CategoryFormProps) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 'var(--mantine-radius-md)',
-                    border: `1px solid ${
-                      isSelected
-                        ? 'var(--mantine-color-teal-filled)'
-                        : 'var(--mantine-color-default-border)'
-                    }`,
-                    background: isSelected
-                      ? 'var(--mantine-color-teal-light)'
-                      : 'var(--mantine-color-body)',
-                    color: isSelected
-                      ? 'var(--mantine-color-teal-filled)'
-                      : 'var(--mantine-color-dimmed)',
+                    ...selectableSurface(
+                      isSelected,
+                      'var(--mantine-color-dimmed)'
+                    ),
                   }}
                 >
                   <Icon size={24} />
@@ -150,34 +140,17 @@ export function CategoryForm({ category }: CategoryFormProps) {
 
         <FieldBlock label="Zdjęcie kategorii">
           {previewSrc ? (
-            <Box pos="relative" w={140}>
-              <Image
-                src={previewSrc}
-                alt="Zdjęcie kategorii"
-                fallbackSrc={THUMB_PLACEHOLDER}
-                h={140}
-                w={140}
-                radius="md"
-                style={{ objectFit: 'cover' }}
-              />
-              <ActionIcon
-                color="red"
-                variant="filled"
-                size="sm"
-                pos="absolute"
-                top={6}
-                right={6}
-                onClick={() => {
-                  newImage.clear();
-                  setKeptImage(null);
-                }}
-                disabled={pending}
-                aria-label="Usuń zdjęcie kategorii"
-                title="Usuń zdjęcie kategorii"
-              >
-                <IconX size={14} />
-              </ActionIcon>
-            </Box>
+            <RemovableImage
+              src={previewSrc}
+              alt="Zdjęcie kategorii"
+              removeLabel="Usuń zdjęcie kategorii"
+              disabled={pending}
+              w={140}
+              onRemove={() => {
+                newImage.clear();
+                setKeptImage(null);
+              }}
+            />
           ) : (
             <ImageDropzone
               onDrop={newImage.select}

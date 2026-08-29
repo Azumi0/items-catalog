@@ -10,7 +10,7 @@ re-running the sync.
   converter runs in synth-entry mode over `src/components` (`[NO_DIST]` in the
   build log is expected, not a failure).
 - The design system is **Mantine 7 + `src/theme.ts`** (teal ramp,
-  `defaultRadius: 'md'`, system-ui stack) plus eighteen of the app's own
+  `defaultRadius: 'md'`, system-ui stack) plus twenty of the app's own
   components. `cfg.extraEntries` merges `@mantine/core`, `@mantine/hooks`,
   `@mantine/notifications`, `@mantine/dropzone`, `@tabler/icons-react` and the
   theme onto `window.HomeItemCatalog` — ~6,730 exports, ~6.5 MB bundle. Tabler

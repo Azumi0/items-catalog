@@ -30,6 +30,28 @@ export const AUTH_INPUT_STYLES = {
   input: { height: 52, fontSize: 16 },
 } as const;
 
+/**
+ * The teal-when-chosen surface shared by the category form's icon grid and
+ * the item form's category chips: same border, same fill, same text colour —
+ * they differ only in shape and in what they look like when idle.
+ */
+export function selectableSurface(
+  isSelected: boolean,
+  idleColor = 'var(--mantine-color-text)'
+) {
+  return {
+    border: `1px solid ${
+      isSelected
+        ? 'var(--mantine-color-teal-filled)'
+        : 'var(--mantine-color-default-border)'
+    }`,
+    background: isSelected
+      ? 'var(--mantine-color-teal-light)'
+      : 'var(--mantine-color-body)',
+    color: isSelected ? 'var(--mantine-color-teal-filled)' : idleColor,
+  };
+}
+
 interface FieldBlockProps {
   label: string;
   /** Dimmed 12px line between the label and the control. */

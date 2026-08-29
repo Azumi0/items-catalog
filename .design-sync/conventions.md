@@ -1,10 +1,10 @@
 # Building with this design system
 
-This is **Mantine 7** wearing the Katalog theme, plus the eighteen screen and
+This is **Mantine 7** wearing the Katalog theme, plus the twenty screen and
 control components of the Home Item Catalog app. `window.HomeItemCatalog`
 carries all of it — every `@mantine/core` component and hook,
 `@mantine/notifications`, `@mantine/dropzone`, every `@tabler/icons-react`
-icon, the app's `theme` object, and the eighteen components documented under
+icon, the app's `theme` object, and the twenty components documented under
 `components/`.
 
 So you are not limited to those cards: reach for `Container`, `Paper`,

@@ -7,10 +7,12 @@ import Link from 'next/link';
 import { useActionRunner } from '@/hooks/useActionRunner';
 import { deleteCategoryAction } from '@/app/actions/categories';
 import type { CategoryWithCount } from '@/lib/services/categories';
-import { itemCountLabel } from '@/lib/itemCount';
+import { itemCountLabel, itemCountInstrumental } from '@/lib/itemCount';
+import { formatDate } from '@/lib/formatDate';
 import { AutoGrid } from './AutoGrid';
 import { CategoryVisual } from './CategoryVisual';
 import { ConfirmSheet } from './ConfirmSheet';
+import { EmptyState } from './EmptyState';
 
 interface CategoriesManagerProps {
   initialCategories: CategoryWithCount[];
@@ -38,31 +40,13 @@ export function CategoriesManager({
   return (
     <>
       {initialCategories.length === 0 ? (
-        <Box
-          py={48}
-          px={24}
-          ta="center"
-          style={{
-            border: '1px solid var(--mantine-color-default-border)',
-            borderRadius: 'var(--mantine-radius-md)',
-          }}
-        >
-          <Text fw={700} mb={6}>
-            Brak kategorii
-          </Text>
-          <Text fz={14} c="dimmed">
-            Dodaj pierwszą kategorię przyciskiem „+”.
-          </Text>
-        </Box>
+        <EmptyState
+          title="Brak kategorii"
+          message="Dodaj pierwszą kategorię przyciskiem „+”."
+        />
       ) : (
         <AutoGrid min={320}>
-          {initialCategories.map((category) => {
-            const createdOn = new Date(category.createdAt).toLocaleDateString(
-              'pl-PL',
-              { day: '2-digit', month: '2-digit', year: 'numeric' }
-            );
-
-            return (
+          {initialCategories.map((category) => (
               <Paper
                 key={category.id}
                 component="article"
@@ -80,7 +64,7 @@ export function CategoriesManager({
                     </Text>
                     <Text fz={12} c="dimmed" mt={2}>
                       {itemCountLabel(category.itemCount)} · utworzono{' '}
-                      {createdOn}
+                      {formatDate(category.createdAt)}
                     </Text>
                   </Box>
 
@@ -113,8 +97,7 @@ export function CategoriesManager({
                   </Group>
                 </Group>
               </Paper>
-            );
-          })}
+          ))}
         </AutoGrid>
       )}
 
@@ -124,7 +107,7 @@ export function CategoriesManager({
         title="Usunąć kategorię?"
         message={
           deleting
-            ? `Kategoria „${deleting.name}” zniknie razem z ${itemCountLabel(
+            ? `Kategoria „${deleting.name}” zniknie razem z ${itemCountInstrumental(
                 deleting.itemCount
               )} i ich zdjęciami. Tej operacji nie da się cofnąć.`
             : ''

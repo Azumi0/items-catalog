@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useActionRunner } from '@/hooks/useActionRunner';
 import { deleteUserAction } from '@/app/actions/users';
 import type { User } from '@/db/schema';
+import { formatDate, monogram } from '@/lib/formatDate';
 import { AutoGrid } from './AutoGrid';
 import { ConfirmSheet } from './ConfirmSheet';
 
@@ -51,10 +52,6 @@ export function UsersManager({
             : isOnlyUser
               ? 'Nie można usunąć jedynego konta w systemie'
               : null;
-          const joinedOn = new Date(user.createdAt).toLocaleDateString(
-            'pl-PL',
-            { day: '2-digit', month: '2-digit', year: 'numeric' }
-          );
 
           return (
             <Paper
@@ -79,7 +76,7 @@ export function UsersManager({
                   }}
                 >
                   <Text fz={18} fw={700} c="dimmed">
-                    {user.username.slice(0, 1).toUpperCase()}
+                    {monogram(user.username)}
                   </Text>
                 </Box>
 
@@ -107,7 +104,7 @@ export function UsersManager({
                     )}
                   </Group>
                   <Text fz={12} c="dimmed" mt={2}>
-                    dołączył(a) {joinedOn}
+                    dołączył(a) {formatDate(user.createdAt)}
                   </Text>
                 </Box>
 

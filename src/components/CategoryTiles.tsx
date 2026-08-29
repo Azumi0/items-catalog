@@ -4,6 +4,7 @@ import type { CategoryWithCount } from '@/lib/services/categories';
 import { itemCountLabel } from '@/lib/itemCount';
 import { AutoGrid } from './AutoGrid';
 import { CategoryVisual } from './CategoryVisual';
+import { EmptyState } from './EmptyState';
 
 interface CategoryTilesProps {
   categories: CategoryWithCount[];
@@ -17,22 +18,10 @@ interface CategoryTilesProps {
 export function CategoryTiles({ categories }: CategoryTilesProps) {
   if (categories.length === 0) {
     return (
-      <Box
-        py={48}
-        px={24}
-        ta="center"
-        style={{
-          border: '1px solid var(--mantine-color-default-border)',
-          borderRadius: 'var(--mantine-radius-md)',
-        }}
-      >
-        <Text fw={700} mb={6}>
-          Brak kategorii
-        </Text>
-        <Text fz={14} c="dimmed">
-          Dodaj pierwszą kategorię przyciskiem „+”.
-        </Text>
-      </Box>
+      <EmptyState
+        title="Brak kategorii"
+        message="Dodaj pierwszą kategorię przyciskiem „+”."
+      />
     );
   }
 

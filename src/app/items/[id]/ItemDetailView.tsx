@@ -25,6 +25,7 @@ import {
   DETAIL_PLACEHOLDER,
   THUMB_PLACEHOLDER,
 } from '@/lib/images';
+import { formatDate } from '@/lib/formatDate';
 
 interface ItemDetailViewProps {
   item: ItemWithCategory;
@@ -39,11 +40,6 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
   const additionalImages = item.additionalImages || [];
   const allImages = [item.mainImage, ...additionalImages];
 
-  const createdOn = new Date(item.createdAt).toLocaleDateString('pl-PL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
 
   const handleDelete = async () => {
     await runDelete({
@@ -142,7 +138,7 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
               Data dodania
             </Text>
             <Text fz={13} fw={600}>
-              {createdOn}
+              {formatDate(item.createdAt)}
             </Text>
           </Group>
         </Stack>
@@ -190,7 +186,7 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
         onClose={() => setLightboxIndex(null)}
         images={allImages}
         initialIndex={lightboxIndex ?? 0}
-        title={item.description || item.categoryName}
+        title={item.description ?? ''}
       />
     </>
   );

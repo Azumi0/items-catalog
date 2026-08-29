@@ -5,7 +5,7 @@ const base = {
   icon: '',
   uploadedImage: null,
   removeImage: false,
-  forUpdate: true,
+  mode: 'update' as const,
 };
 
 describe('Category visual patch', () => {
@@ -34,7 +34,7 @@ describe('Category visual patch', () => {
 
   it('always writes the image on create, so a new row starts explicit', () => {
     expect(
-      categoryVisualPatch({ ...base, forUpdate: false }).mainImage
+      categoryVisualPatch({ ...base, mode: 'create' }).mainImage
     ).toBeNull();
   });
 
