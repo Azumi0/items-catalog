@@ -6,7 +6,7 @@ Self-hosted home inventory and item catalog progressive web application (PWA) de
 
 ## Features
 
-- **Mobile-first Progressive Web App (PWA):** One single-column design that reflows to desktop without breakpoints, built with Mantine UI v7, with Light and Dark mode support. Navigation is a floating bottom bar with a contextual "+" button; every touch target is at least 44px.
+- **Mobile-first Progressive Web App (PWA):** One single-column design that reflows to desktop without breakpoints, built with Mantine UI v9, with Light and Dark mode support. Navigation is a floating bottom bar with a contextual "+" button; every touch target is at least 44px.
 - **Two-screen catalog:** Category tiles are the entry screen; picking one opens that category's items, where search and sorting live. Each category shows its own picture or icon, falling back to its newest item's photo and then to a monogram.
 - **Item & Category Management:** Organize household items into categories, search instantly by description, and sort chronologically. Adding and editing happen on full screens with a sticky action bar; deletions confirm in a bottom sheet.
 - **Optimized Media Pipeline:** Upload original images with automatic WebP thumbnail generation using `sharp`, served through authenticated endpoints.
@@ -18,7 +18,7 @@ Self-hosted home inventory and item catalog progressive web application (PWA) de
 ## Tech Stack
 
 - **Framework:** [Next.js 16](https://nextjs.org/) (App Router, Standalone output)
-- **UI Library:** [Mantine UI v7](https://mantine.dev/) & [Tabler Icons](https://tabler.io/icons)
+- **UI Library:** [Mantine UI v9](https://mantine.dev/) & [Tabler Icons](https://tabler.io/icons)
 - **Database & ORM:** SQLite via [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) and [Drizzle ORM](https://orm.drizzle.team/)
 - **Image Processing:** [sharp](https://sharp.pixelplumbing.com/)
 - **Auth & Security:** [iron-session](https://github.com/vvo/iron-session) & [bcryptjs](https://github.com/dcodeIO/bcrypt.js)
