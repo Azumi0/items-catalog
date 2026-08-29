@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- @template name="Katalog — mobile-first" description="Mobile-first przebudowa: kafelki kategorii, katalog bez selecta kategorii, listy kart zamiast tabel, formularze pełnoekranowe." -->
+<helmet><!-- (w prototypie tu ładował się arkusz design systemu) --><style>body{margin:0;background:var(--mantine-color-body)}*{box-sizing:border-box}</style></helmet>
+<x-import component-from-global-scope="HomeItemCatalog.MantineProvider" theme="{{ theme }}" defaultColorScheme="light" hint-size="100%,100%">
+
+<sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+<dc-import name="AuthScreens" mode="{{ authMode }}" on-submit="{{ enterApp }}" on-switch="{{ switchAuth }}" hint-size="100%,700px"></dc-import>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;padding-bottom:104px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--mantine-color-text)">
+<header style="position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--mantine-color-body);border-bottom:1px solid var(--mantine-color-default-border);min-height:60px">
+<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+<sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goBack }}" aria-label="Wróć" style="flex:none;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:var(--mantine-radius-md);background:transparent;color:var(--mantine-color-text);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconChevronLeft" size="{{ 24 }}" hint-size="24px,24px"></x-import></button></sc-if>
+<div style="min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ headerTitle }}</div><div style="font-size:12px;color:var(--mantine-color-dimmed);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ headerSub }}</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:2px;flex:none">
+<span title="Zalogowany użytkownik" style="display:inline-flex;align-items:center;gap:6px;max-width:96px;padding:6px 10px;margin-right:2px;border-radius:999px;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled);font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ userName }}</span>
+<sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><button onClick="{{ toggleTheme }}" aria-label="Włącz motyw ciemny" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:var(--mantine-radius-md);background:transparent;color:var(--mantine-color-dimmed);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconMoon" size="{{ 21 }}" hint-size="21px,21px"></x-import></button></sc-if>
+<sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><button onClick="{{ toggleTheme }}" aria-label="Włącz motyw jasny" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:var(--mantine-radius-md);background:transparent;color:var(--mantine-color-dimmed);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconSun" size="{{ 21 }}" hint-size="21px,21px"></x-import></button></sc-if>
+<button onClick="{{ logout }}" aria-label="Wyloguj się" style="display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:var(--mantine-radius-md);background:transparent;color:var(--mantine-color-red-filled);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconLogout" size="{{ 21 }}" hint-size="21px,21px"></x-import></button>
+</div>
+</header>
+<main style="max-width:1120px;margin:0 auto;padding:16px">
+
+<sc-if value="{{ isTiles }}" hint-placeholder-val="{{ true }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+<sc-for list="{{ tiles }}" as="cat" hint-placeholder-count="6">
+<button onClick="{{ cat.open }}" style="display:block;width:100%;padding:0;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-body);overflow:hidden;text-align:left;cursor:pointer;box-shadow:var(--mantine-shadow-xs)">
+<sc-if value="{{ cat.hasIcon }}" hint-placeholder-val="{{ false }}"><div style="width:100%;aspect-ratio:1 / 1;display:flex;align-items:center;justify-content:center;background:var(--mantine-color-teal-light)"><span style="display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:var(--mantine-color-body);color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="{{ cat.iconGlobal }}" size="{{ 32 }}" hint-size="32px,32px"></x-import></span></div></sc-if>
+<sc-if value="{{ cat.hasPhoto }}" hint-placeholder-val="{{ false }}"><div style="width:100%;aspect-ratio:1 / 1;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(45deg,var(--mantine-color-gray-1) 0 8px,var(--mantine-color-gray-2) 8px 16px)"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--mantine-color-dimmed);background:var(--mantine-color-body);padding:4px 8px;border-radius:var(--mantine-radius-sm)">{{ cat.photoLabel }}</span></div></sc-if>
+<sc-if value="{{ cat.isBlank }}" hint-placeholder-val="{{ false }}"><div style="width:100%;aspect-ratio:1 / 1;display:flex;align-items:center;justify-content:center;background:var(--mantine-color-gray-light)"><span style="font-size:34px;font-weight:700;color:var(--mantine-color-dimmed)">{{ cat.monogram }}</span></div></sc-if>
+<div style="padding:10px 12px 12px">
+<div style="font-weight:600;font-size:15px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ cat.name }}</div>
+<div style="margin-top:4px;font-size:12px;color:var(--mantine-color-dimmed)">{{ cat.countLabel }}</div>
+<sc-if value="{{ showSourceHints }}" hint-placeholder-val="{{ true }}"><div style="margin-top:8px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:.02em;color:var(--mantine-color-dimmed)">{{ cat.sourceLabel }}</div></sc-if>
+</div>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isItems }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+<div style="flex:1 1 220px;display:flex;align-items:center;gap:8px;height:48px;padding:0 12px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-body)">
+<span style="display:flex;color:var(--mantine-color-dimmed)"><x-import component-from-global-scope="HomeItemCatalog.IconSearch" size="{{ 18 }}" hint-size="18px,18px"></x-import></span>
+<input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Szukaj po opisie…" style="flex:1;min-width:0;height:100%;border:0;outline:none;background:transparent;font-size:16px;color:inherit" />
+</div>
+<div style="display:flex;flex:0 0 auto;padding:4px;gap:4px;border-radius:var(--mantine-radius-md);background:var(--mantine-color-gray-light)">
+<sc-if value="{{ sortIsNewest }}" hint-placeholder-val="{{ true }}"><button style="height:40px;padding:0 14px;border:0;border-radius:var(--mantine-radius-sm);font-family:inherit;font-size:14px;font-weight:600;cursor:default;background:var(--mantine-color-body);color:var(--mantine-color-text);box-shadow:var(--mantine-shadow-xs)">Najnowsze</button></sc-if>
+<sc-if value="{{ sortIsOldest }}" hint-placeholder-val="{{ false }}"><button onClick="{{ sortNewest }}" style="height:40px;padding:0 14px;border:0;border-radius:var(--mantine-radius-sm);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--mantine-color-dimmed)">Najnowsze</button></sc-if>
+<sc-if value="{{ sortIsNewest }}" hint-placeholder-val="{{ true }}"><button onClick="{{ sortOldest }}" style="height:40px;padding:0 14px;border:0;border-radius:var(--mantine-radius-sm);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--mantine-color-dimmed)">Najstarsze</button></sc-if>
+<sc-if value="{{ sortIsOldest }}" hint-placeholder-val="{{ false }}"><button style="height:40px;padding:0 14px;border:0;border-radius:var(--mantine-radius-sm);font-family:inherit;font-size:14px;font-weight:600;cursor:default;background:var(--mantine-color-body);color:var(--mantine-color-text);box-shadow:var(--mantine-shadow-xs)">Najstarsze</button></sc-if>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">
+<sc-for list="{{ visibleItems }}" as="it" hint-placeholder-count="4">
+<button onClick="{{ it.open }}" style="display:flex;gap:12px;padding:10px;text-align:left;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-body);box-shadow:var(--mantine-shadow-xs);cursor:pointer;font-family:inherit;color:inherit">
+<div style="flex:none;width:88px;height:88px;border-radius:var(--mantine-radius-sm);display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;background:repeating-linear-gradient(45deg,var(--mantine-color-gray-1) 0 8px,var(--mantine-color-gray-2) 8px 16px)"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--mantine-color-dimmed)">{{ it.image }}</span></div>
+<div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:14px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ it.description }}</div>
+<div style="margin-top:auto;display:flex;gap:10px;font-size:12px;color:var(--mantine-color-dimmed)"><span>{{ it.author }}</span><span>{{ it.date }}</span></div>
+</div>
+</button>
+</sc-for>
+</div>
+<sc-if value="{{ noItems }}" hint-placeholder-val="{{ false }}"><div style="padding:48px 24px;text-align:center;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md)"><div style="font-weight:700;margin-bottom:6px">Brak przedmiotów</div><div style="font-size:14px;color:var(--mantine-color-dimmed)">Nie znaleziono przedmiotów spełniających kryteria.</div></div></sc-if>
+</sc-if>
+
+<sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+<button onClick="{{ openLightbox }}" aria-label="Powiększ zdjęcie" style="width:100%;aspect-ratio:4 / 3;display:flex;align-items:center;justify-content:center;padding:0;border:0;cursor:zoom-in;border-radius:var(--mantine-radius-md);background:repeating-linear-gradient(45deg,var(--mantine-color-gray-1) 0 10px,var(--mantine-color-gray-2) 10px 20px)"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--mantine-color-dimmed);background:var(--mantine-color-body);padding:6px 10px;border-radius:var(--mantine-radius-sm)">{{ detailImage }}</span></button>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px">
+<sc-for list="{{ detailThumbs }}" as="t" hint-placeholder-count="3">
+<button onClick="{{ t.open }}" aria-label="Powiększ zdjęcie" style="aspect-ratio:1 / 1;display:flex;align-items:center;justify-content:center;padding:4px;text-align:center;border:0;cursor:zoom-in;border-radius:var(--mantine-radius-sm);background:repeating-linear-gradient(45deg,var(--mantine-color-gray-1) 0 8px,var(--mantine-color-gray-2) 8px 16px)"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:9px;color:var(--mantine-color-dimmed)">{{ t.label }}</span></button>
+</sc-for>
+</div>
+<x-import component-from-global-scope="HomeItemCatalog.ImageLightboxModal" opened="{{ lightboxOpened }}" onClose="{{ closeLightbox }}" images="{{ detailImages }}" initialIndex="{{ lightboxIndex }}" title="{{ detailDescription }}" hint-size="0px,0px"></x-import>
+<span style="align-self:flex-start;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)">{{ detailCategory }}</span>
+<div style="font-size:16px;line-height:1.5;text-wrap:pretty">{{ detailDescription }}</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md)">
+<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--mantine-color-dimmed)">Dodał(a)</span><span style="font-weight:600">{{ detailAuthor }}</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><span style="color:var(--mantine-color-dimmed)">Data dodania</span><span style="font-weight:600">{{ detailDate }}</span></div>
+</div>
+<div style="display:flex;gap:8px">
+<button onClick="{{ editItem }}" style="flex:2;min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--mantine-color-teal-filled);color:var(--mantine-color-white)"><x-import component-from-global-scope="HomeItemCatalog.IconEdit" size="{{ 20 }}" hint-size="20px,20px"></x-import><span>Edytuj</span></button>
+<button onClick="{{ askDeleteItem }}" aria-label="Usuń przedmiot" style="flex:none;width:52px;min-height:52px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-md);cursor:pointer;background:var(--mantine-color-red-light);color:var(--mantine-color-red-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconTrash" size="{{ 20 }}" hint-size="20px,20px"></x-import></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCategoriesAdmin }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
+<sc-for list="{{ tiles }}" as="cat" hint-placeholder-count="4">
+<article style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-body);box-shadow:var(--mantine-shadow-xs)">
+<div style="flex:none;width:52px;height:52px;border-radius:var(--mantine-radius-md);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--mantine-color-teal-filled);background:var(--mantine-color-teal-light)">{{ cat.monogram }}</div>
+<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ cat.name }}</div><div style="margin-top:2px;font-size:12px;color:var(--mantine-color-dimmed)">{{ cat.metaLabel }}</div></div>
+<div style="display:flex;gap:4px;flex:none">
+<button onClick="{{ cat.edit }}" aria-label="Edytuj" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-md);background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconEdit" size="{{ 20 }}" hint-size="20px,20px"></x-import></button>
+<button onClick="{{ cat.remove }}" aria-label="Usuń" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-md);background:var(--mantine-color-red-light);color:var(--mantine-color-red-filled);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconTrash" size="{{ 20 }}" hint-size="20px,20px"></x-import></button>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isUsers }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
+<sc-for list="{{ users }}" as="u" hint-placeholder-count="3">
+<article style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-body);box-shadow:var(--mantine-shadow-xs)">
+<div style="flex:none;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;background:var(--mantine-color-gray-light);color:var(--mantine-color-dimmed)">{{ u.monogram }}</div>
+<div style="flex:1;min-width:0">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.username }}</span><sc-if value="{{ u.isCurrent }}" hint-placeholder-val="{{ false }}"><span style="flex:none;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)">To Ty</span></sc-if></div>
+<div style="margin-top:2px;font-size:12px;color:var(--mantine-color-dimmed)">{{ u.metaLabel }}</div>
+</div>
+<div style="display:flex;gap:4px;flex:none">
+<button onClick="{{ u.changePassword }}" aria-label="Zmień hasło" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-md);background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconKey" size="{{ 20 }}" hint-size="20px,20px"></x-import></button>
+<sc-if value="{{ u.canDelete }}" hint-placeholder-val="{{ true }}"><button onClick="{{ u.remove }}" aria-label="Usuń konto" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-md);cursor:pointer;background:var(--mantine-color-red-light);color:var(--mantine-color-red-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconTrash" size="{{ 20 }}" hint-size="20px,20px"></x-import></button></sc-if>
+<sc-if value="{{ u.isCurrent }}" hint-placeholder-val="{{ false }}"><button aria-label="Nie możesz usunąć samego siebie" disabled="{{ true }}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;border-radius:var(--mantine-radius-md);cursor:not-allowed;background:var(--mantine-color-gray-light);color:var(--mantine-color-dimmed)"><x-import component-from-global-scope="HomeItemCatalog.IconTrash" size="{{ 20 }}" hint-size="20px,20px"></x-import></button></sc-if>
+</div>
+</article>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isForm }}" hint-placeholder-val="{{ false }}">
+<dc-import name="Forms" kind="{{ formKind }}" save-label="{{ formSave }}" subject="{{ formSubject }}" initial-name="{{ formName }}" on-cancel="{{ closeForm }}" on-save="{{ closeForm }}" hint-size="100%,600px"></dc-import>
+</sc-if>
+
+</main>
+
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+<div style="position:fixed;left:12px;right:12px;bottom:12px;z-index:30;max-width:600px;margin:0 auto;display:flex;align-items:center;gap:10px">
+<nav style="flex:1;min-width:0;display:flex;align-items:center;justify-content:space-around;gap:4px;padding:6px;border:1px solid var(--mantine-color-default-border);border-radius:20px;background:var(--mantine-color-body);box-shadow:var(--mantine-shadow-md)">
+<sc-if value="{{ navCatalogActive }}" hint-placeholder-val="{{ true }}"><button style="flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:14px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconHome" size="{{ 22 }}" hint-size="22px,22px"></x-import><sc-if value="{{ showNavLabels }}" hint-placeholder-val="{{ true }}"><span>Katalog</span></sc-if></button></sc-if>
+<sc-if value="{{ navCatalogIdle }}" hint-placeholder-val="{{ false }}"><button onClick="{{ goCatalog }}" style="flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:14px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:transparent;color:var(--mantine-color-dimmed)"><x-import component-from-global-scope="HomeItemCatalog.IconHome" size="{{ 22 }}" hint-size="22px,22px"></x-import><sc-if value="{{ showNavLabels }}" hint-placeholder-val="{{ true }}"><span>Katalog</span></sc-if></button></sc-if>
+<sc-if value="{{ navCategoriesActive }}" hint-placeholder-val="{{ false }}"><button style="flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:14px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconCategory" size="{{ 22 }}" hint-size="22px,22px"></x-import><sc-if value="{{ showNavLabels }}" hint-placeholder-val="{{ true }}"><span>Kategorie</span></sc-if></button></sc-if>
+<sc-if value="{{ navCategoriesIdle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goCategories }}" style="flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:14px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:transparent;color:var(--mantine-color-dimmed)"><x-import component-from-global-scope="HomeItemCatalog.IconCategory" size="{{ 22 }}" hint-size="22px,22px"></x-import><sc-if value="{{ showNavLabels }}" hint-placeholder-val="{{ true }}"><span>Kategorie</span></sc-if></button></sc-if>
+<sc-if value="{{ navUsersActive }}" hint-placeholder-val="{{ false }}"><button style="flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:14px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconUsers" size="{{ 22 }}" hint-size="22px,22px"></x-import><sc-if value="{{ showNavLabels }}" hint-placeholder-val="{{ true }}"><span>Użytkownicy</span></sc-if></button></sc-if>
+<sc-if value="{{ navUsersIdle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ goUsers }}" style="flex:1;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;border-radius:14px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;background:transparent;color:var(--mantine-color-dimmed)"><x-import component-from-global-scope="HomeItemCatalog.IconUsers" size="{{ 22 }}" hint-size="22px,22px"></x-import><sc-if value="{{ showNavLabels }}" hint-placeholder-val="{{ true }}"><span>Użytkownicy</span></sc-if></button></sc-if>
+</nav>
+<button onClick="{{ fabAction }}" aria-label="{{ fabLabel }}" title="{{ fabLabel }}" style="flex:none;width:64px;height:64px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;cursor:pointer;background:var(--mantine-color-teal-filled);color:var(--mantine-color-white);box-shadow:var(--mantine-shadow-md)"><x-import component-from-global-scope="HomeItemCatalog.IconPlus" size="{{ 28 }}" hint-size="28px,28px"></x-import></button>
+</div>
+</sc-if>
+
+<sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45)">
+<div style="width:100%;max-width:520px;margin:12px;padding:20px;padding-bottom:24px;border-radius:20px;background:var(--mantine-color-body);box-shadow:var(--mantine-shadow-md)">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--mantine-color-red-light);color:var(--mantine-color-red-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconAlertTriangle" size="{{ 22 }}" hint-size="22px,22px"></x-import></span><span style="font-size:17px;font-weight:700">{{ confirmTitle }}</span></div>
+<div style="font-size:14px;line-height:1.45;color:var(--mantine-color-dimmed);text-wrap:pretty">{{ confirmMessage }}</div>
+<div style="display:flex;gap:8px;margin-top:20px">
+<button onClick="{{ closeConfirm }}" style="flex:1;min-height:52px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--mantine-color-body);color:var(--mantine-color-text)">Anuluj</button>
+<button onClick="{{ closeConfirm }}" style="flex:1;min-height:52px;border:0;border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--mantine-color-red-filled);color:var(--mantine-color-white)">Usuń</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:932},&quot;showSourceHints&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Kafelki kategorii&quot;},&quot;showNavLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Nawigacja&quot;}}">
+class Component extends DCLogic {
+  state = { view: 'tiles', categoryId: null, itemId: null, search: '', sort: 'newest', dark: false, confirm: null, form: null, lightbox: null };
+
+  componentDidMount() { this.applyScheme(); }
+  componentDidUpdate() { this.applyScheme(); }
+  applyScheme() {
+    document.documentElement.setAttribute('data-mantine-color-scheme', this.state.dark ? 'dark' : 'light');
+  }
+
+  cats() {
+    return [
+      { id: 'c-1', name: 'Elektronika', icon: 'IconDeviceLaptop', image: null, created: '12.01.2026' },
+      { id: 'c-2', name: 'Narzędzia', icon: null, image: 'narzedzia-hero.jpg', created: '03.02.2026' },
+      { id: 'c-3', name: 'Książki', icon: null, image: null, created: '17.02.2026' },
+      { id: 'c-4', name: 'Kuchnia', icon: 'IconToolsKitchen2', image: null, created: '02.03.2026' },
+      { id: 'c-5', name: 'Ogród', icon: null, image: null, created: '20.03.2026' },
+      { id: 'c-6', name: 'Sport', icon: null, image: null, created: '11.04.2026' },
+    ];
+  }
+
+  items() {
+    return [
+      { id: 'i-1', categoryId: 'c-1', description: 'Laptop Dell Latitude 7420, ładowarka i etui', image: 'laptop.jpg', extra: ['laptop-2.jpg', 'laptop-3.jpg'], author: 'kasia', date: '14.04.2026', t: 6 },
+      { id: 'i-2', categoryId: 'c-1', description: 'Router TP-Link Archer, karton z instrukcją', image: 'router.jpg', extra: [], author: 'piotr', date: '02.04.2026', t: 5 },
+      { id: 'i-3', categoryId: 'c-2', description: 'Wiertarka udarowa Bosch, walizka i komplet wierteł', image: 'wiertarka.jpg', extra: ['wiertarka-2.jpg'], author: 'piotr', date: '28.03.2026', t: 4 },
+      { id: 'i-4', categoryId: 'c-2', description: 'Klucze nasadowe 1/2", zestaw 24 szt.', image: 'klucze.jpg', extra: [], author: 'kasia', date: '19.03.2026', t: 3 },
+      { id: 'i-5', categoryId: 'c-3', description: 'Atlas świata, wydanie 2019, twarda oprawa', image: 'atlas.jpg', extra: [], author: 'kasia', date: '11.03.2026', t: 2 },
+      { id: 'i-6', categoryId: 'c-3', description: 'Pudło książek kucharskich z piwnicy', image: 'ksiazki-pudlo.jpg', extra: ['ksiazki-2.jpg', 'ksiazki-3.jpg'], author: 'mama', date: '05.03.2026', t: 1 },
+      { id: 'i-7', categoryId: 'c-4', description: 'Robot kuchenny Bosch MUM, końcówki w pudełku', image: 'robot.jpg', extra: [], author: 'mama', date: '01.03.2026', t: 0 },
+    ];
+  }
+
+  go(view, patch) { this.setState(Object.assign({ view }, patch || {})); }
+
+  renderVals() {
+    const v = this.state.view;
+    const items = this.items();
+    const tiles = this.cats().map((c) => {
+      const own = items.filter((i) => i.categoryId === c.id);
+      const derived = !c.icon && !c.image && own.length ? own[0].image : null;
+      const photo = c.image || derived;
+      const count = own.length === 1 ? '1 przedmiot' : own.length + ' przedmiotów';
+      return {
+        ...c,
+        countLabel: count,
+        metaLabel: count + ' · utworzono ' + c.created,
+        monogram: c.name.slice(0, 1).toUpperCase(),
+        hasIcon: !!c.icon,
+        iconGlobal: c.icon ? 'HomeItemCatalog.' + c.icon : 'HomeItemCatalog.IconCategory',
+        hasPhoto: !c.icon && !!photo,
+        photoLabel: c.image || derived || '',
+        isBlank: !c.icon && !photo,
+        sourceLabel: c.icon ? 'źródło: ikona kategorii' : c.image ? 'źródło: zdjęcie kategorii' : derived ? 'źródło: 1. przedmiot' : 'źródło: brak — monogram',
+        open: () => this.go('items', { categoryId: c.id, search: '' }),
+        edit: () => this.go('form', { form: { kind: 'category', title: 'Edytuj kategorię', sub: c.name, save: 'Zapisz zmiany', name: c.name } }),
+        remove: () => this.setState({ confirm: { title: 'Usunąć kategorię?', message: 'Kategoria „' + c.name + '” zniknie razem z ' + count + ' i ich zdjęciami. Tej operacji nie da się cofnąć.' } }),
+      };
+    });
+
+    const cat = tiles.find((c) => c.id === this.state.categoryId) || null;
+    const q = this.state.search.trim().toLowerCase();
+    const visibleItems = items
+      .filter((i) => cat && i.categoryId === cat.id)
+      .filter((i) => !q || (i.description || '').toLowerCase().includes(q))
+      .sort((a, b) => (this.state.sort === 'newest' ? b.t - a.t : a.t - b.t))
+      .map((i) => ({ ...i, open: () => this.go('detail', { itemId: i.id }) }));
+
+    const item = items.find((i) => i.id === this.state.itemId) || items[0];
+    const users = [
+      { id: 'u-1', username: 'kasia', isCurrent: true, created: '02.01.2026' },
+      { id: 'u-2', username: 'piotr', isCurrent: false, created: '08.01.2026' },
+      { id: 'u-3', username: 'mama', isCurrent: false, created: '21.02.2026' },
+    ].map((u) => ({
+      ...u,
+      monogram: u.username.slice(0, 1).toUpperCase(),
+      metaLabel: 'dołączył(a) ' + u.created,
+      canDelete: !u.isCurrent,
+      changePassword: () => this.go('form', { form: { kind: 'password', title: 'Zmiana hasła', sub: u.username, save: 'Zmień hasło', subject: u.username } }),
+      remove: () => this.setState({ confirm: { title: 'Usunąć konto?', message: 'Konto „' + u.username + '” straci dostęp do katalogu. Dodane przez nie przedmioty zostaną w katalogu.' } }),
+    }));
+
+    const tab = v === 'categories' ? 'categories' : v === 'users' ? 'users' : 'catalog';
+    const form = this.state.form || {};
+    const isForm = v === 'form';
+    const isAuth = v === 'login' || v === 'setup';
+    const titles = {
+      tiles: ['Katalog', 'Wybierz kategorię'],
+      items: [cat ? cat.name : 'Katalog', cat ? cat.countLabel : ''],
+      detail: ['Przedmiot', item ? item.date : ''],
+      categories: ['Kategorie', 'Zarządzanie kategoriami'],
+      users: ['Użytkownicy', 'Zarządzanie dostępem'],
+      form: [form.title || 'Formularz', form.sub || ''],
+    };
+    const t = titles[v] || titles.tiles;
+    const fab = {
+      catalog: { label: 'Dodaj przedmiot', run: () => this.go('form', { form: { kind: 'item', title: 'Nowy przedmiot', sub: cat ? cat.name : 'Wybierz kategorię', save: 'Dodaj przedmiot' } }) },
+      categories: { label: 'Nowa kategoria', run: () => this.go('form', { form: { kind: 'category', title: 'Nowa kategoria', sub: 'Nazwa, ikona lub zdjęcie', save: 'Utwórz kategorię' } }) },
+      users: { label: 'Dodaj użytkownika', run: () => this.go('form', { form: { kind: 'user', title: 'Nowy użytkownik', sub: 'Login i hasło początkowe', save: 'Utwórz konto' } }) },
+    }[tab];
+
+    return {
+      theme: (window.HomeItemCatalog || {}).theme,
+      showSourceHints: this.props.showSourceHints ?? true,
+      showNavLabels: this.props.showNavLabels ?? true,
+      isAuth, isApp: !isAuth,
+      authMode: v,
+      enterApp: () => this.go('tiles'),
+      switchAuth: () => this.go(v === 'login' ? 'setup' : 'login'),
+      tiles, users, visibleItems,
+      isTiles: v === 'tiles',
+      isItems: v === 'items',
+      isDetail: v === 'detail',
+      isCategoriesAdmin: v === 'categories',
+      isUsers: v === 'users',
+      isForm,
+      noItems: v === 'items' && visibleItems.length === 0,
+      showBack: v === 'items' || v === 'detail' || isForm,
+      headerTitle: t[0],
+      headerSub: t[1],
+      userName: 'kasia',
+      detailImage: item ? item.image : '',
+      detailImages: item ? [item.image].concat(item.extra) : [],
+      detailThumbs: item ? item.extra.map((e, idx) => ({ label: e, open: () => this.setState({ lightbox: idx + 1 }) })) : [],
+      lightboxOpened: this.state.lightbox !== null,
+      lightboxIndex: this.state.lightbox || 0,
+      openLightbox: () => this.setState({ lightbox: 0 }),
+      closeLightbox: () => this.setState({ lightbox: null }),
+      detailCategory: item ? (this.cats().find((c) => c.id === item.categoryId) || {}).name : '',
+      detailDescription: item ? item.description : '',
+      detailAuthor: item ? item.author : '',
+      detailDate: item ? item.date : '',
+      editItem: () => this.go('form', { form: { kind: 'item', title: 'Edytuj przedmiot', sub: item ? item.image : '', save: 'Zapisz zmiany' } }),
+      askDeleteItem: () => this.setState({ confirm: { title: 'Usunąć przedmiot?', message: 'Przedmiot zniknie z katalogu razem ze zdjęciami. Tej operacji nie da się cofnąć.' } }),
+      formKind: form.kind || 'item',
+      formSave: form.save || 'Zapisz',
+      formSubject: form.subject || '',
+      formName: form.name || '',
+      closeForm: () => this.setState({ view: this.state.form && this.state.form.kind === 'category' ? 'categories' : this.state.form && (this.state.form.kind === 'user' || this.state.form.kind === 'password') ? 'users' : 'tiles', form: null }),
+      search: this.state.search,
+      onSearch: (e) => this.setState({ search: e.currentTarget.value }),
+      sortNewest: () => this.setState({ sort: 'newest' }),
+      sortOldest: () => this.setState({ sort: 'oldest' }),
+      sortIsNewest: this.state.sort === 'newest',
+      sortIsOldest: this.state.sort === 'oldest',
+      goBack: () => this.setState({ view: v === 'detail' ? 'items' : isForm ? (form.kind === 'category' ? 'categories' : form.kind === 'user' || form.kind === 'password' ? 'users' : 'tiles') : 'tiles', form: null }),
+      goCatalog: () => this.go('tiles', { categoryId: null }),
+      goCategories: () => this.go('categories'),
+      goUsers: () => this.go('users'),
+      showNav: !isForm,
+      navCatalogActive: tab === 'catalog',
+      navCatalogIdle: tab !== 'catalog',
+      navCategoriesActive: tab === 'categories',
+      navCategoriesIdle: tab !== 'categories',
+      navUsersActive: tab === 'users',
+      navUsersIdle: tab !== 'users',
+      fabLabel: fab.label,
+      fabAction: fab.run,
+      isLight: !this.state.dark,
+      isDark: this.state.dark,
+      toggleTheme: () => this.setState({ dark: !this.state.dark }),
+      logout: () => this.go('login'),
+      confirmOpen: !!this.state.confirm,
+      confirmTitle: this.state.confirm ? this.state.confirm.title : '',
+      confirmMessage: this.state.confirm ? this.state.confirm.message : '',
+      closeConfirm: () => this.setState({ confirm: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>
