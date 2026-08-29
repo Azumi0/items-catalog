@@ -8,16 +8,27 @@ import { IconAlertCircle, IconPlus } from '@tabler/icons-react';
 
 export const dynamic = 'force-dynamic';
 
-export default async function NewItemPage() {
+export default async function NewItemPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ categoryId?: string }>;
+}) {
   const user = await requireAuthPage();
 
-  const categories = await getCategories();
+  const [categories, { categoryId }] = await Promise.all([
+    getCategories(),
+    searchParams,
+  ]);
+
+  // The catalog FAB carries the open category over; anything else falls back
+  // to the first category, as the form did before.
+  const prefilled = categories.find((category) => category.id === categoryId);
 
   return (
     <AppLayout
       user={user}
       title="Nowy przedmiot"
-      subtitle="Wybierz kategorię"
+      subtitle={prefilled?.name ?? 'Wybierz kategorię'}
       backHref="/"
       tab="catalog"
       chrome={false}
@@ -62,7 +73,7 @@ export default async function NewItemPage() {
           </Alert>
         ) : (
           <Paper withBorder p="xl" radius="md" shadow="xs">
-            <NewItemForm categories={categories} />
+            <NewItemForm categories={categories} initialCategoryId={prefilled?.id} />
           </Paper>
         )}
       </Container>

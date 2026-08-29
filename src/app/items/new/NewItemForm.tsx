@@ -25,12 +25,17 @@ import { useSingleImagePreview, useMultiImagePreviews } from '@/hooks/useImagePr
 
 interface NewItemFormProps {
   categories: CategoryWithCount[];
+  /** Preselected when the catalog FAB was pressed inside a category. */
+  initialCategoryId?: string;
 }
 
-export function NewItemForm({ categories }: NewItemFormProps) {
+export function NewItemForm({
+  categories,
+  initialCategoryId,
+}: NewItemFormProps) {
   const router = useRouter();
   const [categoryId, setCategoryId] = useState<string | null>(
-    categories[0]?.id || null
+    initialCategoryId || categories[0]?.id || null
   );
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);

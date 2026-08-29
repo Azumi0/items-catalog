@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="max-width:640px;margin:0 auto;padding:16px 16px 96px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--mantine-color-text)">
+
+<sc-if value="{{ isItem }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Zdjęcie główne</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:180px;padding:20px;border:2px dashed var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-gray-light);text-align:center">
+<span style="display:flex;color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconCamera" size="{{ 32 }}" hint-size="32px,32px"></x-import></span>
+<div style="font-size:14px;font-weight:600">Zrób zdjęcie lub wybierz z galerii</div>
+<div style="font-size:12px;color:var(--mantine-color-dimmed)">JPG, PNG — maks. 10 MB</div>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Zdjęcia dodatkowe</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px">
+<sc-for list="{{ extraSlots }}" as="s" hint-placeholder-count="3">
+<div style="aspect-ratio:1 / 1;display:flex;align-items:center;justify-content:center;padding:4px;text-align:center;border-radius:var(--mantine-radius-sm);background:repeating-linear-gradient(45deg,var(--mantine-color-gray-1) 0 8px,var(--mantine-color-gray-2) 8px 16px)"><span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;color:var(--mantine-color-dimmed)">{{ s.label }}</span></div>
+</sc-for>
+<button aria-label="Dodaj zdjęcie" style="aspect-ratio:1 / 1;display:flex;align-items:center;justify-content:center;border:2px dashed var(--mantine-color-default-border);border-radius:var(--mantine-radius-sm);background:transparent;color:var(--mantine-color-dimmed);cursor:pointer"><x-import component-from-global-scope="HomeItemCatalog.IconPlus" size="{{ 22 }}" hint-size="22px,22px"></x-import></button>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Kategoria</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{ categoryChips }}" as="c" hint-placeholder-count="5">
+<sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}"><button style="min-height:44px;padding:0 16px;border:1px solid var(--mantine-color-teal-filled);border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)">{{ c.name }}</button></sc-if>
+<sc-if value="{{ c.idle }}" hint-placeholder-val="{{ true }}"><button onClick="{{ c.pick }}" style="min-height:44px;padding:0 16px;border:1px solid var(--mantine-color-default-border);border-radius:999px;font-size:14px;cursor:pointer;background:var(--mantine-color-body);color:var(--mantine-color-text)">{{ c.name }}</button></sc-if>
+</sc-for>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Opis</div>
+<textarea placeholder="Co to jest, gdzie leży, stan…" style="width:100%;min-height:120px;padding:12px;font-family:inherit;font-size:16px;line-height:1.4;color:inherit;background:var(--mantine-color-body);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none;resize:vertical"></textarea>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCategory }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Nazwa kategorii</div>
+<input value="{{ nameValue }}" onChange="{{ onName }}" placeholder="np. Elektronika, Narzędzia" style="width:100%;height:48px;padding:0 12px;font-family:inherit;font-size:16px;color:inherit;background:var(--mantine-color-body);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none" />
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:2px">Ikona</div>
+<div style="font-size:12px;color:var(--mantine-color-dimmed);margin-bottom:8px">Opcjonalna. Bez ikony i zdjęcia użyjemy zdjęcia pierwszego przedmiotu.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px">
+<sc-for list="{{ iconChoices }}" as="i" hint-placeholder-count="8">
+<sc-if value="{{ i.selected }}" hint-placeholder-val="{{ false }}"><button aria-label="{{ i.name }}" style="height:56px;display:flex;align-items:center;justify-content:center;border:1px solid var(--mantine-color-teal-filled);border-radius:var(--mantine-radius-md);cursor:pointer;background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="{{ i.global }}" size="{{ 24 }}" hint-size="24px,24px"></x-import></button></sc-if>
+<sc-if value="{{ i.idle }}" hint-placeholder-val="{{ true }}"><button aria-label="{{ i.name }}" onClick="{{ i.pick }}" style="height:56px;display:flex;align-items:center;justify-content:center;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);cursor:pointer;background:var(--mantine-color-body);color:var(--mantine-color-dimmed)"><x-import component-from-global-scope="{{ i.global }}" size="{{ 24 }}" hint-size="24px,24px"></x-import></button></sc-if>
+</sc-for>
+</div>
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Zdjęcie kategorii</div>
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:140px;padding:20px;border:2px dashed var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);background:var(--mantine-color-gray-light);text-align:center">
+<span style="display:flex;color:var(--mantine-color-teal-filled)"><x-import component-from-global-scope="HomeItemCatalog.IconPhoto" size="{{ 28 }}" hint-size="28px,28px"></x-import></span>
+<div style="font-size:13px;color:var(--mantine-color-dimmed)">Zdjęcie ma pierwszeństwo przed ikoną</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isUser }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Login</div>
+<input value="{{ nameValue }}" onChange="{{ onName }}" placeholder="np. mama, tata, piotr" style="width:100%;height:48px;padding:0 12px;font-family:inherit;font-size:16px;color:inherit;background:var(--mantine-color-body);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none" />
+</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Hasło początkowe</div>
+<input type="password" placeholder="Minimum 4 znaki" style="width:100%;height:48px;padding:0 12px;font-family:inherit;font-size:16px;color:inherit;background:var(--mantine-color-body);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none" />
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPassword }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="padding:12px;border-radius:var(--mantine-radius-md);background:var(--mantine-color-teal-light);color:var(--mantine-color-teal-filled);font-size:13px;font-weight:600">Zmiana hasła dla: {{ subject }}</div>
+<div>
+<div style="font-size:13px;font-weight:600;margin-bottom:6px">Nowe hasło</div>
+<input type="password" placeholder="Minimum 4 znaki" style="width:100%;height:48px;padding:0 12px;font-family:inherit;font-size:16px;color:inherit;background:var(--mantine-color-body);border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);outline:none" />
+</div>
+</div>
+</sc-if>
+
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;gap:8px;padding:12px 16px;padding-bottom:20px;background:var(--mantine-color-body);border-top:1px solid var(--mantine-color-default-border)">
+<div style="display:flex;gap:8px;width:100%;max-width:640px;margin:0 auto">
+<button onClick="{{ onCancel }}" style="flex:1;min-height:52px;border:1px solid var(--mantine-color-default-border);border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;background:var(--mantine-color-body);color:var(--mantine-color-text)">Anuluj</button>
+<button onClick="{{ onSave }}" style="flex:2;min-height:52px;border:0;border-radius:var(--mantine-radius-md);font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;background:var(--mantine-color-teal-filled);color:var(--mantine-color-white)">{{ saveLabel }}</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:932},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;item&quot;,&quot;category&quot;,&quot;user&quot;,&quot;password&quot;],&quot;default&quot;:&quot;item&quot;,&quot;tsType&quot;:&quot;'item' | 'category' | 'user' | 'password'&quot;},&quot;saveLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Zapisz&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;subject&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;kasia&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;initialName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onCancel&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onSave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  state = { name: '', category: 'c-2', icon: null };
+
+  renderVals() {
+    const kind = this.props.kind || 'item';
+    const icons = ['IconDeviceLaptop', 'IconTool', 'IconBook', 'IconToolsKitchen2', 'IconPlant', 'IconBallFootball', 'IconArmchair', 'IconBike'];
+    const picked = this.state.icon;
+    return {
+      isItem: kind === 'item',
+      isCategory: kind === 'category',
+      isUser: kind === 'user',
+      isPassword: kind === 'password',
+      subject: this.props.subject || '',
+      saveLabel: this.props.saveLabel || 'Zapisz',
+      onCancel: this.props.onCancel,
+      onSave: this.props.onSave,
+      nameValue: this.state.name || this.props.initialName || '',
+      onName: (e) => this.setState({ name: e.currentTarget.value }),
+      extraSlots: [{ label: 'zdjecie-2.jpg' }, { label: 'zdjecie-3.jpg' }],
+      categoryChips: ['Elektronika', 'Narzędzia', 'Książki', 'Kuchnia', 'Ogród', 'Sport'].map((n, i) => ({
+        name: n,
+        selected: this.state.category === 'c-' + (i + 1),
+        idle: this.state.category !== 'c-' + (i + 1),
+        pick: () => this.setState({ category: 'c-' + (i + 1) }),
+      })),
+      iconChoices: icons.map((n) => ({
+        name: n,
+        global: 'HomeItemCatalog.' + n,
+        selected: picked === n,
+        idle: picked !== n,
+        pick: () => this.setState({ icon: n }),
+      })),
+    };
+  }
+}
+</script>
+</body>
+</html>
