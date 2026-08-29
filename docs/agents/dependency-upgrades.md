@@ -52,11 +52,20 @@ indistinguishable.
 
 Take the latest stable by default. **Hold** a major when its ecosystem support
 is immature relative to what it buys this project — the payoff is measured
-against a 61-file codebase, not against a large one. Recorded precedent:
-TypeScript 7 is held at 5.9.x, because `typescript-eslint`, the Next `tsconfig`
-plugin and Vitest type tooling vary in their support of it, and the reward is
-compile speed this project does not need. State the hold and its reason in the
-commit that skips it.
+against a 61-file codebase, not against a large one. State the hold and its
+reason in the commit that skips it.
+
+Currently held:
+
+- **TypeScript** at 5.9.x. `typescript-eslint`, the Next `tsconfig` plugin and
+  Vitest type tooling vary in their support of 7, and the reward is compile
+  speed this project does not need.
+- **ESLint** at 9.x. `eslint-plugin-react` has published no ESLint 10 release
+  at all — its peer range stops at `^9.7` and it calls `context.getFilename()`,
+  which 10 removed — and it is a hard dependency of `eslint-config-next`.
+  Taking 10 therefore means dropping `eslint-config-next` and hand-assembling
+  its replacement, which would give up the React Compiler rules that catch real
+  defects here. Re-check when `eslint-plugin-react` ships 10 support.
 
 ## Adapting the codebase
 
