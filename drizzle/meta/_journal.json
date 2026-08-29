@@ -8,6 +8,13 @@
       "when": 1786893567897,
       "tag": "0000_old_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787979242457,
+      "tag": "0001_spotty_bishop",
+      "breakpoints": true
     }
   ]
 }

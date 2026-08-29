@@ -17,6 +17,10 @@ export const categories = sqliteTable('categories', {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: text('name').notNull().unique(),
+  // Tabler icon name (e.g. IconDeviceLaptop), not a URL.
+  icon: text('icon'),
+  // Stored image filename, same shape as items.main_image — not a URL.
+  mainImage: text('main_image'),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),

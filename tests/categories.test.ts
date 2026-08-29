@@ -62,6 +62,109 @@ describe('Categories Management Seam', () => {
     expect(all[0].name).toBe('Power Tools');
   });
 
+  it('exposes the newest item main image as firstItemImage', async () => {
+    const user = await setupFirstUser('admin', 'admin123');
+    const cat = await createCategory('Tools');
+
+    const db = getDb();
+    const older = new Date('2026-01-01T10:00:00Z');
+    const newer = new Date('2026-02-01T10:00:00Z');
+
+    await db.insert(items).values({
+      id: crypto.randomUUID(),
+      categoryId: cat.id,
+      description: 'older',
+      mainImage: 'older.jpg',
+      additionalImages: [],
+      createdById: user.id,
+      createdByName: user.username,
+      createdAt: older,
+      updatedAt: older,
+    });
+    await db.insert(items).values({
+      id: crypto.randomUUID(),
+      categoryId: cat.id,
+      description: 'newer',
+      mainImage: 'newer.jpg',
+      additionalImages: [],
+      createdById: user.id,
+      createdByName: user.username,
+      createdAt: newer,
+      updatedAt: newer,
+    });
+
+    const [row] = await getCategories();
+    expect(row.itemCount).toBe(2);
+    expect(row.firstItemImage).toBe('newer.jpg');
+  });
+
+  it('reports firstItemImage as null for an empty category', async () => {
+    await createCategory('Empty');
+
+    const [row] = await getCategories();
+    expect(row.itemCount).toBe(0);
+    expect(row.firstItemImage).toBeNull();
+  });
+
+  it('stores the icon and the category image, and exposes them on the list', async () => {
+    const created = await createCategory('Elektronika', {
+      icon: 'IconDeviceLaptop',
+      mainImage: 'hero.jpg',
+    });
+
+    expect(created.icon).toBe('IconDeviceLaptop');
+    expect(created.mainImage).toBe('hero.jpg');
+
+    const [row] = await getCategories();
+    expect(row.icon).toBe('IconDeviceLaptop');
+    expect(row.mainImage).toBe('hero.jpg');
+  });
+
+  it('leaves icon and image untouched when the update omits them', async () => {
+    const cat = await createCategory('Narzedzia', { icon: 'IconTool' });
+
+    const updated = await updateCategory(cat.id, 'Narzedzia domowe');
+
+    expect(updated.name).toBe('Narzedzia domowe');
+    expect(updated.icon).toBe('IconTool');
+  });
+
+  it('clears the icon when the update passes null', async () => {
+    const cat = await createCategory('Ksiazki', { icon: 'IconBook' });
+
+    const updated = await updateCategory(cat.id, 'Ksiazki', { icon: null });
+
+    expect(updated.icon).toBeNull();
+  });
+
+  it('deletes the replaced category image from disk', async () => {
+    const imgBuffer = await sharp({
+      create: { width: 60, height: 60, channels: 3, background: { r: 10, g: 10, b: 10 } },
+    }).jpeg().toBuffer();
+
+    const first = await saveImage(imgBuffer, 'first.jpg');
+    const second = await saveImage(imgBuffer, 'second.jpg');
+
+    const cat = await createCategory('Ogrod', { mainImage: first.filename });
+    await updateCategory(cat.id, 'Ogrod', { mainImage: second.filename });
+
+    expect(fs.existsSync(getImagePath('originals', first.filename))).toBe(false);
+    expect(fs.existsSync(getImagePath('originals', second.filename))).toBe(true);
+  });
+
+  it('deletes the category image when the category is removed', async () => {
+    const imgBuffer = await sharp({
+      create: { width: 60, height: 60, channels: 3, background: { r: 10, g: 10, b: 10 } },
+    }).jpeg().toBuffer();
+
+    const saved = await saveImage(imgBuffer, 'hero.jpg');
+    const cat = await createCategory('Sport', { mainImage: saved.filename });
+
+    await deleteCategory(cat.id);
+
+    expect(fs.existsSync(getImagePath('originals', saved.filename))).toBe(false);
+  });
+
   it('deletes category and cleans up associated items and physical files', async () => {
     const user = await setupFirstUser('admin', 'admin123');
     const cat = await createCategory('Furniture');
