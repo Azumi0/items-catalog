@@ -14,6 +14,8 @@ export default defineConfig({
       '**/.claude/**',
       '**/dist/**',
       '**/.next/**',
+      // Playwright owns e2e/ — Vitest cannot run its specs.
+      '**/e2e/**',
     ],
   },
   resolve: {
