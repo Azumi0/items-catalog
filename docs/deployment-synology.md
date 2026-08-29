@@ -134,11 +134,6 @@ services:
       - PUID=1026
       - PGID=100
       - SESSION_SECRET=WKLEJ-TU-WLASNY-LOSOWY-CIAG
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 ```
 
 Wygeneruj sekret na PC i podmień ostatnią wartość:
@@ -152,6 +147,12 @@ Wygeneruj sekret na PC i podmień ostatnią wartość:
 Mapowanie `127.0.0.1:3000:3000` wystawia port wyłącznie na pętlę zwrotną NAS-a. Odwrotny serwer proxy DSM to nginx działający na hoście, więc dosięgnie `localhost:3000` bez przeszkód — ale z LAN-u port 3000 po prostu nie istnieje. Jedyną drogą do aplikacji jest HTTPS przez proxy, czyli dokładnie to, czego chcesz.
 
 Cena: nie podejrzysz aplikacji po `http://192.168.1.100:3000` nawet do szybkiego sprawdzenia. Jeśli w etapie 6 coś nie zagra i będziesz chciał zobaczyć, czy serwer w ogóle odpowiada, zmień mapowanie tymczasowo na `"3000:3000"` albo sprawdź przez SSH: `curl -I http://localhost:3000/login`.
+
+### Dlaczego nie ma sekcji `logging:`
+
+Kusi, żeby dopisać `logging: driver: json-file` z `max-size`/`max-file` — to standardowy sposób na rotację logów i na zwykłym Dockerze jest słuszny. Na DSM ma jednak skutek uboczny, który kosztuje godzinę diagnozy: demon Dockera na Synology używa własnego sterownika logów (`db`), a zakładka **Dziennik** w Container Managerze czyta właśnie z tej bazy. Jawne nadpisanie sterownika przekierowuje strumienie kontenera do pliku `*-json.log` na wolumenie i GUI pokazuje wtedy **„Brak dostępnych dzienników"** — mimo że kontener działa poprawnie i normalnie loguje.
+
+Dlatego compose powyżej nie ustawia sterownika. Zostajesz z rotacją, którą prowadzi Synology, w zamian za działający podgląd logów w GUI. Ta aplikacja loguje kilka linii na starcie plus żądania HTTP, więc rozmiar logu nie jest tu realnym zagrożeniem.
 
 ### Dlaczego nie plik z repo
 
@@ -191,6 +192,7 @@ curl -I http://localhost:3000/login
 | kontener restartuje w pętli | błąd migracji albo brak `/data` | dziennik kontenera pokaże dokładny wyjątek |
 | `port is already allocated` | 3000 zajęty na loopbacku przez inną usługę | zmień na `"127.0.0.1:3100:3000"` i popraw port docelowy w reverse proxy |
 | logowanie wraca na `/login` | dostęp po HTTP | dokończ etap 8 — to nie jest błąd aplikacji |
+| zakładka **Dziennik** pusta („Brak dostępnych dzienników"), choć kontener działa | w compose ustawiony `logging: driver: json-file` — logi omijają bazę, z której czyta GUI DSM | usuń sekcję `logging:` i przebuduj projekt; doraźnie logi zobaczysz przez SSH: `sudo docker logs item-catalog` |
 
 Zakładanie pierwszego konta zostaw na etap 9, po skonfigurowaniu HTTPS. Setup po HTTP przeszedłby technicznie (POST się wykona), ale sesja się nie zapisze i utkniesz na `/login` z już zajętą nazwą użytkownika.
 

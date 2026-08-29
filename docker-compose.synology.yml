@@ -55,12 +55,17 @@ services:
       # Zmiana tej wartosci uniewaznia wszystkie aktywne sesje.
       - SESSION_SECRET=ZMIEN-MNIE-na-losowy-ciag-minimum-32-znaki
 
-    # Rotacja logow — bez tego json-file rosnie w nieskonczonosc na wolumenie NAS.
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
+    # UWAGA: NIE ustawiaj tu "logging: driver: json-file".
+    #
+    # Demon Dockera na DSM uzywa wlasnego sterownika logow (Synology "db") i
+    # zakladka Dziennik w Container Managerze czyta wlasnie z tej bazy. Jawne
+    # nadpisanie sterownika na json-file przekierowuje strumienie kontenera do
+    # pliku *-json.log na wolumenie, a GUI pokazuje "Brak dostepnych dziennikow"
+    # — logi zostaja wtedy dostepne wylacznie przez SSH: docker logs item-catalog.
+    #
+    # Cena tej decyzji: rezygnujesz z jawnej rotacji (max-size / max-file) na
+    # rzecz tego, co robi sterownik Synology. Przy kilku liniach na start plus
+    # logach zadan HTTP to w domowym zastosowaniu nie jest problem.
 
     # Odkomentuj, jesli Container Manager przy starcie projektu probuje POBRAC
     # obraz z rejestru i konczy sie bledem "pull access denied".
