@@ -28,6 +28,11 @@ _Avoid_: Full picture, raw photo
 An optimized WebP image generated from an original photo for fast catalog browsing.
 _Avoid_: Preview, icon, miniature
 
+**Category Visual**:
+What a category shows wherever it appears, resolved by a fixed fallback: its own
+image, then its icon, then the newest item's image, then a monogram of its name.
+_Avoid_: Category avatar, cover, thumbnail
+
 **Author Snapshot**:
 The immutable copy of the creator's username stored on an item (`createdByName`) to preserve attribution if the user is deleted.
 _Avoid_: User stamp, creator tag

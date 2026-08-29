@@ -6,8 +6,9 @@ Self-hosted home inventory and item catalog progressive web application (PWA) de
 
 ## Features
 
-- **Progressive Web App (PWA):** Responsive UI optimized for mobile and desktop, built with Mantine UI v7, with Light and Dark mode support.
-- **Item & Category Management:** Organize household items into categories, search instantly by description, and sort chronologically.
+- **Mobile-first Progressive Web App (PWA):** One single-column design that reflows to desktop without breakpoints, built with Mantine UI v7, with Light and Dark mode support. Navigation is a floating bottom bar with a contextual "+" button; every touch target is at least 44px.
+- **Two-screen catalog:** Category tiles are the entry screen; picking one opens that category's items, where search and sorting live. Each category shows its own picture or icon, falling back to its newest item's photo and then to a monogram.
+- **Item & Category Management:** Organize household items into categories, search instantly by description, and sort chronologically. Adding and editing happen on full screens with a sticky action bar; deletions confirm in a bottom sheet.
 - **Optimized Media Pipeline:** Upload original images with automatic WebP thumbnail generation using `sharp`, served through authenticated endpoints.
 - **Flat Authentication & Onboarding:** Simple multi-user household access secured with `iron-session` cookies and `bcryptjs`. Automatically redirects to `/setup` on initial launch.
 - **Single-Volume Persistence:** SQLite database (`better-sqlite3` + Drizzle ORM) and uploads live in `/data`, making backups via Synology Hyper Backup straightforward.
@@ -118,13 +119,18 @@ src/
   app/
     actions/          Server Actions — auth, categories, items, users
     api/images/       Authenticated image route (originals + thumbs)
-    categories/       Category management page
-    items/            Catalog list, detail, new and edit pages
+    page.tsx          Catalog entry screen: the category tiles
+    categories/       Category management, the category form, and
+                      [id]/items — the items of one category
+    items/            Item detail, new and edit pages
     login/  setup/    Public pages: sign-in and first-run onboarding
-    users/            User management page
+    users/            User management, the new-user and password forms
     layout.tsx        MantineProvider, Notifications, viewport, SW registration
-  components/         AppLayout, ItemsCatalog, ImageLightboxModal,
-                      ImageDropzone, CategoriesManager, UsersManager,
+  components/         AppLayout (top bar, bottom nav, FAB), CategoryTiles,
+                      CategoryItemsList, CategoriesManager, UsersManager,
+                      CategoryForm, UserForm, ItemForm, CategoryVisual,
+                      ConfirmSheet, FormActionBar, FormField, AutoGrid,
+                      ImageDropzone, ImageLightboxModal, AuthScreen,
                       ServiceWorkerRegistration
   hooks/              useActionRunner, useImagePreviews
   lib/
@@ -132,7 +138,10 @@ src/
     session.ts        getSession, requireAuth, requireAuthPage
     storage.ts        Image writes, thumbnail generation, deletion
     images.ts         Image URL builders and inline placeholders
-    categoryOptions.ts  Category list shaped for Mantine Select
+    categoryVisual.ts   The category image/icon/derived/monogram fallback
+    categoryVisualPatch.ts  What a category form submission changes
+    categoryIcons.ts  The Tabler glyphs a category can be given
+    itemCount.ts      "1 przedmiot" / "N przedmiotów"
     services/         Data access: categories, items, users
   db/                 Drizzle schema, connection, migrator
   middleware.ts       Cookie-presence fast path (not a security boundary)
@@ -149,6 +158,8 @@ drizzle/              Generated SQL migrations and snapshots
 
 docs/
   initial-prompt.md   The originating specification (archived, Polish)
+  design_handoff_mobile_first/  The mobile-first redesign handoff: screen
+                      specifications, prototypes and screenshots
   adr/                Architecture decision records
   agents/             Agent conventions: issue tracker, triage labels, domain
   deployment-synology.md
