@@ -17,7 +17,7 @@ import { IconX } from '@tabler/icons-react';
 import { createItemAction, updateItemAction } from '@/app/actions/items';
 import type { CategoryWithCount } from '@/lib/services/categories';
 import type { ItemWithCategory } from '@/lib/services/items';
-import { thumbUrl } from '@/lib/images';
+import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
 import { useActionRunner } from '@/hooks/useActionRunner';
 import {
   useMultiImagePreviews,
@@ -143,6 +143,7 @@ export function ItemForm({
               <Image
                 src={mainPreview}
                 alt="Zdjęcie główne"
+                fallbackSrc={THUMB_PLACEHOLDER}
                 radius="md"
                 style={{ aspectRatio: '4 / 3', objectFit: 'cover' }}
               />
@@ -186,6 +187,7 @@ export function ItemForm({
                 <Image
                   src={thumbUrl(filename)}
                   alt="Zdjęcie dodatkowe"
+                  fallbackSrc={THUMB_PLACEHOLDER}
                   radius="sm"
                   style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
                 />
