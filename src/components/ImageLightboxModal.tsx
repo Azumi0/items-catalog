@@ -46,10 +46,24 @@ export function ImageLightboxModal({
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
   const transformRef = useRef<ReactZoomPanPinchContentRef | null>(null);
 
-  // Sync currentIndex with initialIndex when modal opens or initialIndex changes
+  // Sync currentIndex with initialIndex when the lightbox opens or the
+  // requested image changes. React's documented way to adjust state to a prop
+  // is a guarded assignment during render, not an effect: an effect renders
+  // once with the stale index and then immediately renders again, which is the
+  // cascade react-hooks/set-state-in-effect rejects.
+  const [syncedTo, setSyncedTo] = useState<number | null>(null);
+  const requestedIndex = opened ? initialIndex : null;
+  if (syncedTo !== requestedIndex) {
+    setSyncedTo(requestedIndex);
+    if (requestedIndex !== null) {
+      setCurrentIndex(requestedIndex);
+    }
+  }
+
+  // Zooming is imperative state living inside react-zoom-pan-pinch, so it is
+  // reset from an effect. No setState here, so no cascade.
   useEffect(() => {
     if (opened) {
-      setCurrentIndex(initialIndex);
       transformRef.current?.resetTransform(0);
     }
   }, [opened, initialIndex]);

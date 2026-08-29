@@ -4,6 +4,12 @@
 * **Data:** 2026-08-28
 * **Autor:** Przemysław Wrzeszcz
 
+> **Nota (2026-08-29):** Next.js 16 zmienil nazwe pliku `middleware.ts` na
+> `proxy.ts`, a eksportowanej funkcji z `middleware` na `proxy`. Decyzja
+> opisana nizej sie nie zmienila — zmienila sie wylacznie nazwa pliku. Tekst
+> ADR-a pozostaje w oryginalnym brzmieniu; wszedzie, gdzie mowa o
+> `src/middleware.ts`, chodzi o dzisiejsze `src/proxy.ts`.
+
 ---
 
 ## 1. Kontekst i Problem

@@ -2,7 +2,7 @@
 
 import { Box, Image, Text } from '@mantine/core';
 import { categoryVisual, type CategoryVisualSource } from '@/lib/categoryVisual';
-import { categoryIconComponent } from '@/lib/categoryIcons';
+import { CategoryIcon } from './CategoryIcon';
 import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
 
 interface CategoryVisualProps {
@@ -46,7 +46,6 @@ export function CategoryVisual({
   }
 
   if (visual.kind === 'icon') {
-    const Icon = categoryIconComponent(visual.value);
     return (
       <Box
         {...frame}
@@ -71,10 +70,10 @@ export function CategoryVisual({
               background: 'var(--mantine-color-body)',
             }}
           >
-            <Icon size={32} />
+            <CategoryIcon name={visual.value} size={32} />
           </Box>
         ) : (
-          <Icon size={24} />
+          <CategoryIcon name={visual.value} size={24} />
         )}
       </Box>
     );
