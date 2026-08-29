@@ -16,6 +16,18 @@ export async function getUsers(): Promise<Array<Omit<User, 'passwordHash'>>> {
   return allUsers.map(({ passwordHash: _, ...rest }) => rest);
 }
 
+export async function getUser(
+  id: string
+): Promise<Omit<User, 'passwordHash'> | null> {
+  const db = getDb();
+  const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  if (!row) {
+    return null;
+  }
+  const { passwordHash: _, ...userWithoutPassword } = row;
+  return userWithoutPassword;
+}
+
 export const MIN_PASSWORD_LENGTH = 4;
 
 export function validatePassword(password: string): void {

@@ -1,8 +1,14 @@
 'use client';
 
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
-import { Group, Text, rem } from '@mantine/core';
-import { IconUpload, IconX, IconPhoto, IconPlus } from '@tabler/icons-react';
+import { Stack, Text } from '@mantine/core';
+import {
+  IconUpload,
+  IconX,
+  IconPhoto,
+  IconPlus,
+  IconCamera,
+} from '@tabler/icons-react';
 
 /**
  * What the item forms accept. IMAGE_MIME_TYPE covers PNG/JPEG/WebP/GIF; HEIC
@@ -17,16 +23,17 @@ export const ACCEPTED_IMAGE_TYPES = [
 const IDLE_ICONS = {
   photo: IconPhoto,
   plus: IconPlus,
+  camera: IconCamera,
 } as const;
 
 export interface ImageDropzoneProps {
   onDrop: (files: File[]) => void;
-  /** Bold line inside the dropzone. */
-  title: string;
+  /** Bold line inside the dropzone. Omit for a caption-only drop target. */
+  title?: string;
   /** Dimmed line under the title. */
-  hint: string;
+  hint?: string;
   disabled?: boolean;
-  /** Which glyph to show at rest. `photo` for a first image, `plus` to add more. */
+  /** Which glyph to show at rest. */
   idleIcon?: keyof typeof IDLE_ICONS;
   /** Glyph edge length in px. */
   iconSize?: number;
@@ -34,14 +41,21 @@ export interface ImageDropzoneProps {
   minHeight?: number;
   maxFiles?: number;
   mb?: string;
-  /** Tighter spacing and smaller copy, for the denser edit-form layout. */
-  compact?: boolean;
+  /**
+   * Hints the browser to open the rear camera instead of the file picker.
+   * Mobile only — desktop browsers ignore it.
+   */
+  capture?: boolean;
+  /**
+   * `panel` is the labelled rectangle a form field uses. `tile` is the bare
+   * square "+" that sits in a photo grid next to the pictures already added.
+   */
+  variant?: 'panel' | 'tile';
 }
 
 /**
- * The Accept/Reject/Idle dropzone body shared by the item forms. It appeared
- * four times — main and additional images, in both the new and edit form —
- * differing only in glyph, sizes and copy.
+ * The Accept/Reject/Idle dropzone body shared by the item and category forms:
+ * a dashed rectangle on `gray-light`, glyph over copy, centred.
  */
 export function ImageDropzone({
   onDrop,
@@ -49,14 +63,18 @@ export function ImageDropzone({
   hint,
   disabled,
   idleIcon = 'photo',
-  iconSize = 42,
-  minHeight = 120,
+  iconSize = 32,
+  minHeight = 180,
   maxFiles,
   mb,
-  compact = false,
+  capture,
+  variant = 'panel',
 }: ImageDropzoneProps) {
   const IdleIcon = IDLE_ICONS[idleIcon];
-  const glyph = { width: rem(iconSize), height: rem(iconSize) };
+  const isTile = variant === 'tile';
+  const glyphColor = isTile
+    ? 'var(--mantine-color-dimmed)'
+    : 'var(--mantine-color-teal-filled)';
 
   return (
     <Dropzone
@@ -65,41 +83,54 @@ export function ImageDropzone({
       disabled={disabled}
       maxFiles={maxFiles}
       mb={mb}
+      radius={isTile ? 'sm' : 'md'}
+      inputProps={capture ? { capture: 'environment' } : undefined}
+      styles={{
+        root: {
+          border: '2px dashed var(--mantine-color-default-border)',
+          background: isTile ? 'transparent' : 'var(--mantine-color-gray-light)',
+          ...(isTile ? { aspectRatio: '1 / 1' } : {}),
+        },
+      }}
     >
-      <Group
+      <Stack
+        align="center"
         justify="center"
-        gap={compact ? 'sm' : 'md'}
-        mih={minHeight}
+        gap={6}
+        mih={isTile ? '100%' : minHeight}
+        p={isTile ? 4 : 20}
+        ta="center"
         style={{ pointerEvents: 'none' }}
       >
         <Dropzone.Accept>
           <IconUpload
-            style={{ ...glyph, color: 'var(--mantine-color-teal-6)' }}
+            size={iconSize}
             stroke={1.5}
+            color="var(--mantine-color-teal-filled)"
           />
         </Dropzone.Accept>
         <Dropzone.Reject>
           <IconX
-            style={{ ...glyph, color: 'var(--mantine-color-red-6)' }}
+            size={iconSize}
             stroke={1.5}
+            color="var(--mantine-color-red-filled)"
           />
         </Dropzone.Reject>
         <Dropzone.Idle>
-          <IdleIcon
-            style={{ ...glyph, color: 'var(--mantine-color-dimmed)' }}
-            stroke={1.5}
-          />
+          <IdleIcon size={iconSize} stroke={1.5} color={glyphColor} />
         </Dropzone.Idle>
 
-        <div>
-          <Text size={compact ? 'xs' : 'sm'} inline fw={500}>
+        {title && (
+          <Text fz={14} fw={600}>
             {title}
           </Text>
-          <Text size="xs" c="dimmed" inline mt={compact ? 4 : 7}>
+        )}
+        {hint && (
+          <Text fz={title ? 12 : 13} c="dimmed">
             {hint}
           </Text>
-        </div>
-      </Group>
+        )}
+      </Stack>
     </Dropzone>
   );
 }

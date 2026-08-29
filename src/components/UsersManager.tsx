@@ -1,41 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Container,
-  Paper,
-  Title,
-  Text,
-  Button,
-  Group,
-  Table,
-  Badge,
-  ActionIcon,
-  Modal,
-  TextInput,
-  PasswordInput,
-  Stack,
-  Tooltip,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import {
-  IconUserPlus,
-  IconKey,
-  IconTrash,
-  IconUsers,
-  IconAlertTriangle,
-  IconUser,
-} from '@tabler/icons-react';
+import { ActionIcon, Box, Group, Paper, Text } from '@mantine/core';
+import { IconKey, IconTrash } from '@tabler/icons-react';
+import Link from 'next/link';
 import { useActionRunner } from '@/hooks/useActionRunner';
-import {
-  createUserAction,
-  changePasswordAction,
-  deleteUserAction,
-} from '@/app/actions/users';
+import { deleteUserAction } from '@/app/actions/users';
 import type { User } from '@/db/schema';
+import { AutoGrid } from './AutoGrid';
+import { ConfirmSheet } from './ConfirmSheet';
+
+type ListedUser = Omit<User, 'passwordHash'>;
 
 interface UsersManagerProps {
-  initialUsers: Array<Omit<User, 'passwordHash'>>;
+  initialUsers: ListedUser[];
   currentUserId: string;
 }
 
@@ -43,315 +21,158 @@ export function UsersManager({
   initialUsers,
   currentUserId,
 }: UsersManagerProps) {
-  // Create Modal
-  const [createOpened, { open: openCreate, close: closeCreate }] =
-    useDisclosure(false);
-  const [newUsername, setNewUsername] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const { run: runCreate, pending: isCreating } = useActionRunner();
-
-  // Password Modal
-  const [passwordOpened, { open: openPassword, close: closePassword }] =
-    useDisclosure(false);
-  const [targetUser, setTargetUser] =
-    useState<Omit<User, 'passwordHash'> | null>(null);
-  const [updatedPassword, setUpdatedPassword] = useState('');
-  const { run: runChangePassword, pending: isChangingPassword } = useActionRunner();
-
-  // Delete Modal
-  const [deleteOpened, { open: openDelete, close: closeDelete }] =
-    useDisclosure(false);
-  const [deletingUser, setDeletingUser] =
-    useState<Omit<User, 'passwordHash'> | null>(null);
+  const [deleting, setDeleting] = useState<ListedUser | null>(null);
   const { run: runDelete, pending: isDeleting } = useActionRunner();
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newUsername.trim() || !newPassword) return;
-
-    const formData = new FormData();
-    formData.append('username', newUsername);
-    formData.append('password', newPassword);
-
-    await runCreate({
-      action: () => createUserAction(null, formData),
-      errorTitle: 'Błąd dodawania użytkownika',
-      successTitle: 'Sukces',
-      successMessage: `Użytkownik "${newUsername}" został utworzony.`,
-      onSuccess: () => {
-        setNewUsername('');
-        setNewPassword('');
-        closeCreate();
-      },
-    });
-  };
-
-  const handleOpenPasswordModal = (user: Omit<User, 'passwordHash'>) => {
-    setTargetUser(user);
-    setUpdatedPassword('');
-    openPassword();
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!targetUser || !updatedPassword) return;
-
-    const { id, username } = targetUser;
-    const formData = new FormData();
-    formData.append('userId', id);
-    formData.append('newPassword', updatedPassword);
-
-    await runChangePassword({
-      action: () => changePasswordAction(null, formData),
-      errorTitle: 'Błąd zmiany hasła',
-      successTitle: 'Zmieniono hasło',
-      successMessage: `Hasło dla użytkownika "${username}" zostało pomyślnie zaktualizowane.`,
-      onSuccess: closePassword,
-    });
-  };
-
-  const handleOpenDeleteModal = (user: Omit<User, 'passwordHash'>) => {
-    setDeletingUser(user);
-    openDelete();
-  };
+  const isOnlyUser = initialUsers.length <= 1;
 
   const handleDelete = async () => {
-    if (!deletingUser) return;
-
-    const { id, username } = deletingUser;
+    if (!deleting) return;
+    const { id, username } = deleting;
 
     await runDelete({
       action: () => deleteUserAction(id),
       errorTitle: 'Błąd usuwania',
       successTitle: 'Usunięto użytkownika',
-      successMessage: `Użytkownik "${username}" został usunięty z systemu.`,
-      onSuccess: closeDelete,
+      successMessage: `Użytkownik „${username}” został usunięty z systemu.`,
+      onSuccess: () => setDeleting(null),
     });
   };
 
   return (
-    <Container size="lg">
-      <Paper p="lg" radius="md" withBorder shadow="xs" mb="lg">
-        <Group justify="space-between" align="center">
-          <Group gap="xs">
-            <IconUsers size={28} color="var(--mantine-color-teal-filled)" />
-            <div>
-              <Title order={2} size="h3">
-                Zarządzanie Użytkownikami
-              </Title>
-              <Text c="dimmed" size="sm">
-                Dodawaj nowych domowników i zarządzaj dostępem do katalogu.
-              </Text>
-            </div>
-          </Group>
-          <Button
-            color="teal"
-            leftSection={<IconUserPlus size={18} />}
-            onClick={openCreate}
-          >
-            Dodaj użytkownika
-          </Button>
-        </Group>
-      </Paper>
+    <>
+      <AutoGrid min={320}>
+        {initialUsers.map((user) => {
+          const isCurrent = user.id === currentUserId;
+          // The service refuses both of these; the disabled button says so
+          // before the notification has to.
+          const blockedReason = isCurrent
+            ? 'Nie możesz usunąć samego siebie'
+            : isOnlyUser
+              ? 'Nie można usunąć jedynego konta w systemie'
+              : null;
+          const joinedOn = new Date(user.createdAt).toLocaleDateString(
+            'pl-PL',
+            { day: '2-digit', month: '2-digit', year: 'numeric' }
+          );
 
-      <Paper radius="md" withBorder shadow="xs" style={{ overflow: 'hidden' }}>
-        <Table striped highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Użytkownik</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Data utworzenia</Table.Th>
-              <Table.Th ta="right">Akcje</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {initialUsers.map((u) => {
-              const isCurrent = u.id === currentUserId;
-              const isOnlyUser = initialUsers.length <= 1;
-              const dateStr = new Date(u.createdAt).toLocaleDateString(
-                'pl-PL',
-                {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                }
-              );
-
-              return (
-                <Table.Tr key={u.id}>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <IconUser size={18} />
-                      <Text fw={600}>{u.username}</Text>
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>
-                    {isCurrent && (
-                      <Badge color="teal" variant="light">
-                        To Ty
-                      </Badge>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm" c="dimmed">
-                      {dateStr}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td ta="right">
-                    <Group gap="xs" justify="flex-end">
-                      <Tooltip label="Zmień hasło" withArrow>
-                        <ActionIcon
-                          variant="subtle"
-                          color="teal"
-                          onClick={() => handleOpenPasswordModal(u)}
-                        >
-                          <IconKey size={18} />
-                        </ActionIcon>
-                      </Tooltip>
-
-                      {isCurrent ? (
-                        <Tooltip label="Nie możesz usunąć samego siebie" withArrow>
-                          <span>
-                            <ActionIcon variant="subtle" color="gray" disabled>
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </span>
-                        </Tooltip>
-                      ) : isOnlyUser ? (
-                        <Tooltip
-                          label="Nie można usunąć jedynego konta w systemie"
-                          withArrow
-                        >
-                          <span>
-                            <ActionIcon variant="subtle" color="gray" disabled>
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </span>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip label="Usuń konto" withArrow>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            onClick={() => handleOpenDeleteModal(u)}
-                          >
-                            <IconTrash size={18} />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
-      </Paper>
-
-      {/* Create User Modal */}
-      <Modal
-        opened={createOpened}
-        onClose={closeCreate}
-        title={<Text fw={700}>Dodaj nowego użytkownika</Text>}
-        centered
-      >
-        <form onSubmit={handleCreate}>
-          <Stack gap="md">
-            <TextInput
-              label="Login / Nazwa użytkownika"
-              placeholder="np. mama, tata, piotr"
-              required
-              autoFocus
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.currentTarget.value)}
-              disabled={isCreating}
-            />
-            <PasswordInput
-              label="Hasło początkowe"
-              placeholder="Minimum 4 znaki"
-              required
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.currentTarget.value)}
-              disabled={isCreating}
-            />
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={closeCreate} disabled={isCreating}>
-                Anuluj
-              </Button>
-              <Button type="submit" color="teal" loading={isCreating}>
-                Utwórz konto
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </Modal>
-
-      {/* Change Password Modal */}
-      <Modal
-        opened={passwordOpened}
-        onClose={closePassword}
-        title={
-          <Text fw={700}>
-            Zmień hasło dla &quot;{targetUser?.username}&quot;
-          </Text>
-        }
-        centered
-      >
-        <form onSubmit={handleChangePassword}>
-          <Stack gap="md">
-            <PasswordInput
-              label="Nowe hasło"
-              placeholder="Minimum 4 znaki"
-              required
-              autoFocus
-              value={updatedPassword}
-              onChange={(e) => setUpdatedPassword(e.currentTarget.value)}
-              disabled={isChangingPassword}
-            />
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={closePassword} disabled={isChangingPassword}>
-                Anuluj
-              </Button>
-              <Button type="submit" color="teal" loading={isChangingPassword}>
-                Zmień hasło
-              </Button>
-            </Group>
-          </Stack>
-        </form>
-      </Modal>
-
-      {/* Delete User Warning Modal */}
-      <Modal
-        opened={deleteOpened}
-        onClose={closeDelete}
-        title={
-          <Group gap="xs">
-            <IconAlertTriangle color="red" size={20} />
-            <Text fw={700}>Potwierdź usunięcie użytkownika</Text>
-          </Group>
-        }
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            Czy na pewno chcesz usunąć konto użytkownika{' '}
-            <strong>&quot;{deletingUser?.username}&quot;</strong>?
-          </Text>
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={closeDelete} disabled={isDeleting}>
-              Anuluj
-            </Button>
-            <Button
-              color="red"
-              onClick={handleDelete}
-              loading={isDeleting}
-              leftSection={<IconTrash size={16} />}
+          return (
+            <Paper
+              key={user.id}
+              component="article"
+              withBorder
+              radius="md"
+              shadow="xs"
+              p={12}
             >
-              Usuń konto
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
-    </Container>
+              <Group gap={12} wrap="nowrap">
+                <Box
+                  w={52}
+                  h={52}
+                  style={{
+                    flex: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    background: 'var(--mantine-color-gray-light)',
+                  }}
+                >
+                  <Text fz={18} fw={700} c="dimmed">
+                    {user.username.slice(0, 1).toUpperCase()}
+                  </Text>
+                </Box>
+
+                <Box style={{ flex: 1, minWidth: 0 }}>
+                  <Group gap={8} wrap="nowrap">
+                    <Text fz={15} fw={600} truncate>
+                      {user.username}
+                    </Text>
+                    {isCurrent && (
+                      <Text
+                        component="span"
+                        fz={11}
+                        fw={600}
+                        px={8}
+                        py={2}
+                        style={{
+                          flex: 'none',
+                          borderRadius: 999,
+                          background: 'var(--mantine-color-teal-light)',
+                          color: 'var(--mantine-color-teal-filled)',
+                        }}
+                      >
+                        To Ty
+                      </Text>
+                    )}
+                  </Group>
+                  <Text fz={12} c="dimmed" mt={2}>
+                    dołączył(a) {joinedOn}
+                  </Text>
+                </Box>
+
+                <Group gap={4} wrap="nowrap" style={{ flex: 'none' }}>
+                  <ActionIcon
+                    component={Link}
+                    href={`/users/${user.id}/password`}
+                    variant="light"
+                    color="teal"
+                    radius="md"
+                    w={44}
+                    h={44}
+                    aria-label={`Zmień hasło użytkownika ${user.username}`}
+                    title="Zmień hasło"
+                  >
+                    <IconKey size={20} />
+                  </ActionIcon>
+
+                  {blockedReason ? (
+                    <ActionIcon
+                      variant="light"
+                      color="gray"
+                      radius="md"
+                      w={44}
+                      h={44}
+                      disabled
+                      aria-label={blockedReason}
+                      title={blockedReason}
+                      style={{ cursor: 'not-allowed' }}
+                    >
+                      <IconTrash size={20} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      radius="md"
+                      w={44}
+                      h={44}
+                      onClick={() => setDeleting(user)}
+                      aria-label={`Usuń konto ${user.username}`}
+                      title="Usuń konto"
+                    >
+                      <IconTrash size={20} />
+                    </ActionIcon>
+                  )}
+                </Group>
+              </Group>
+            </Paper>
+          );
+        })}
+      </AutoGrid>
+
+      <ConfirmSheet
+        opened={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title="Usunąć konto?"
+        message={
+          deleting
+            ? `Konto „${deleting.username}” straci dostęp do katalogu. Dodane przez nie przedmioty zostaną w katalogu.`
+            : ''
+        }
+        onConfirm={handleDelete}
+        loading={isDeleting}
+      />
+    </>
   );
 }
