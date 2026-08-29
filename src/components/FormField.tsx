@@ -21,6 +21,15 @@ export const TALL_INPUT_STYLES = {
   input: { height: 48, fontSize: 16 },
 } as const;
 
+/**
+ * The taller variant the auth screens use — 52px rather than 48px, the only
+ * two screens with nothing else on them.
+ */
+export const AUTH_INPUT_STYLES = {
+  ...FIELD_LABEL_STYLES,
+  input: { height: 52, fontSize: 16 },
+} as const;
+
 interface FieldBlockProps {
   label: string;
   /** Dimmed 12px line between the label and the control. */
