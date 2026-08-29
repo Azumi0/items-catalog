@@ -1,7 +1,7 @@
 import { getDb } from '@/db';
 import { users, User } from '@/db/schema';
 import { count, eq } from 'drizzle-orm';
-import { hashPassword, verifyPassword } from '@/lib/auth';
+import { getDecoyPasswordHash, hashPassword, verifyPassword } from '@/lib/auth';
 import crypto from 'crypto';
 
 export async function getUserCount(): Promise<number> {
@@ -28,11 +28,24 @@ export async function getUser(
   return userWithoutPassword;
 }
 
-export const MIN_PASSWORD_LENGTH = 4;
+/**
+ * Twelve, not the four this started with.
+ *
+ * Four characters is a defensible floor for a service reachable only from the
+ * living room; it is indefensible for one published to the internet (ADR-006),
+ * where the entire keyspace fits in a wordlist. The login throttle makes online
+ * guessing slow, but it cannot help if `app.db` ever leaves the NAS — a backup
+ * on a laptop, a snapshot in someone's cloud — because bcrypt at cost 10 will
+ * not save a four-character password from an offline attack.
+ *
+ * Only checked when a password is written. Accounts created under the old
+ * floor keep working; changing their password is what brings them up to it.
+ */
+export const MIN_PASSWORD_LENGTH = 12;
 
 export function validatePassword(password: string): void {
   if (!password || password.length < MIN_PASSWORD_LENGTH) {
-    throw new Error(`Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaki.`);
+    throw new Error(`Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków.`);
   }
 }
 
@@ -157,6 +170,9 @@ export async function authenticateUser(
     .limit(1);
 
   if (!user) {
+    // Burn the same ~80 ms a real account would, so response time does not
+    // reveal which usernames exist. See getDecoyPasswordHash.
+    await verifyPassword(password, await getDecoyPasswordHash());
     return null;
   }
 

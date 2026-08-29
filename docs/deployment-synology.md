@@ -14,7 +14,7 @@ Wynikają z kodu, nie z dokumentacji, i każda potrafi zablokować wdrożenie:
 
 **2. Zmienna to `DATA_DIR`, nie `DATA_PATH`.** Wcześniejsze wersje `README.md` i przykładowego compose podawały `DATA_PATH` — ta nazwa nie występuje nigdzie w kodzie (`src/lib/storage.ts`, `src/db/index.ts` czytają `DATA_DIR`). Oba pliki są już poprawione; gdybyś napotkał `DATA_PATH` w starszej kopii, to literówka, nie alias.
 
-**3. `SESSION_SECRET` ma wbudowany fallback.** Bez tej zmiennej aplikacja użyje stałego sekretu zapisanego w repozytorium — każdy, kto zna kod, może podrobić ciasteczko sesji. Wygeneruj własny.
+**3. Bez `SESSION_SECRET` aplikacja się nie uruchomi.** `src/lib/auth.ts` odrzuca start w produkcji, gdy zmiennej brakuje, jest krótsza niż 32 znaki albo nadal ma wartość zastępczą z dokumentacji. Wcześniejsze wersje miały tu cichy fallback na sekret zapisany w repozytorium — został usunięty, bo każdy, kto czytał kod, mógł podrobić ciasteczko sesji. Wygeneruj własny: `openssl rand -base64 32`.
 
 ---
 
@@ -172,7 +172,7 @@ Using PUID: 1026, PGID: 100
 Running database migrations...
 Migrations completed successfully.
 Starting server...
-▲ Next.js 15.x  - Local: http://0.0.0.0:3000
+▲ Next.js 16.x  - Local: http://0.0.0.0:3000
 ```
 
 W File Station w `/docker/items-catalog/data/` powinny pojawić się `app.db`, `app.db-wal` i katalog `uploads/`.
@@ -279,11 +279,63 @@ sudo synosystemctl restart nginx
 
 Ustawienie przeżywa restart NAS-a, ale może zostać skasowane przy większej aktualizacji DSM — warto zapamiętać, że to tu.
 
+### 8f. Dostęp spoza domu (opcjonalny, ale zmienia model zagrożeń)
+
+Do tego miejsca aplikacja jest dostępna wyłącznie z LAN-u. Jeśli chcesz odczytywać katalog będąc poza domem — na przykład w sklepie, żeby nie kupić drugi raz tej samej rzeczy — potrzebne jest przekierowanie portu na routerze:
+
+| Pole | Wartość |
+| --- | --- |
+| Port zewnętrzny | `443` |
+| Adres docelowy | IP NAS-a, np. `192.168.1.13` |
+| Port docelowy | `443` |
+| Protokół | TCP |
+
+Testuj **z telefonu na danych komórkowych, z wyłączonym Wi-Fi** — to jedyny wiarygodny test dostępu z zewnątrz.
+
+**Zapora DSM musi to przepuścić.** Panel sterowania → Bezpieczeństwo → Zapora. Typowa konfiguracja dopuszcza tylko `192.168.1.0/24`, a domyślna odmowa jest realizowana jako *drop*, nie *reject* — objawem jest timeout, nie odmowa połączenia. Przy okazji warto zawęzić regułę dla portu 443 geolokalizacją do Polski: nie zatrzyma to nikogo zdeterminowanego, ale odcina większość automatycznego skanowania.
+
+**Certyfikat musi się odnawiać bez Twojego udziału.** Sprawdź, co obejmuje:
+
+```bash
+sudo openssl s_client -connect 127.0.0.1:443 -servername katalog.mojdom.synology.me </dev/null 2>/dev/null | openssl x509 -noout -subject -ext subjectAltName -dates
+```
+
+Wildcard `*.mojdom.synology.me` w `subjectAltName` oznacza weryfikację DNS-01 i odnowienia bez otwierania czegokolwiek. Konkretna nazwa oznacza HTTP-01 — wtedy **port 80 też musi być przekierowany na stałe**, inaczej za około 60 dni odnowienie cicho padnie i błąd certyfikatu zastanie Cię w sklepie.
+
+**Co robi po tej stronie sama aplikacja.** Wystawienie na internet było powodem zmian opisanych w [`ADR-006`](adr/ADR-006-hartowanie-pod-dostep-z-internetu.md): logowanie ma ograniczenie prób (5 błędnych haseł → blokada od 60 s do 15 minut, liczona osobno dla nazwy użytkownika i adresu klienta), minimalna długość hasła wynosi 12 znaków, a odpowiedzi niosą komplet nagłówków bezpieczeństwa. Jedno zastrzeżenie, o które łatwo się potknąć: **automatyczne blokowanie DSM tu nie działa** — reaguje ono na nieudane logowania do usług Synology, a Twoje idą przez reverse proxy prosto do aplikacji i DSM ich nie widzi.
+
+Alternatywą dla otwierania portu jest **VPN** (UniFi i inne routery mają wbudowany WireGuard, jest też pakiet Tailscale w Centrum pakietów). Kosztuje jedno stuknięcie w przełącznik przed sprawdzeniem katalogu, a w zamian NAS pozostaje niewidoczny z internetu. To także jedyne wyjście, gdy operator stosuje CGNAT.
+
+### 8g. Gdy adres nie odpowiada
+
+Diagnozę prowadź w tej kolejności — każdy krok odcina warstwę i żaden nie wymaga zgadywania:
+
+| # | Polecenie | Co rozstrzyga |
+| --- | --- | --- |
+| 1 | `nslookup katalog.mojdom.synology.me` (z PC) | czy nazwa się rozwiązuje i na jaki adres — publiczny czy lokalny |
+| 2 | `Test-NetConnection -ComputerName 192.168.1.13 -Port 443` (PowerShell) | czy nginx DSM w ogóle słucha i czy zapora przepuszcza ruch z LAN-u |
+| 3 | `curl -k -I -H 'Host: katalog.mojdom.synology.me' https://127.0.0.1/` — **przez SSH na NAS-ie**, nie na PC | czy reguła reverse proxy i aplikacja działają. Oczekiwane: `HTTP/2 307` z `location: /login` |
+| 4 | `sudo tcpdump -ni any 'tcp port 443 and not net 192.168.0.0/16'` na NAS-ie, w trakcie próby z danych komórkowych | czy pakiety z internetu w ogóle docierają do NAS-a |
+
+Krok 3 uruchomiony omyłkowo na własnym PC pyta `127.0.0.1` laptopa i zawsze zwróci `Could not connect` — to nie jest wynik mówiący cokolwiek o NAS-ie.
+
+Interpretacja:
+
+| Objaw | Przyczyna | Naprawa |
+| --- | --- | --- |
+| `ERR_CONNECTION_TIMED_OUT`, krok 3 zwraca `307` | ruch nie dociera do NAS-a; problem jest w sieci, nie w konfiguracji z etapów 8c–8d | kroki 1 i 4 wskażą warstwę |
+| DNS zwraca adres publiczny, z LAN-u timeout | brak NAT hairpin — router nie zawraca ruchu wychodzącego na własny adres | lokalny rekord DNS wskazujący na IP NAS-a (na routerze albo w pakiecie DNS Server); do szybkiego testu wpis w `hosts` na PC |
+| tcpdump pokazuje `Flags [S]` bez odpowiedzi | zapora DSM odrzuca ruch spoza LAN-u | reguła dla 443 w Panel sterowania → Bezpieczeństwo → Zapora |
+| tcpdump nie pokazuje niczego | ruch ginie przed NAS-em | sprawdź adres WAN routera: `100.64–100.127.x.x` to CGNAT operatora, adres prywatny to podwójny NAT za modemem operatora |
+| błąd certyfikatu, ale strona się ładuje | certyfikat nie obejmuje subdomeny | krok 8b — wariant wildcard |
+
 ---
 
 ## Etap 9 — Pierwsze konto i instalacja PWA
 
 Wejdź na `https://katalog.mojdom.synology.me` → przekierowanie na `/setup` → załóż pierwsze konto administratora.
+
+**Hasło musi mieć co najmniej 12 znaków** i — jeśli wykonałeś etap 8f — jest jedynym sekretem chroniącym katalog przed internetem. Ograniczenie prób logowania spowalnia zgadywanie, ale nie uratuje hasła, które ktoś odgadnie za piątym razem. Użyj menedżera haseł.
 
 Na telefonie: otwórz ten sam adres w Chrome lub Safari → menu → **Dodaj do ekranu głównego**. Manifest (`public/manifest.json`) ustawia `display: standalone`, więc aplikacja otworzy się bez paska adresu. Dopiero teraz, po HTTPS, zadziała też dostęp do aparatu przy dodawaniu zdjęć.
 

@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import { SessionOptions } from 'iron-session';
 
 export interface SessionData {
@@ -75,4 +76,24 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
+}
+
+let decoyHash: Promise<string> | null = null;
+
+/**
+ * A well-formed bcrypt hash of a value nobody can guess, for comparing against
+ * when the submitted username does not exist.
+ *
+ * Without it, a login for an unknown account returns as fast as the database
+ * lookup while a wrong password for a real account costs a full bcrypt verify.
+ * That gap is measurable over the network and turns the login form into an
+ * account-name oracle — which matters here because the one account is likely
+ * named after its owner.
+ *
+ * Built lazily and cached: hashing once at import would add ~80 ms to every
+ * cold start for a value most requests never touch.
+ */
+export function getDecoyPasswordHash(): Promise<string> {
+  decoyHash ??= hashPassword(crypto.randomUUID());
+  return decoyHash;
 }
