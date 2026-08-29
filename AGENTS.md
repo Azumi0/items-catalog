@@ -21,6 +21,12 @@ The only exceptions are `/login`, `/setup`, and the auth actions that back them.
 
 Nothing enforces this mechanically. See `docs/adr/ADR-003-page-level-authorization-invariant.md`.
 
+### Internet-facing hardening
+
+This catalog is published to the internet through the DSM reverse proxy, so the login form is exposed to more than the household. Four things exist because of that and are not spare parts: the throttle in `src/lib/loginThrottle.ts`, the rightmost-hop rule in `src/lib/requestIp.ts`, `MIN_PASSWORD_LENGTH = 12`, and the decoy bcrypt comparison for unknown usernames.
+
+Each has a plausible-looking "simplification" that quietly removes the protection — reading the leftmost `X-Forwarded-For` entry, returning early when the user is not found, lowering the password floor to make a test convenient. Read `docs/adr/ADR-006-hartowanie-pod-dostep-z-internetu.md` before touching any of them.
+
 ### Issue tracker
 
 
