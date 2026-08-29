@@ -79,6 +79,8 @@ Camera capture (`getUserMedia`) and "Add to Home Screen" also require a secure c
 
 ## Getting Started (Local Development)
 
+Requires **Node.js 24.18.0 or newer** (see `.nvmrc`); `pnpm` is pinned through `packageManager`.
+
 ### 1. Install dependencies
 
 ```bash

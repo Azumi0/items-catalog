@@ -1,7 +1,9 @@
 # 1. Base image
-# Node 22: pnpm 11 (pinned w package.json -> packageManager) wymaga >= 22.13,
-# bo korzysta z wbudowanego modulu node:sqlite.
-FROM node:22-alpine AS base
+# Wersja przypieta dokladnie (nie node:24-alpine): obraz jest artefaktem
+# odtwarzalnym, wiec podbicie patcha ma byc swiadoma zmiana w repo.
+# Dolny prog nadal obowiazuje: pnpm 11 wymaga Node >= 22.13, bo korzysta
+# z wbudowanego modulu node:sqlite. 24.18.0 spelnia go z zapasem.
+FROM node:24.18.0-alpine AS base
 RUN apk add --no-cache libc6-compat su-exec python3 make g++
 # Bez --activate/@latest: corepack pobiera dokladnie wersje z pola packageManager.
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
@@ -23,11 +25,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 RUN pnpm run build
-RUN pnpm exec esbuild src/db/migrate.ts --bundle --platform=node --target=node22 --outfile=dist/migrate.js --external:better-sqlite3
+RUN pnpm exec esbuild src/db/migrate.ts --bundle --platform=node --target=node24 --outfile=dist/migrate.js --external:better-sqlite3
 
 
 # 4. Production Runner
-FROM node:22-alpine AS runner
+FROM node:24.18.0-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-cache libc6-compat su-exec
