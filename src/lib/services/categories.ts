@@ -9,8 +9,12 @@ export interface CategoryWithCount extends Category {
   /**
    * `main_image` of the newest item in the category, or null when it has none.
    * The third step of the category visual fallback — see src/lib/categoryVisual.ts.
+   *
+   * The design handoff calls this `firstItemImage`; renamed because "first" is
+   * a position in a list whose order the user can flip, while the value is a
+   * fixed recency rule. See ADR-004 §3.7.
    */
-  firstItemImage: string | null;
+  newestItemImage: string | null;
 }
 
 /**
@@ -27,7 +31,7 @@ export interface CategoryVisualInput {
  * joins `items` to count them, and joining it again for "newest row per group"
  * would need a window function SQLite only gained in 3.25.
  */
-const firstItemImageSql = sql<
+const newestItemImageSql = sql<
   string | null
 >`(select ${items.mainImage} from ${items} where ${items.categoryId} = ${categories.id} order by ${items.createdAt} desc limit 1)`;
 
@@ -42,7 +46,7 @@ export async function getCategories(): Promise<CategoryWithCount[]> {
       createdAt: categories.createdAt,
       updatedAt: categories.updatedAt,
       itemCount: count(items.id),
-      firstItemImage: firstItemImageSql,
+      newestItemImage: newestItemImageSql,
     })
     .from(categories)
     .leftJoin(items, eq(items.categoryId, categories.id))

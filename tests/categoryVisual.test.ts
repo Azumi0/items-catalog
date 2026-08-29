@@ -8,7 +8,7 @@ describe('Category visual fallback', () => {
         name: 'Elektronika',
         icon: 'IconDeviceLaptop',
         mainImage: 'hero.jpg',
-        firstItemImage: 'laptop.jpg',
+        newestItemImage: 'laptop.jpg',
       })
     ).toEqual({ kind: 'image', value: 'hero.jpg' });
   });
@@ -19,7 +19,7 @@ describe('Category visual fallback', () => {
         name: 'Elektronika',
         icon: 'IconDeviceLaptop',
         mainImage: null,
-        firstItemImage: 'laptop.jpg',
+        newestItemImage: 'laptop.jpg',
       })
     ).toEqual({ kind: 'icon', value: 'IconDeviceLaptop' });
   });
@@ -30,7 +30,7 @@ describe('Category visual fallback', () => {
         name: 'Narzędzia',
         icon: null,
         mainImage: null,
-        firstItemImage: 'wiertarka.jpg',
+        newestItemImage: 'wiertarka.jpg',
       })
     ).toEqual({ kind: 'derived', value: 'wiertarka.jpg' });
   });
@@ -41,7 +41,7 @@ describe('Category visual fallback', () => {
         name: 'książki',
         icon: null,
         mainImage: null,
-        firstItemImage: null,
+        newestItemImage: null,
       })
     ).toEqual({ kind: 'monogram', value: 'K' });
   });
@@ -52,7 +52,7 @@ describe('Category visual fallback', () => {
         name: 'Ogród',
         icon: '   ',
         mainImage: '',
-        firstItemImage: null,
+        newestItemImage: null,
       })
     ).toEqual({ kind: 'monogram', value: 'O' });
   });

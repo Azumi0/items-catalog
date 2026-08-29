@@ -15,7 +15,7 @@ actions. Edit is a link to the category's form screen; delete opens a
 <CategoriesManager
   initialCategories={[{
     id: 'c-1', name: 'Elektronika', icon: 'IconDeviceLaptop', mainImage: null,
-    itemCount: 12, firstItemImage: null,
+    itemCount: 12, newestItemImage: null,
     createdAt: new Date(), updatedAt: new Date(),
   }]}
 />
