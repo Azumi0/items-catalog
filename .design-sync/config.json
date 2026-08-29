@@ -94,6 +94,25 @@
     },
     "ItemDetailView": {
       "cardMode": "column"
+    },
+    "CategoryVisual": {
+      "cardMode": "column"
+    },
+    "ItemForm": {
+      "cardMode": "single",
+      "primaryStory": "Add"
+    },
+    "CategoryForm": {
+      "cardMode": "single",
+      "primaryStory": "Create"
+    },
+    "UserForm": {
+      "cardMode": "single",
+      "primaryStory": "Create"
+    },
+    "PasswordForm": {
+      "cardMode": "single",
+      "primaryStory": "ChangePassword"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"

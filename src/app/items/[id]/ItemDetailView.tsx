@@ -19,7 +19,12 @@ import { ImageLightboxModal } from '@/components/ImageLightboxModal';
 import { AutoGrid } from '@/components/AutoGrid';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { useActionRunner } from '@/hooks/useActionRunner';
-import { thumbUrl, originalUrl, DETAIL_PLACEHOLDER } from '@/lib/images';
+import {
+  thumbUrl,
+  originalUrl,
+  DETAIL_PLACEHOLDER,
+  THUMB_PLACEHOLDER,
+} from '@/lib/images';
 
 interface ItemDetailViewProps {
   item: ItemWithCategory;
@@ -83,6 +88,7 @@ export function ItemDetailView({ item }: ItemDetailViewProps) {
                 <Image
                   src={thumbUrl(filename)}
                   alt=""
+                  fallbackSrc={THUMB_PLACEHOLDER}
                   radius="sm"
                   style={{ aspectRatio: '1 / 1', objectFit: 'cover' }}
                 />

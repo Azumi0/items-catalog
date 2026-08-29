@@ -104,7 +104,7 @@ them via `paths`:
 - `[RENDER_THIN] ImageLightboxModal … rendered height is 0px` — the modal is a
   portal with fixed positioning, so measured height collapses. The screenshot
   is correct and complete; benign.
-- `[EXPORT_COLLISION] ./.design-sync/screens.ts exports 5 name(s) the main
+- `[EXPORT_COLLISION] ./.design-sync/screens.ts exports 3 name(s) the main
   package also exports` — false positive. In synth-entry mode the converter
   adds every discovered component to its "main exports" set before comparing,
   but the synth entry re-exports only `src/components`. Confirmed harmless:
@@ -136,3 +136,18 @@ them via `paths`:
   A different cache means a different Playwright release — check
   `playwright-core/browsers.json` before installing.
 - The build was run on Node 24.18, pnpm 11.15.1, Mantine 7.17, Next 15.1.
+
+## Validator warnings that are expected here
+
+- `[RENDER_THIN] ConfirmSheet` and `[RENDER_THIN] ImageLightboxModal` — both
+  are Mantine overlays (`Drawer` and `Modal`), so their content renders into a
+  portal outside the measured subtree and the preview measures 0px high. The
+  screenshots in `_screenshots/` show both rendering correctly; the check is
+  measuring the wrong box, not finding an empty one.
+- `[GRID_OVERFLOW]` on the four form components — `FormActionBar` is
+  `position: fixed` by design, so no grid cell can contain it. They carry
+  `cardMode: "single"` in `cfg.overrides` for that reason; re-adding a story
+  to one of them may re-trip the check until the override is confirmed.
+- `[TOKENS_MISSING] --app-shell-*` — Mantine's `AppShell` stylesheet still
+  ships in the concatenated CSS, but the redesign replaced `AppShell` with a
+  hand-built shell, so nothing sets those variables. Harmless.

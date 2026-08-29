@@ -21,7 +21,7 @@ import {
   categoryIconComponent,
   categoryIconLabel,
 } from '@/lib/categoryIcons';
-import { thumbUrl } from '@/lib/images';
+import { thumbUrl, THUMB_PLACEHOLDER } from '@/lib/images';
 import { useSingleImagePreview } from '@/hooks/useImagePreviews';
 import { AutoGrid } from './AutoGrid';
 import { FieldBlock, TALL_INPUT_STYLES } from './FormField';
@@ -154,6 +154,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
               <Image
                 src={previewSrc}
                 alt="Zdjęcie kategorii"
+                fallbackSrc={THUMB_PLACEHOLDER}
                 h={140}
                 w={140}
                 radius="md"
