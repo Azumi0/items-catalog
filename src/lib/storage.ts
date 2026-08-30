@@ -67,7 +67,15 @@ export async function saveImage(
   // reject the input (e.g. a .heic the Alpine build has no codec for), and
   // writing the original before that would leave a file with no thumbnail
   // and no database row pointing at it.
+  //
+  // `.rotate()` comes before the resize and is not optional: a phone stores the
+  // frame the sensor saw and records the quarter-turn in an EXIF tag, which
+  // every viewer applies to the untouched original. Sharp applies it only when
+  // asked, and strips the tag from its output — so without this call the
+  // thumbnail ends up lying on its side next to an item photo that shows
+  // upright.
   const thumbBuffer = await sharp(buffer)
+    .rotate()
     .resize(400, 400, {
       fit: 'inside',
       withoutEnlargement: true,

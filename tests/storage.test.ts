@@ -22,6 +22,38 @@ describe('Storage & Media Processing Seam', () => {
     delete process.env.DATA_DIR;
   });
 
+  /**
+   * A phone writes the photo in the sensor's own orientation and records how
+   * to turn it in an EXIF tag; every viewer applies the tag. Sharp does not,
+   * unless asked, and it drops the tag from the output — so a thumbnail built
+   * without that step comes out lying on its side while the untouched original
+   * still shows upright on the item screen.
+   */
+  it('turns the thumbnail the way the original EXIF orientation asks', async () => {
+    // Orientation 6 = "rotate 90° clockwise when displaying", which is what a
+    // phone held upright writes. Landscape pixels, portrait once turned.
+    const sideways = await sharp({
+      create: {
+        width: 800,
+        height: 400,
+        channels: 3,
+        background: { r: 0, g: 128, b: 0 },
+      },
+    })
+      .jpeg()
+      .withMetadata({ orientation: 6 })
+      .toBuffer();
+
+    expect((await sharp(sideways).metadata()).orientation).toBe(6);
+
+    const result = await saveImage(sideways, 'photo.jpg');
+    const thumb = await sharp(
+      await fs.promises.readFile(getImagePath('thumbs', result.thumbFilename))
+    ).metadata();
+
+    expect(thumb.height).toBeGreaterThan(thumb.width!);
+  });
+
   it('saves an image original and generates a webp thumbnail (max 400x400)', async () => {
     // Create a 800x600 test image in memory with sharp
     const testImageBuffer = await sharp({
