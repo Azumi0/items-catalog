@@ -29,7 +29,11 @@ export async function setupFirstUserAction(prevState: any, formData: FormData) {
     // setupFirstUser validates the password itself — see services/users.ts.
     const user = await setupFirstUser(username, password);
     const session = await getSession();
-    session.user = { id: user.id, username: user.username };
+    session.user = {
+      id: user.id,
+      username: user.username,
+      sessionVersion: user.sessionVersion,
+    };
     session.isLoggedIn = true;
     await session.save();
     // Creating the first account is a successful authentication like any
@@ -106,7 +110,13 @@ export async function loginAction(prevState: any, formData: FormData) {
   }
 
   const session = await getSession();
-  session.user = { id: user.id, username: user.username };
+  // The version is stamped into the cookie so that a later password change can
+  // invalidate it — see getCurrentUser (ADR-007).
+  session.user = {
+    id: user.id,
+    username: user.username,
+    sessionVersion: user.sessionVersion,
+  };
   session.isLoggedIn = true;
   await session.save();
 

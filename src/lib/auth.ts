@@ -6,6 +6,16 @@ export interface SessionData {
   user?: {
     id: string;
     username: string;
+    /**
+     * The account's `session_version` at the moment this cookie was issued.
+     * A cookie whose copy no longer matches the database has been revoked —
+     * see getCurrentUser (ADR-007).
+     *
+     * Optional because cookies issued before this field existed are still in
+     * circulation; they are read as version 0, which is what every existing
+     * account starts at, so deploying this does not sign the household out.
+     */
+    sessionVersion?: number;
   };
   isLoggedIn: boolean;
 }
