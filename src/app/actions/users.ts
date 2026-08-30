@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAuth } from '@/lib/session';
+import { getSession, requireAuth } from '@/lib/session';
 import {
   createUser,
   changePassword,
@@ -28,7 +28,7 @@ export async function createUserAction(prevState: any, formData: FormData) {
 }
 
 export async function changePasswordAction(prevState: any, formData: FormData) {
-  await requireAuth();
+  const currentUser = await requireAuth();
   const userId = formData.get('userId') as string;
   const newPassword = formData.get('newPassword') as string;
 
@@ -38,7 +38,22 @@ export async function changePasswordAction(prevState: any, formData: FormData) {
 
   try {
     // changePassword validates the password itself — see services/users.ts.
-    await changePassword(userId, newPassword);
+    const sessionVersion = await changePassword(userId, newPassword);
+
+    // Changing a password signs out every cookie issued under the old one
+    // (ADR-007) — including, without this, the one that just asked for the
+    // change. Restamping keeps the browser doing the work signed in while
+    // still evicting that account's other devices, which is the behaviour
+    // anyone changing their own password expects. Changing somebody else's
+    // account leaves this session alone and signs *them* out everywhere.
+    if (userId === currentUser.id) {
+      const session = await getSession();
+      if (session.user) {
+        session.user.sessionVersion = sessionVersion;
+        await session.save();
+      }
+    }
+
     revalidatePath('/users');
     return { success: true };
   } catch (err: any) {

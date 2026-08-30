@@ -15,6 +15,13 @@
       "when": 1787979242457,
       "tag": "0001_spotty_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788092223945,
+      "tag": "0002_lovely_mandarin",
+      "breakpoints": true
     }
   ]
 }

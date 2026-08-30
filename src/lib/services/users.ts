@@ -10,6 +10,32 @@ export async function getUserCount(): Promise<number> {
   return result[0]?.count ?? 0;
 }
 
+/**
+ * The state every request needs to decide whether a session cookie is still
+ * good: does this account still exist, and has its password changed since the
+ * cookie was issued (ADR-007)?
+ *
+ * Deliberately narrow. It runs on every authenticated request, so it reads one
+ * row by primary key and returns nothing that would tempt a caller to use it
+ * as a general-purpose user lookup.
+ */
+export async function getUserAuthState(
+  id: string
+): Promise<{ id: string; username: string; sessionVersion: number } | null> {
+  const db = getDb();
+  const [row] = await db
+    .select({
+      id: users.id,
+      username: users.username,
+      sessionVersion: users.sessionVersion,
+    })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
+
+  return row ?? null;
+}
+
 export async function getUsers(): Promise<Array<Omit<User, 'passwordHash'>>> {
   const db = getDb();
   const allUsers = await db.select().from(users).orderBy(users.createdAt);
@@ -117,10 +143,19 @@ export async function createUser(
   return userWithoutPassword;
 }
 
+/**
+ * Returns the account's new session version, so the caller can decide what to
+ * do about the session it is holding right now.
+ *
+ * Bumping it signs out every device holding a cookie issued under the old
+ * password. That is the point: a self-contained encrypted session cookie
+ * cannot otherwise be revoked, so before this the standard response to a
+ * suspected leak — change the password — evicted nobody for up to a week.
+ */
 export async function changePassword(
   userId: string,
   newPassword: string
-): Promise<void> {
+): Promise<number> {
   validatePassword(newPassword);
 
   const db = getDb();
@@ -135,10 +170,13 @@ export async function changePassword(
   }
 
   const passwordHash = await hashPassword(newPassword);
+  const sessionVersion = existing[0].sessionVersion + 1;
   await db
     .update(users)
-    .set({ passwordHash })
+    .set({ passwordHash, sessionVersion })
     .where(eq(users.id, userId));
+
+  return sessionVersion;
 }
 
 export async function deleteUser(
@@ -161,7 +199,7 @@ export async function deleteUser(
 export async function authenticateUser(
   username: string,
   password: string
-): Promise<{ id: string; username: string } | null> {
+): Promise<{ id: string; username: string; sessionVersion: number } | null> {
   const db = getDb();
   const [user] = await db
     .select()
@@ -184,5 +222,6 @@ export async function authenticateUser(
   return {
     id: user.id,
     username: user.username,
+    sessionVersion: user.sessionVersion,
   };
 }
