@@ -55,6 +55,13 @@ services:
       # Zmiana tej wartosci uniewaznia wszystkie aktywne sesje.
       - SESSION_SECRET=ZMIEN-MNIE-na-losowy-ciag-minimum-32-znaki
 
+      # UWAGA: PUBLIC_ORIGIN nie jest zmienna srodowiskowa kontenera i nie ma
+      # sensu dopisywac jej tutaj. Next zapisuje next.config.mjs do
+      # standalone/server.js w czasie budowania obrazu, wiec ta wartosc musi
+      # trafic do `docker build --build-arg PUBLIC_ORIGIN=...` na stacji
+      # roboczej. W typowej konfiguracji DSM w ogole nie jest potrzebna —
+      # patrz komentarz w next.config.mjs.
+
     # UWAGA: NIE ustawiaj tu "logging: driver: json-file".
     #
     # Demon Dockera na DSM uzywa wlasnego sterownika logow (Synology "db") i

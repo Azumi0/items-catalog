@@ -15,6 +15,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # Publiczna nazwa hosta katalogu, np. katalog.example.synology.me.
+        #
+        # To argument BUDOWANIA, nie zmienna srodowiskowa kontenera: Next
+        # zapisuje next.config.mjs do standalone/server.js w czasie builda,
+        # wiec wpis w sekcji environment nie zostalby przez nic odczytany.
+        #
+        # Zostaw pusta, jesli odwrotny serwer proxy przekazuje naglowek Host
+        # bez zmian — wtedy Origin i Host sie zgadzaja i lista nie jest
+        # potrzebna. Szczegoly w komentarzu w next.config.mjs.
+        - PUBLIC_ORIGIN=${PUBLIC_ORIGIN:-}
     image: home-item-catalog:latest
     container_name: item-catalog
     restart: unless-stopped

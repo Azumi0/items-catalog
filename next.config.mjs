@@ -46,6 +46,34 @@ const securityHeaders = [
   },
 ];
 
+/**
+ * Cross-site request forgery is handled by Next itself, and deliberately not by
+ * tokens of our own (ADR-007).
+ *
+ * Every mutation in this app is a Server Action; the only Route Handler is a
+ * GET. For each Server Action call Next compares the `Origin` header against
+ * `Host`/`X-Forwarded-Host` and aborts on a mismatch
+ * (next/dist/server/app-render/action-handler.js), action ids are unguessable,
+ * the session cookie is SameSite, and the CSP below pins `form-action` to
+ * 'self'. A hidden token in every form would add a second lock to the same
+ * door — six forms' worth of new surface for no new protection. Do not "fix"
+ * its absence.
+ *
+ * The real risk runs the other way: that check can fire on legitimate traffic
+ * and take every form in the app down at once. It only needs this list when
+ * the reverse proxy presents a host that differs from the browser's origin —
+ * DSM's rule (deployment guide, step 8c) forwards `Host` unchanged and sets no
+ * `X-Forwarded-Host`, so the two match and the list stays empty.
+ *
+ * PUBLIC_ORIGIN is read when the image is BUILT, not when it starts. Next
+ * serialises this config into .next/standalone/server.js, so setting it in a
+ * compose file changes nothing — it belongs on the `docker build` command
+ * (see the ARG in the Dockerfile). Changing the published hostname therefore
+ * means rebuilding the image, which for a value that changes about as often as
+ * the DDNS name itself is a cost worth naming rather than working around.
+ */
+const publicOrigin = process.env.PUBLIC_ORIGIN?.trim();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
@@ -77,6 +105,7 @@ const nextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '20mb',
+      ...(publicOrigin ? { allowedOrigins: [publicOrigin] } : {}),
     },
     optimizePackageImports: [
       '@mantine/core',
