@@ -2,13 +2,7 @@
 
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
 import { Stack, Text } from '@mantine/core';
-import {
-  IconUpload,
-  IconX,
-  IconPhoto,
-  IconPlus,
-  IconCamera,
-} from '@tabler/icons-react';
+import { IconUpload, IconX, IconPhoto, IconPlus } from '@tabler/icons-react';
 
 /**
  * What the item forms accept. IMAGE_MIME_TYPE covers PNG/JPEG/WebP/GIF; HEIC
@@ -23,7 +17,6 @@ export const ACCEPTED_IMAGE_TYPES = [
 const IDLE_ICONS = {
   photo: IconPhoto,
   plus: IconPlus,
-  camera: IconCamera,
 } as const;
 
 export interface ImageDropzoneProps {
@@ -42,15 +35,6 @@ export interface ImageDropzoneProps {
   maxFiles?: number;
   mb?: string;
   /**
-   * Hints the browser to open the rear camera *instead of* the file picker.
-   * Mobile only — desktop browsers ignore it.
-   *
-   * No call site sets this today: on a phone it replaces the picker rather
-   * than pre-selecting a tab in it, so the gallery becomes unreachable. Only
-   * turn it on for a zone whose copy promises the camera alone. See ADR-004.
-   */
-  capture?: boolean;
-  /**
    * `panel` is the labelled rectangle a form field uses. `tile` is the bare
    * square "+" that sits in a photo grid next to the pictures already added.
    */
@@ -60,6 +44,11 @@ export interface ImageDropzoneProps {
 /**
  * The Accept/Reject/Idle dropzone body shared by the item and category forms:
  * a dashed rectangle on `gray-light`, glyph over copy, centred.
+ *
+ * This is the *gallery* half of a photo field and carries no `capture`: on a
+ * phone that attribute replaces the picker with the camera rather than adding
+ * it, so the live-camera path is a `CameraButton` beside the zone instead.
+ * See ADR-004 §3.1.
  */
 export function ImageDropzone({
   onDrop,
@@ -71,7 +60,6 @@ export function ImageDropzone({
   minHeight = 180,
   maxFiles,
   mb,
-  capture,
   variant = 'panel',
 }: ImageDropzoneProps) {
   const IdleIcon = IDLE_ICONS[idleIcon];
@@ -88,7 +76,6 @@ export function ImageDropzone({
       maxFiles={maxFiles}
       mb={mb}
       radius={isTile ? 'sm' : 'md'}
-      inputProps={capture ? { capture: 'environment' } : undefined}
       styles={{
         root: {
           border: '2px dashed var(--mantine-color-default-border)',

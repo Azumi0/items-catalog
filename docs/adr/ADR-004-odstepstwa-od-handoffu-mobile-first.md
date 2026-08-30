@@ -57,29 +57,60 @@ Ten ADR zamyka listę tych odstępstw i uzasadnia każde z nich.
 Wybrano **Opcję B**. Poniżej zamknięta lista odstępstw. **Każda pozycja jest
 świadoma. Nie „naprawiaj" jej bez ponownego otwarcia tej decyzji.**
 
-### 3.1. Atrybut `capture` nie jest włączony na dropzonie zdjęcia głównego
+### 3.1. Aparat jest osobnym przyciskiem obok dropzone'u, a nie atrybutem `capture` na nim
+
+*Zrewidowane 2026-08-30 po zgłoszeniu z urządzenia. Pierwotne brzmienie tej
+pozycji opierało się na założeniu, które okazało się nieprawdziwe — zapis
+poniżej opisuje, na czym polegał błąd, żeby nie wrócił.*
 
 `IMPLEMENTATION_PROMPT.md`, etap 5, wymaga: „Wykorzystaj istniejący
 `ImageDropzone`, z `capture` dla kamery na mobile."
 
-Prop `capture` **istnieje** w `src/components/ImageDropzone.tsx` i działa
-(`inputProps={{ capture: 'environment' }}`), ale **żaden ekran go nie ustawia**.
+**Czego nie robimy i dlaczego:** `capture` na `<input type="file">` nie zaznacza
+aparatu jako domyślnej zakładki w systemowym oknie wyboru — on to okno
+**zastępuje**. Włączony na dropzonie odciąłby galerię, a katalogowanie domu
+zwykle polega na sfotografowaniu kilku rzeczy i wprowadzeniu ich później. Ta
+część pierwotnej decyzji zostaje w mocy.
 
-Powód: `capture` na `<input type="file">` nie zaznacza aparatu jako
-domyślnej zakładki w systemowym oknie wyboru — on to okno **zastępuje**. iOS
-Safari i Android Chrome otwierają wtedy bezpośrednio aparat, bez dostępu do
-galerii i do Plików. Tymczasem kopia tego samego pola, wprost zadana przez
-`README.md` §10, brzmi „Zrób zdjęcie **lub wybierz z galerii**". Włączony
-`capture` sprawia, że etykieta obiecuje dwie drogi, a pole udostępnia jedną.
+**Co było błędem:** pierwotny zapis dopowiadał, że „bez `capture` systemowe okno
+wyboru i tak proponuje aparat", i na tej podstawie zostawiał pole z jednym
+wejściem. To jest nieprawda na Androidzie. Chrome oddaje `accept`
+zawierające wyłącznie typy obrazów systemowemu **Photo Pickerowi**, który
+otwiera się prosto na galerii i nie ma migawki; osobno znany jest przypadek,
+w którym samo podanie listy konkretnych typów MIME zamiast `image/*` gasi
+intencję aparatu (zob. issuetracker.google.com/issues/317289301). W obu
+wariantach efekt jest ten sam i dokładnie taki, jak zgłoszony: pole zdjęcia
+umie sięgnąć wyłącznie po zdjęcia już zrobione. Etykieta pola brzmiała przy tym
+„Zrób zdjęcie **lub wybierz z galerii**" — obiecywała dwie drogi, a dawała
+jedną. Tyle że odwrotnie, niż zakładał pierwotny zapis.
 
-Bez `capture` systemowe okno wyboru i tak proponuje aparat jako pierwszą opcję,
-więc nie tracimy niczego, a galeria wraca. Koszt pomyłki jest niesymetryczny:
-bez `capture` użytkownik nadal może zrobić zdjęcie, z `capture` nie może sięgnąć
-po zdjęcia już zrobione — a katalogowanie domu zwykle polega na sfotografowaniu
-kilku rzeczy i wprowadzeniu ich później.
+**Decyzja:** pole zdjęcia ma **dwa wejścia**, bo jeden atrybut nie potrafi
+obsłużyć obu dróg naraz:
 
-Prop zostaje w komponencie na wypadek pola, którego kopia obiecuje wyłącznie
-aparat. Zobacz komentarz przy wywołaniu w `src/components/ItemForm.tsx`.
+| ścieżka | kontrolka | `accept` | `capture` |
+| --- | --- | --- | --- |
+| galeria | `ImageDropzone` | pełna lista MIME (z HEIC/HEIF z iPhone'a) | brak |
+| aparat | `CameraButton` | `image/*` | `environment` |
+
+`CameraButton` (`src/components/CameraButton.tsx`) trzyma własny ukryty
+`<input>` i podaje zdjęcie do tego samego `onDrop`/`onCapture`, co dropzone,
+więc podgląd i wysyłka mają jedną ścieżkę. `accept="image/*"` zamiast listy
+typów jest tam celowy — to druga rzecz, która potrafi zgasić aparat, a zdjęcie
+prosto z aparatu i tak jest JPEG-iem.
+
+Konsekwencje w kopii: dropzone mówi teraz „Wybierz zdjęcie z galerii", a
+obietnica aparatu przeniosła się na przycisk („Zrób zdjęcie", w siatce zdjęć
+dodatkowych „Zrób kolejne zdjęcie"). Pole zdjęcia kategorii, które wcześniej
+miało sam podpis, dostało ten sam układ.
+
+Prop `capture` zniknął z `ImageDropzone` — nie ma już wywołania, które mogłoby
+go sensownie ustawić, bo aparat mieszka we własnej kontrolce.
+
+Pilnują tego `tests/photoCapture.test.ts` (atrybuty obu wejść — to one
+decydują, który selektor otworzy telefon) oraz `e2e/catalog.spec.ts`
+(„…can take a photo, not only pick one" — na prawdziwych ekranach, w mobilnym
+Chromium, wraz ze sprawdzeniem, że zdjęcie z aparatu trafia do tego samego
+podglądu).
 
 ### 3.2. Ekran logowania nie ma przełącznika trybu
 
