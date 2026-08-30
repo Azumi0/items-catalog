@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/categories';
 import { thumbUrl } from '@/lib/images';
 import { useSingleImagePreview } from '@/hooks/useImagePreviews';
+import { CameraButton } from './CameraButton';
 import { FieldBlock, TALL_INPUT_STYLES } from './FormField';
 import { IconPickerField } from './IconPickerField';
 import { FormActionBar } from './FormActionBar';
@@ -106,15 +107,19 @@ export function CategoryForm({ category }: CategoryFormProps) {
               }}
             />
           ) : (
-            <ImageDropzone
-              onDrop={newImage.select}
-              maxFiles={1}
-              disabled={pending}
-              idleIcon="photo"
-              iconSize={28}
-              minHeight={140}
-              hint="Zdjęcie ma pierwszeństwo przed ikoną"
-            />
+            <Stack gap={8}>
+              <ImageDropzone
+                onDrop={newImage.select}
+                maxFiles={1}
+                disabled={pending}
+                idleIcon="photo"
+                iconSize={28}
+                minHeight={140}
+                title="Wybierz zdjęcie z galerii"
+                hint="Zdjęcie ma pierwszeństwo przed ikoną"
+              />
+              <CameraButton onCapture={newImage.select} disabled={pending} />
+            </Stack>
           )}
         </FieldBlock>
       </Stack>

@@ -20,6 +20,7 @@ import {
   useSingleImagePreview,
 } from '@/hooks/useImagePreviews';
 import { AutoGrid } from './AutoGrid';
+import { CameraButton } from './CameraButton';
 import {
   FieldBlock,
   FIELD_LABEL_STYLES,
@@ -149,58 +150,68 @@ export function ItemForm({
               }}
             />
           ) : (
-            <ImageDropzone
-              onDrop={newMain.select}
-              maxFiles={1}
-              disabled={pending}
-              idleIcon="camera"
-              iconSize={32}
-              minHeight={180}
-              // Deliberately no `capture` — it would open the camera directly
-              // and close off the gallery this field's own label promises.
-              // See ADR-004 §3.1.
-              title="Zrób zdjęcie lub wybierz z galerii"
-              hint="JPG, PNG — maks. 10 MB"
-            />
+            <Stack gap={8}>
+              <ImageDropzone
+                onDrop={newMain.select}
+                maxFiles={1}
+                disabled={pending}
+                idleIcon="photo"
+                iconSize={32}
+                minHeight={180}
+                // No `capture` here — it would replace the picker with the
+                // camera and close off the gallery this label promises. The
+                // camera is the button below instead. See ADR-004 §3.1.
+                title="Wybierz zdjęcie z galerii"
+                hint="JPG, PNG — maks. 10 MB"
+              />
+              <CameraButton onCapture={newMain.select} disabled={pending} />
+            </Stack>
           )}
         </FieldBlock>
 
         <FieldBlock label="Zdjęcia dodatkowe">
-          <AutoGrid min={88} gap={8}>
-            {keptAdditional.map((filename) => (
-              <RemovableImage
-                key={filename}
-                src={thumbUrl(filename)}
-                alt="Zdjęcie dodatkowe"
-                removeLabel="Usuń zdjęcie"
-                disabled={pending}
-                onRemove={() =>
-                  setKeptAdditional((current) =>
-                    current.filter((name) => name !== filename)
-                  )
-                }
-              />
-            ))}
+          <Stack gap={8}>
+            <AutoGrid min={88} gap={8}>
+              {keptAdditional.map((filename) => (
+                <RemovableImage
+                  key={filename}
+                  src={thumbUrl(filename)}
+                  alt="Zdjęcie dodatkowe"
+                  removeLabel="Usuń zdjęcie"
+                  disabled={pending}
+                  onRemove={() =>
+                    setKeptAdditional((current) =>
+                      current.filter((name) => name !== filename)
+                    )
+                  }
+                />
+              ))}
 
-            {newAdditional.previews.map((preview, index) => (
-              <RemovableImage
-                key={preview}
-                src={preview}
-                alt={`Nowe zdjęcie ${index + 1}`}
-                removeLabel="Usuń zdjęcie"
-                disabled={pending}
-                onRemove={() => newAdditional.removeAt(index)}
-              />
-            ))}
+              {newAdditional.previews.map((preview, index) => (
+                <RemovableImage
+                  key={preview}
+                  src={preview}
+                  alt={`Nowe zdjęcie ${index + 1}`}
+                  removeLabel="Usuń zdjęcie"
+                  disabled={pending}
+                  onRemove={() => newAdditional.removeAt(index)}
+                />
+              ))}
 
-            <ImageDropzone
-              onDrop={newAdditional.add}
+              <ImageDropzone
+                onDrop={newAdditional.add}
+                disabled={pending}
+                idleIcon="plus"
+                iconSize={22}
+                variant="tile"
+              />
+            </AutoGrid>
+            <CameraButton
+              onCapture={newAdditional.add}
               disabled={pending}
-              idleIcon="plus"
-              iconSize={22}
-              variant="tile"
+              label="Zrób kolejne zdjęcie"
             />
-          </AutoGrid>
+          </Stack>
         </FieldBlock>
 
         <FieldBlock label="Kategoria">

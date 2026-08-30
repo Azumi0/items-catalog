@@ -44,8 +44,8 @@ test('an item can be added with a photo', async ({ page }) => {
   await page.getByRole('link', { name: 'Dodaj przedmiot' }).click();
   await expect(page).toHaveURL(/\/items\/new/);
 
-  // Both dropzones render a hidden file input; the main photo's comes first
-  // in the DOM, matching the order of the fields on screen.
+  // Every photo field renders a hidden file input; the main photo's dropzone
+  // comes first in the DOM, matching the order of the fields on screen.
   await page.locator('input[type="file"]').first().setInputFiles(MAIN_PHOTO);
 
   // The preview replaces the dropzone once a file is chosen — that swap is
@@ -90,3 +90,32 @@ test('an item can be opened and deleted', async ({ page }) => {
   await expect(page).toHaveURL(/\/categories\/[^/]+\/items$/);
   await expect(page.getByText('Brak przedmiotów')).toBeVisible();
 });
+
+/**
+ * Chrome on Android sends an image-only `accept` to the system photo picker,
+ * which lists the gallery and offers no shutter, so a field whose only input
+ * is the dropzone cannot take a live photo at all. Each photo field therefore
+ * carries a second input that asks for the camera outright — the button this
+ * checks — and it has to be wired to the same preview as the dropzone.
+ * See ADR-004 §3.1.
+ */
+for (const [screen, path, previewAlt] of [
+  ['the item form', '/items/new', 'Zdjęcie główne'],
+  ['the category form', '/categories/new', 'Zdjęcie kategorii'],
+] as const) {
+  test(`${screen} can take a photo, not only pick one`, async ({ page }) => {
+    await page.goto(path);
+
+    await expect(
+      page.getByRole('button', { name: 'Zrób zdjęcie' })
+    ).toBeVisible();
+
+    const camera = page.locator('input[capture="environment"]').first();
+    await expect(camera).toHaveAttribute('accept', 'image/*');
+
+    // The shot has to land in the same slot a gallery pick would.
+    await camera.setInputFiles(MAIN_PHOTO);
+    await expect(page.getByAltText(previewAlt)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
+}
