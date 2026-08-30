@@ -48,7 +48,7 @@ describe('Users Management Seam', () => {
     expect(await getUserCount()).toBe(1);
 
     // Second attempt to setupFirstUser should fail
-    await expect(setupFirstUser('anotherAdmin', 'pass123')).rejects.toThrow(
+    await expect(setupFirstUser('anotherAdmin', 'pierwszeHaslo123')).rejects.toThrow(
       /tylko wtedy, gdy w systemie nie ma żadnych użytkowników/i
     );
   });
@@ -67,8 +67,28 @@ describe('Users Management Seam', () => {
     expect(nonExistent).toBeNull();
   });
 
+  it('spends bcrypt work on an unknown username so response time reveals nothing', async () => {
+    await setupFirstUser('alice', 'alicePass123');
+
+    // A username that does not exist must not return at the speed of a bare
+    // SELECT — that gap is measurable over the network and would turn the
+    // login form into a list of which accounts are real. The floor is far
+    // below one bcrypt round at cost 10 (~50-100 ms), so it asserts that the
+    // decoy comparison happens without being sensitive to how fast the box is.
+    const started = performance.now();
+    expect(await authenticateUser('nie-ma-takiego', 'alicePass123')).toBeNull();
+    expect(performance.now() - started).toBeGreaterThan(20);
+  });
+
+  it('rejects a password below the minimum length', async () => {
+    await expect(setupFirstUser('admin', 'krotkie')).rejects.toThrow(
+      /co najmniej 12 znaków/i
+    );
+    expect(await getUserCount()).toBe(0);
+  });
+
   it('creates additional users and lists all users', async () => {
-    await setupFirstUser('admin', 'admin123');
+    await setupFirstUser('admin', 'adminHaslo123');
     const newUser = await createUser('bob', 'bobSecret123');
 
     expect(newUser.username).toBe('bob');
@@ -81,22 +101,22 @@ describe('Users Management Seam', () => {
   });
 
   it('changes user password', async () => {
-    const user = await setupFirstUser('admin', 'oldPass123');
-    await changePassword(user.id, 'newPass456');
+    const user = await setupFirstUser('admin', 'stareHaslo123');
+    await changePassword(user.id, 'noweHaslo456');
 
-    expect(await authenticateUser('admin', 'oldPass123')).toBeNull();
-    expect(await authenticateUser('admin', 'newPass456')).not.toBeNull();
+    expect(await authenticateUser('admin', 'stareHaslo123')).toBeNull();
+    expect(await authenticateUser('admin', 'noweHaslo456')).not.toBeNull();
   });
 
   it('enforces deletion rules: cannot delete self and cannot delete last user', async () => {
-    const admin = await setupFirstUser('admin', 'admin123');
+    const admin = await setupFirstUser('admin', 'adminHaslo123');
 
     // Rule 1: Cannot delete self
     await expect(deleteUser(admin.id, admin.id)).rejects.toThrow(
       /nie możesz usunąć samego siebie/i
     );
 
-    const bob = await createUser('bob', 'bob123');
+    const bob = await createUser('bob', 'bobHaslo12345');
 
     // Rule 2: Bob can be deleted by admin
     await deleteUser(admin.id, bob.id);
@@ -109,8 +129,8 @@ describe('Users Management Seam', () => {
   });
 
   it('allows deleting a user who authored items without breaking foreign keys', async () => {
-    const admin = await setupFirstUser('admin', 'admin123');
-    const bob = await createUser('bob', 'bob123');
+    const admin = await setupFirstUser('admin', 'adminHaslo123');
+    const bob = await createUser('bob', 'bobHaslo12345');
 
     const db = getDb();
     const catId = crypto.randomUUID();

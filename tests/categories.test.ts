@@ -66,7 +66,7 @@ describe('Categories Management Seam', () => {
   });
 
   it('exposes the newest item main image as newestItemImage', async () => {
-    const user = await setupFirstUser('admin', 'admin123');
+    const user = await setupFirstUser('admin', 'adminHaslo123');
     const cat = await createCategory('Tools');
 
     const db = getDb();
@@ -171,7 +171,7 @@ describe('Categories Management Seam', () => {
   // as null is what lets the visual rule move on to the next step instead of
   // rendering an empty square.
   it('reads an icon the library no longer has as no icon at all', async () => {
-    const user = await setupFirstUser('admin', 'admin123');
+    const user = await setupFirstUser('admin', 'adminHaslo123');
     const cat = await createCategory('Retro', { icon: 'IconBike' });
 
     const db = getDb();
@@ -228,7 +228,7 @@ describe('Categories Management Seam', () => {
   });
 
   it('deletes category and cleans up associated items and physical files', async () => {
-    const user = await setupFirstUser('admin', 'admin123');
+    const user = await setupFirstUser('admin', 'adminHaslo123');
     const cat = await createCategory('Furniture');
 
     // Create a dummy image file

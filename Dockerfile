@@ -24,6 +24,15 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Public hostname the catalog is served under, e.g. katalog.example.synology.me.
+#
+# Baked in here rather than passed at run time because Next serialises
+# next.config.mjs into the standalone server, so a compose-file variable would
+# be read by nothing. Leave it empty unless the reverse proxy presents a host
+# that differs from the browser's origin — see the comment in next.config.mjs.
+ARG PUBLIC_ORIGIN=""
+ENV PUBLIC_ORIGIN=$PUBLIC_ORIGIN
+
 RUN pnpm run build
 RUN pnpm exec esbuild src/db/migrate.ts --bundle --platform=node --target=node24 --outfile=dist/migrate.js --external:better-sqlite3
 
