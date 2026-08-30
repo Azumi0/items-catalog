@@ -54,6 +54,32 @@ function resolveSessionSecret(): string {
   return secret;
 }
 
+/**
+ * Key for sealing the device cookie (ADR-007), derived from the session secret
+ * rather than configured separately.
+ *
+ * Derived, not reused verbatim, so that the two cookies stay cryptographically
+ * independent: rotating SESSION_SECRET to evict every session must not be
+ * something that also silently un-trusts every device, and a flaw in one seal
+ * must not hand over the other. HKDF with a fixed info string is the standard
+ * way to split one secret into several, and it needs no new environment
+ * variable in the compose file.
+ *
+ * The `v1` in the label is a rotation handle: changing it invalidates every
+ * device cookie in circulation, which is the blunt instrument to reach for if
+ * one is ever believed to have leaked.
+ */
+export function getDeviceCookieSecret(): string {
+  const derived = crypto.hkdfSync(
+    'sha256',
+    resolveSessionSecret(),
+    '',
+    'item-catalog-device-cookie-v1',
+    32
+  );
+  return Buffer.from(derived).toString('base64');
+}
+
 export const sessionOptions: SessionOptions = {
   // Resolved lazily: `next build` runs with NODE_ENV=production but no
   // SESSION_SECRET, so an eager throw here would break the Docker build.
