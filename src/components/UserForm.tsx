@@ -52,7 +52,7 @@ export function UserForm() {
         />
         <PasswordInput
           label="Hasło początkowe"
-          placeholder="Minimum 4 znaki"
+          placeholder="Minimum 12 znaków"
           required
           value={password}
           onChange={(event) => setPassword(event.currentTarget.value)}
@@ -115,7 +115,7 @@ export function PasswordForm({ user }: PasswordFormProps) {
 
         <PasswordInput
           label="Nowe hasło"
-          placeholder="Minimum 4 znaki"
+          placeholder="Minimum 12 znaków"
           required
           autoFocus
           value={password}

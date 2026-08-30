@@ -279,6 +279,13 @@ sudo synosystemctl restart nginx
 
 Ustawienie przeżywa restart NAS-a, ale może zostać skasowane przy większej aktualizacji DSM — warto zapamiętać, że to tu.
 
+**Ten sam plik jest jedynym miejscem, w którym da się ograniczyć ruch nieuwierzytelniony.** Next parsuje ciało żądania Server Action **zanim** uruchomi funkcję akcji, czyli zanim wykona się `requireAuth()`. Ktoś z internetu, kto nie ma i nie zdobędzie konta, może więc wysyłać na NAS-a wielomegabajtowe żądania i doprowadzić do ich zbuforowania. Aplikacja nie może tego naprawić — kolejność należy do frameworka, nie do naszego kodu (`ADR-007`, sekcja „Czego to nie rozwiązuje").
+
+Praktyczne wnioski dla powyższego pliku:
+
+- **Nie ustawiaj `client_max_body_size` wyżej, niż potrzeba.** `bodySizeLimit` w `next.config.mjs` wynosi 20 MB, więc wszystko powyżej i tak zostanie odrzucone przez aplikację — ale dopiero **po** odebraniu. `25m` załatwia zdjęcia z telefonu i sprawia, że nginx ucina nadmiar wcześniej niż Node. Wartość `50m` z przykładu wyżej działa, lecz zostawia 30 MB marginesu, który służy wyłącznie atakującemu.
+- **Ograniczenia tempa (`limit_req`) nie da się tu czysto dołożyć.** Dyrektywa `limit_req_zone` należy do kontekstu `http` i zmieści się w tym pliku, ale samo `limit_req` musi trafić do bloku `server`/`location`, a ten DSM generuje sam z reguły odwrotnego proxy i nadpisuje przy każdej jej zmianie. Realne dźwignie to zapora DSM (Panel sterowania → Bezpieczeństwo → Zapora — reguła geograficzna odcina większość ruchu skanującego) albo rezygnacja z otwartego portu na rzecz VPN-a, opisana w 8f.
+
 ### 8f. Dostęp spoza domu (opcjonalny, ale zmienia model zagrożeń)
 
 Do tego miejsca aplikacja jest dostępna wyłącznie z LAN-u. Jeśli chcesz odczytywać katalog będąc poza domem — na przykład w sklepie, żeby nie kupić drugi raz tej samej rzeczy — potrzebne jest przekierowanie portu na routerze:

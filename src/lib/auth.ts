@@ -100,7 +100,16 @@ export const sessionOptions: SessionOptions = {
   cookieOptions: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    // 'strict' rather than 'lax'. Nothing in this app changes state on a GET,
+    // so 'lax' was not a hole — but there is no reason to send the session
+    // cookie on a navigation somebody else's page started, either.
+    //
+    // The cost, small but real: following a link to the catalog from another
+    // site or a chat app arrives without the cookie and lands on /login, which
+    // then redirects back once the browser is navigating within the site.
+    // Bookmarks, typed addresses and the installed PWA are unaffected —
+    // browsers send 'strict' cookies for those.
+    sameSite: 'strict',
     maxAge: 60 * 60 * 24 * 7, // 1 week
   },
 };

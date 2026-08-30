@@ -66,7 +66,7 @@ export async function getCurrentUser() {
   } catch (err) {
     // Fail closed. Silence from the database is not evidence that a session is
     // still valid, and this is the only door in.
-    console.error('Nie udało się zweryfikować sesji w bazie danych:', err);
+    console.error('Could not verify the session against the database:', err);
     return null;
   }
 

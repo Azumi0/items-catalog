@@ -69,6 +69,38 @@ const MAX_TRACKED_BUCKETS = 5_000;
  */
 const MAX_BURNED_NONCES = 1_000;
 
+/**
+ * Floor on how often a lockout may be written to the container log.
+ *
+ * Logging is worth having — without it the household has no way to notice it
+ * is being attacked at all, since DSM's own auto-block never sees these
+ * requests. But the log is written on the failure path, whose rate an attacker
+ * sets, and the DSM log driver writes to the NAS volume. Somebody cycling
+ * usernames never trips a per-username lockout twice, so without a floor they
+ * could turn "tell me about lockouts" into "fill my disk". Suppressed lines
+ * are counted and reported by the next one that gets through, so the record
+ * stays honest about what it left out.
+ */
+const LOCKOUT_LOG_INTERVAL_MS = 10_000;
+
+let lastLockoutLogAt = 0;
+let suppressedLockoutLogs = 0;
+
+function reportLockout(detail: string, now: number): void {
+  if (now - lastLockoutLogAt < LOCKOUT_LOG_INTERVAL_MS) {
+    suppressedLockoutLogs += 1;
+    return;
+  }
+
+  const omitted =
+    suppressedLockoutLogs > 0
+      ? ` (+${suppressedLockoutLogs} more not logged in the last ${LOCKOUT_LOG_INTERVAL_MS / 1000}s)`
+      : '';
+  lastLockoutLogAt = now;
+  suppressedLockoutLogs = 0;
+  console.warn(`Login throttle: ${detail}${omitted}`);
+}
+
 interface Bucket {
   /** Failures accumulated inside the current window. */
   failures: number;
@@ -272,6 +304,10 @@ function registerFailedTrustedLogin(
   if (bucket.failures >= FAILURES_BEFORE_LOCKOUT) {
     burnDeviceNonce(username, nonce);
     buckets.delete(key);
+    reportLockout(
+      `device cookie for "${normaliseLogin(username)}" burnt after ${FAILURES_BEFORE_LOCKOUT} wrong passwords; back on the shared ledger`,
+      now
+    );
     return OPEN;
   }
 
@@ -312,9 +348,11 @@ export function registerFailedLogin(identity: LoginIdentity): ThrottleVerdict {
     bucket.lastFailureAt = now;
 
     if (bucket.failures >= FAILURES_BEFORE_LOCKOUT) {
-      bucket.blockedUntil = now + lockoutDurationMs(bucket.lockouts);
+      const durationMs = lockoutDurationMs(bucket.lockouts);
+      bucket.blockedUntil = now + durationMs;
       bucket.lockouts += 1;
       bucket.failures = 0;
+      reportLockout(`${key} locked for ${durationMs / 1000}s`, now);
     }
 
     buckets.set(key, bucket);
@@ -335,4 +373,6 @@ export function registerSuccessfulLogin(identity: LoginIdentity): void {
 export function resetLoginThrottle(): void {
   buckets.clear();
   burnedNonces.clear();
+  lastLockoutLogAt = 0;
+  suppressedLockoutLogs = 0;
 }
