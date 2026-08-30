@@ -22,6 +22,7 @@ import {
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { logoutAction } from '@/app/actions/auth';
+import { InstallPrompt } from '@/components/InstallPrompt';
 
 /** Which bottom-nav entry is lit, and therefore what the FAB does. */
 export type AppTab = 'catalog' | 'categories' | 'users';
@@ -208,6 +209,11 @@ export function AppLayout({
       </Group>
 
       <Box component="main" maw={1120} mx="auto" p={16}>
+        {/* Above the content rather than fixed over it: the offer is optional,
+            and a banner pinned to the bottom would have to know the height of
+            whichever bar is already down there. Form screens (chrome={false})
+            skip it — see @/components/InstallPrompt. */}
+        {chrome && <InstallPrompt />}
         {children}
       </Box>
 
