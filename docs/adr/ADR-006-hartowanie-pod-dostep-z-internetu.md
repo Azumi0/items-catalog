@@ -88,6 +88,7 @@ Dwie decyzje szczegółowe warte zapisania, bo obie są łatwe do odwrócenia �
 ### Negatywne / Koszty:
 
 - **Atakujący znający nazwę użytkownika może zablokować właściciela** na maksymalnie 15 minut. Świadomie zaakceptowane; alternatywą jest brak ochrony.
+  > **Nieaktualne od `ADR-007`.** Alternatywa jednak się znalazła: ciastko urządzenia wg OWASP daje przeglądarce, z której kiedykolwiek udało się zalogować, własny licznik, więc blokada per-login przestaje dotyczyć domownika. Reszta tego ADR-a obowiązuje bez zmian.
 - **Restart kontenera zeruje liczniki.** Akceptowalne, bo restart nie jest w zasięgu atakującego.
 - **Hasła krótsze niż 12 znaków przestają przechodzić** przy zakładaniu konta i zmianie hasła. Konta założone wcześniej działają dalej — walidacja obowiązuje tylko przy zapisie.
 - **CSP dopuszcza `'unsafe-inline'` w `script-src`.** Ochrona przed XSS jest więc częściowa; pełną daje dopiero wariant z nonce, świadomie odłożony.
@@ -96,5 +97,6 @@ Dwie decyzje szczegółowe warte zapisania, bo obie są łatwe do odwrócenia �
 ### Czego to nie rozwiązuje:
 
 - Nie ma drugiego składnika uwierzytelniania. Przy wystawieniu na internet jedynym sekretem pozostaje hasło.
+- Sesji nie da się unieważnić: zmiana hasła ani usunięcie konta nie kończą trwającej sesji. **Rozwiązane w `ADR-007`.**
 - Wszyscy zalogowani użytkownicy mają te same uprawnienia, łącznie z zarządzaniem kontami (`src/app/actions/users.ts`). Dla instalacji jednoosobowej to bez znaczenia, ale nie jest to model ról.
 - Bezpieczeństwo warstwy sieciowej (zapora DSM, ograniczenie geograficzne, przekierowanie portu) leży poza aplikacją i jest opisane w `docs/deployment-synology.md`.

@@ -26,10 +26,12 @@ describe('Login Throttle Seam', () => {
     resetLoginThrottle();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-29T20:00:00Z'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
     resetLoginThrottle();
   });
 
@@ -108,10 +110,12 @@ describe('Trusted device ledger', () => {
     resetLoginThrottle();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-29T20:00:00Z'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
     resetLoginThrottle();
   });
 
@@ -179,5 +183,56 @@ describe('Trusted device ledger', () => {
     // attempt burns it rather than starting afresh.
     failTimes({ ...TRUSTED, username: 'DOMOWNIK' }, 1);
     expect(isDeviceNonceBurned('domownik', 'nonce-abc')).toBe(true);
+  });
+});
+
+describe('Lockout logging', () => {
+  let warn: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    resetLoginThrottle();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-29T20:00:00Z'));
+    warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    resetLoginThrottle();
+  });
+
+  it('records a lockout, because nothing else will', () => {
+    // DSM's auto-block never sees these requests — they arrive through the
+    // reverse proxy straight into Node. Without this line the household has no
+    // way to learn it is being attacked.
+    failTimes({ username: 'domownik', ip: '198.51.100.4' }, 5);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('user:domownik');
+  });
+
+  it('will not let an attacker set the rate the log is written at', () => {
+    // Cycling usernames never trips the same bucket twice, so every five
+    // requests would otherwise buy a line on the NAS volume.
+    for (let i = 0; i < 20; i += 1) {
+      failTimes({ username: `ofiara-${i}`, ip: null }, 5);
+    }
+
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('admits how many lines it swallowed', () => {
+    failTimes({ username: 'pierwszy', ip: null }, 5);
+    failTimes({ username: 'drugi', ip: null }, 5);
+    failTimes({ username: 'trzeci', ip: null }, 5);
+
+    vi.advanceTimersByTime(10_000);
+    failTimes({ username: 'czwarty', ip: null }, 5);
+
+    // The record has to be honest about what it left out, or a quiet log
+    // reads as a quiet night.
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(warn.mock.calls[1][0]).toContain('+2 more not logged');
   });
 });
