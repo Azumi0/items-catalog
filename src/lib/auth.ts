@@ -1,10 +1,21 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import { SessionOptions } from 'iron-session';
 
 export interface SessionData {
   user?: {
     id: string;
     username: string;
+    /**
+     * The account's `session_version` at the moment this cookie was issued.
+     * A cookie whose copy no longer matches the database has been revoked —
+     * see getCurrentUser (ADR-007).
+     *
+     * Optional because cookies issued before this field existed are still in
+     * circulation; they are read as version 0, which is what every existing
+     * account starts at, so deploying this does not sign the household out.
+     */
+    sessionVersion?: number;
   };
   isLoggedIn: boolean;
 }
@@ -53,6 +64,32 @@ function resolveSessionSecret(): string {
   return secret;
 }
 
+/**
+ * Key for sealing the device cookie (ADR-007), derived from the session secret
+ * rather than configured separately.
+ *
+ * Derived, not reused verbatim, so that the two cookies stay cryptographically
+ * independent: rotating SESSION_SECRET to evict every session must not be
+ * something that also silently un-trusts every device, and a flaw in one seal
+ * must not hand over the other. HKDF with a fixed info string is the standard
+ * way to split one secret into several, and it needs no new environment
+ * variable in the compose file.
+ *
+ * The `v1` in the label is a rotation handle: changing it invalidates every
+ * device cookie in circulation, which is the blunt instrument to reach for if
+ * one is ever believed to have leaked.
+ */
+export function getDeviceCookieSecret(): string {
+  const derived = crypto.hkdfSync(
+    'sha256',
+    resolveSessionSecret(),
+    '',
+    'item-catalog-device-cookie-v1',
+    32
+  );
+  return Buffer.from(derived).toString('base64');
+}
+
 export const sessionOptions: SessionOptions = {
   // Resolved lazily: `next build` runs with NODE_ENV=production but no
   // SESSION_SECRET, so an eager throw here would break the Docker build.
@@ -63,7 +100,16 @@ export const sessionOptions: SessionOptions = {
   cookieOptions: {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    // 'strict' rather than 'lax'. Nothing in this app changes state on a GET,
+    // so 'lax' was not a hole — but there is no reason to send the session
+    // cookie on a navigation somebody else's page started, either.
+    //
+    // The cost, small but real: following a link to the catalog from another
+    // site or a chat app arrives without the cookie and lands on /login, which
+    // then redirects back once the browser is navigating within the site.
+    // Bookmarks, typed addresses and the installed PWA are unaffected —
+    // browsers send 'strict' cookies for those.
+    sameSite: 'strict',
     maxAge: 60 * 60 * 24 * 7, // 1 week
   },
 };
@@ -75,4 +121,24 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
+}
+
+let decoyHash: Promise<string> | null = null;
+
+/**
+ * A well-formed bcrypt hash of a value nobody can guess, for comparing against
+ * when the submitted username does not exist.
+ *
+ * Without it, a login for an unknown account returns as fast as the database
+ * lookup while a wrong password for a real account costs a full bcrypt verify.
+ * That gap is measurable over the network and turns the login form into an
+ * account-name oracle — which matters here because the one account is likely
+ * named after its owner.
+ *
+ * Built lazily and cached: hashing once at import would add ~80 ms to every
+ * cold start for a value most requests never touch.
+ */
+export function getDecoyPasswordHash(): Promise<string> {
+  decoyHash ??= hashPassword(crypto.randomUUID());
+  return decoyHash;
 }

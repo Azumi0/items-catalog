@@ -21,6 +21,23 @@ The only exceptions are `/login`, `/setup`, and the auth actions that back them.
 
 Nothing enforces this mechanically. See `docs/adr/ADR-003-page-level-authorization-invariant.md`.
 
+### Internet-facing hardening
+
+This catalog is published to the internet through the DSM reverse proxy, so the login form is exposed to more than the household. Eight things exist because of that and are not spare parts:
+
+- the throttle in `src/lib/loginThrottle.ts`, and its split into a trusted and a shared ledger;
+- the rightmost-hop rule in `src/lib/requestIp.ts`;
+- `MIN_PASSWORD_LENGTH = 12`;
+- the decoy bcrypt comparison for unknown usernames;
+- the device cookie in `src/lib/deviceCookie.ts`, and the fact that it is sealed with a *derived* key and validated *statelessly*;
+- the `session_version` check in `getCurrentUser` (`src/lib/session.ts`), including its fail-closed behaviour on a database error;
+- the absence of CSRF tokens, which is a decision and not an omission — see `next.config.mjs`;
+- `sameSite: 'strict'` on both cookies.
+
+Each has a plausible-looking "simplification" that quietly removes the protection — reading the leftmost `X-Forwarded-For` entry, returning early when the user is not found, lowering the password floor to make a test convenient, re-issuing the device cookie on every login so it "rotates", letting `getCurrentUser` trust the cookie alone to save a query, adding hidden CSRF tokens to "fix" their absence.
+
+Read `docs/adr/ADR-006-hartowanie-pod-dostep-z-internetu.md` and `docs/adr/ADR-007-ciastko-urzadzenia-i-uniewaznianie-sesji.md` before touching any of them. ADR-007 supersedes one recorded cost in ADR-006; the rest of ADR-006 stands.
+
 ### Issue tracker
 
 

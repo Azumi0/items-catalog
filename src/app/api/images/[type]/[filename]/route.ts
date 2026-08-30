@@ -6,6 +6,14 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * SVG is deliberately missing. `saveImage` never writes one — it accepts a
+ * fixed list of raster extensions — so the entry was unreachable, but serving
+ * image/svg+xml from this origin would mean any .svg that ever reached
+ * /data/uploads could run script with the session's own privileges. Anything
+ * unrecognised falls through to application/octet-stream, which renders
+ * nothing and executes nothing.
+ */
 const MIME_TYPES: Record<string, string> = {
   '.webp': 'image/webp',
   '.jpg': 'image/jpeg',
@@ -13,7 +21,6 @@ const MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
   '.gif': 'image/gif',
   '.avif': 'image/avif',
-  '.svg': 'image/svg+xml',
   '.heic': 'image/heic',
   '.heif': 'image/heif',
 };
@@ -66,6 +73,10 @@ export async function GET(
         'Content-Type': contentType,
         'Cache-Control': 'private, max-age=86400',
         'Content-Length': stat.size.toString(),
+        // Belt to the MIME allowlist's braces: a file whose bytes look like
+        // HTML must not be re-typed as HTML by the browser and rendered on
+        // this origin.
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (err) {

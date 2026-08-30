@@ -44,7 +44,7 @@ corepack prepare pnpm@latest --activate
 
 | Variable | Default | Used by | Description |
 | --- | --- | --- | --- |
-| `SESSION_SECRET` | built-in fallback | `src/lib/auth.ts` | Encryption key for the `iron-session` cookie. **Minimum 32 characters.** Changing it invalidates all active sessions. |
+| `SESSION_SECRET` | none in production; refuses to start without it | `src/lib/auth.ts` | Encryption key for the `iron-session` cookie. **Minimum 32 characters.** Changing it invalidates all active sessions. |
 | `DATA_DIR` | `/data` if it exists, otherwise `./data` | `src/lib/storage.ts`, `src/db/index.ts` | Root directory for the SQLite database and uploaded images. |
 | `DATABASE_URL` | `<DATA_DIR>/app.db` | `src/db/index.ts`, `drizzle.config.ts` | Explicit path to the SQLite file. Overrides `DATA_DIR` for the database only. |
 | `NODE_ENV` | `production` in the image | Next.js, `src/lib/auth.ts` | Also controls the `Secure` flag on the session cookie — see the warning below. |
@@ -59,7 +59,22 @@ corepack prepare pnpm@latest --activate
 openssl rand -hex 32
 ```
 
-If `SESSION_SECRET` is unset, the application falls back to a constant defined in `src/lib/auth.ts`. That value is public in this repository, so anyone who reads the source can forge a session cookie. Always set it outside local development.
+In production the application **refuses to start** unless `SESSION_SECRET` is set, is at least 32 characters, and is not one of the placeholder values shipped in this repository's docs and compose files. Earlier revisions fell back to a constant defined in `src/lib/auth.ts` — a value anyone reading the source could use to forge a session cookie — and that fallback has been removed. Outside production (`pnpm dev`, the test suite) a development secret is used so neither needs any setup.
+
+---
+
+## Exposing the catalog to the internet
+
+The application was written for a home LAN. Publishing it through a reverse proxy moves the trust boundary to the login form, which is why the following are built in — see [`docs/adr/ADR-006`](docs/adr/ADR-006-hartowanie-pod-dostep-z-internetu.md) for the reasoning and the trade-offs:
+
+- **Login throttling.** Five wrong passwords start a lockout that escalates 60 s → 120 s → 300 s → 900 s, counted separately per username and per client address. State is held in process memory, so restarting the container clears it.
+- **Minimum password length of 12.** Enforced when a password is written, so accounts created under the old four-character floor keep working until their password changes.
+- **No account enumeration.** An unknown username costs the same bcrypt work as a wrong password, and both return the same message.
+- **Security headers on every response** — CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` — configured in `next.config.mjs`. `Strict-Transport-Security` is deliberately left to the reverse proxy.
+
+Two things this does *not* cover: there is no second authentication factor, and every signed-in user has the same rights, including user management. Network-level hardening (port forwarding, firewall rules, certificate renewal) is covered in [`docs/deployment-synology.md`](docs/deployment-synology.md), stage 8f.
+
+Note for reverse proxy operators: the client address is read from the **rightmost** entry of `X-Forwarded-For`, which is the only entry a caller cannot forge when the proxy appends to the header (nginx `$proxy_add_x_forwarded_for`). A proxy that instead *replaces* the header, or none at all, degrades the throttle to username-only rather than trusting a spoofable value.
 
 ---
 

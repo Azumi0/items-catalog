@@ -35,7 +35,7 @@ describe('Items Management Seam', () => {
     fs.mkdirSync(TEST_DIR, { recursive: true });
     runMigrations();
 
-    const user = await setupFirstUser('alice', 'pass123');
+    const user = await setupFirstUser('alice', 'pierwszeHaslo123');
     userId = user.id;
     userName = user.username;
 

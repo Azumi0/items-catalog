@@ -7,6 +7,17 @@ export const users = sqliteTable('users', {
     .$defaultFn(() => crypto.randomUUID()),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  /**
+   * Bumped whenever this account's password changes, and compared against the
+   * copy carried in the session cookie (ADR-007).
+   *
+   * Sessions are self-contained encrypted cookies with no server-side record,
+   * so without this there is nothing to revoke: changing a password because it
+   * is believed to have leaked would leave whoever holds it signed in for up
+   * to a week. One integer turns "change the password" back into an action
+   * that actually evicts somebody.
+   */
+  sessionVersion: integer('session_version').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .$defaultFn(() => new Date()),
