@@ -9,6 +9,7 @@ import {
   type LoginIdentity,
 } from '@/lib/loginThrottle';
 import { getClientIp } from '@/lib/requestIp';
+import { issueDeviceCookie, readTrustedDeviceNonce } from '@/lib/deviceCookie';
 import { redirect } from 'next/navigation';
 
 export async function setupFirstUserAction(prevState: any, formData: FormData) {
@@ -31,6 +32,10 @@ export async function setupFirstUserAction(prevState: any, formData: FormData) {
     session.user = { id: user.id, username: user.username };
     session.isLoggedIn = true;
     await session.save();
+    // Creating the first account is a successful authentication like any
+    // other, so the browser it happened in earns its device cookie here rather
+    // than on a later trip through the login form.
+    await issueDeviceCookie(user.username);
   } catch (err: any) {
     return { error: err.message || 'Błąd podczas konfiguracji administratora.' };
   }
@@ -58,10 +63,17 @@ export async function loginAction(prevState: any, formData: FormData) {
     return { error: 'Wprowadź login i hasło.' };
   }
 
-  // Both halves are throttled: the username so that guessing one account is
+  // A browser that has signed in here before carries a device cookie, and its
+  // attempts are counted against that device alone (ADR-007). Everything else
+  // goes on the shared ledger: the username so that guessing one account is
   // slow wherever it is attempted from, the address so that spraying many
   // usernames from one host is slow too.
-  const identity: LoginIdentity = { username, ip: await getClientIp() };
+  const deviceNonce = await readTrustedDeviceNonce(username);
+  const identity: LoginIdentity = {
+    username,
+    ip: await getClientIp(),
+    deviceNonce,
+  };
 
   const verdict = loginThrottleVerdict(identity);
   if (verdict.blocked) {
@@ -84,6 +96,14 @@ export async function loginAction(prevState: any, formData: FormData) {
   }
 
   registerSuccessfulLogin(identity);
+
+  // Only when the request arrived without a usable one. Re-issuing on every
+  // sign-in would read as rotation, but validation is stateless, so the
+  // replaced cookie would keep verifying — a guarantee the code cannot make
+  // and should not appear to.
+  if (!deviceNonce) {
+    await issueDeviceCookie(user.username);
+  }
 
   const session = await getSession();
   session.user = { id: user.id, username: user.username };
