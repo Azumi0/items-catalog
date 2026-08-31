@@ -102,14 +102,19 @@ const JPEG_QUALITY = 85;
 /**
  * How hard the model may think before answering.
  *
- * The Gemini 3 family defaults to `high`, which is aimed at multi-step
- * planning and verified code generation — not at writing three sentences
- * about a photo. Google publishes no guidance for captioning or OCR, and in
- * published vision benchmarks the deeper setting does not reliably win. What
- * `high` does reliably do is delay the first token, and a user is standing in
- * front of a spinner while that happens.
+ * Started at `low`, on the reasoning that three sentences about a photo is not
+ * the multi-step planning `high` is aimed at, and that a user is standing in
+ * front of a spinner while the model deliberates. Raised to `medium` after the
+ * prompt grew: it now asks the model to separate a foreground subject from its
+ * background *and* to identify what the subject is only as far as the picture
+ * supports, falling back to a broader word otherwise. That is conditional
+ * instruction-following under several rules at once, which is where a deeper
+ * budget plausibly helps — unlike plain captioning, where published vision
+ * benchmarks show it does not reliably win.
+ *
+ * Raise or lower it here; the 60s budget (§2.8) leaves room either way.
  */
-const THINKING_LEVEL = 'low';
+const THINKING_LEVEL = 'medium';
 
 /**
  * Image detail budget, set per content item (`resolution`) as Gemini 3 allows.
