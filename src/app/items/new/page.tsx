@@ -2,6 +2,7 @@ import { requireAuthPage } from '@/lib/session';
 import { getCategories } from '@/lib/services/categories';
 import { AppLayout } from '@/components/AppLayout';
 import { ItemForm } from '@/components/ItemForm';
+import { isAiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,11 @@ export default async function NewItemPage({
       tab="catalog"
       chrome={false}
     >
-      <ItemForm categories={categories} initialCategoryId={prefilled?.id} />
+      <ItemForm
+        categories={categories}
+        initialCategoryId={prefilled?.id}
+        aiEnabled={isAiConfigured()}
+      />
     </AppLayout>
   );
 }

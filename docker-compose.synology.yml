@@ -54,6 +54,23 @@ services:
       #
       # Zmiana tej wartosci uniewaznia wszystkie aktywne sesje.
       - SESSION_SECRET=ZMIEN-MNIE-na-losowy-ciag-minimum-32-znaki
+      # --- Generowanie opisow przez AI (opcjonalne) ---
+      #
+      # Zostaw puste, jesli nie chcesz tej funkcji: przycisk "Wygeneruj opis
+      # z AI" w ogole sie wtedy nie renderuje, reszta katalogu dziala bez zmian.
+      #
+      # Klucz zakladasz w Google AI Studio: https://aistudio.google.com/apikey
+      #
+      # UWAGA: wlaczenie tego oznacza, ze zdjecie glowne przedmiotu opuszcza
+      # NAS i trafia do Google. To jedyne miejsce, w ktorym ta aplikacja
+      # wychodzi do internetu w czasie obslugi zadania — swiadomy wyjatek od
+      # reszty projektu, opisany w
+      # docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md
+      - GEMINI_API_KEY=
+
+      # Puste = gemini-3.5-flash-lite. Podmiana modelu to restart kontenera,
+      # bez przebudowy obrazu.
+      - GEMINI_MODEL=
 
       # UWAGA: PUBLIC_ORIGIN nie jest zmienna srodowiskowa kontenera i nie ma
       # sensu dopisywac jej tutaj. Next zapisuje next.config.mjs do
