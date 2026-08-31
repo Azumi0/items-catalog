@@ -170,9 +170,8 @@ describe('Gemini description seam', () => {
       const [params] = interactionsCreate.mock.calls[0];
 
       expect(params.model).toBe('gemini-3.5-flash-lite');
-      // Latency knob: the Gemini 3 default is `high`, which is aimed at
-      // multi-step planning, not at three sentences about a photo.
-      expect(params.generation_config.thinking_level).toBe('low');
+      // Latency knob, deliberately below the Gemini 3 default of `high`.
+      expect(params.generation_config.thinking_level).toBe('medium');
       expect(params.input[0]).toEqual({ type: 'text', text: DESCRIPTION_PROMPT });
       expect(params.input[1].type).toBe('image');
       expect(params.input[1].mime_type).toBe('image/jpeg');
