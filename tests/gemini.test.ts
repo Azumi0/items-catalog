@@ -247,6 +247,34 @@ describe('Gemini description seam', () => {
     });
   });
 
+  /**
+   * The prompt is a tuning knob and is expected to be rewritten. These two
+   * clauses are not part of the tuning: both exist because of a specific
+   * failure, where a photo of a cat in front of a bookshelf came back
+   * describing the cat *and* the books, with fragments of their spines
+   * transcribed. If a future rewrite drops them, that regression comes back
+   * silently — the output still reads like a perfectly good description.
+   */
+  describe('prompt scope', () => {
+    it('scopes the description to one subject in the foreground', () => {
+      expect(DESCRIPTION_PROMPT).toContain('pierwszego planu');
+      expect(DESCRIPTION_PROMPT).toMatch(/w tle[\s\S]*pomiń/);
+    });
+
+    it('keeps transcription off anything in the background', () => {
+      expect(DESCRIPTION_PROMPT).toContain('Napisów z przedmiotów w tle nie przepisuj');
+    });
+
+    /**
+     * Naming what a thing is reads the picture; naming who made it or what it
+     * is worth invents. ADR-008 §2.9 draws that line.
+     */
+    it('permits identifying the kind of thing but not its provenance', () => {
+      expect(DESCRIPTION_PROMPT).toMatch(/rodzaj, typ, model, rasa/);
+      expect(DESCRIPTION_PROMPT).toMatch(/Nie podawaj marki, producenta, pochodzenia/);
+    });
+  });
+
   describe('response handling', () => {
     it('reads the description out of the interaction', async () => {
       interactionsCreate.mockResolvedValue(
