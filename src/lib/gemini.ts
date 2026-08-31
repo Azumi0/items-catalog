@@ -125,23 +125,45 @@ const MEDIA_RESOLUTION = 'high';
  * expected to happen, and hunting the string through a request builder would
  * be the wrong shape for a knob that gets turned.
  *
- * Every line is load-bearing. The negative constraints are the point: a model
- * asked to describe a possession will otherwise volunteer a brand, a material
- * and an era it cannot see, and those inventions are worse than a short
- * description because they read exactly like observations.
+ * Every line is load-bearing, and two of them exist because of a specific
+ * failure:
+ *
+ * The **foreground rule** is not decoration. Asked simply to "describe the
+ * object", a model treats the whole frame as the object: a photo of a cat on a
+ * table produced a description of the cat *and* the books behind it, complete
+ * with the fragments of their spines transcribed verbatim — because the
+ * transcription rule said "every inscription on the object" without ever
+ * saying which object that was. One subject in frame hid the ambiguity; two
+ * revealed it.
+ *
+ * The **identification rule** draws a line the first version did not. Naming
+ * what a thing *is* (a cat, a British Shorthair, a hammer drill) is reading
+ * the picture. Naming who made it, where it came from, how old it is or what
+ * it is worth is inventing, and those inventions are worse than a short
+ * description because they read exactly like observations. A brand is still
+ * off limits as a guess — but a legible brand *printed on the object* arrives
+ * anyway, through the transcription rule, as a fact rather than a claim.
  */
-export const DESCRIPTION_PROMPT = `Opisz przedmiot widoczny na zdjęciu.
+export const DESCRIPTION_PROMPT = `Opisz przedmiot z pierwszego planu zdjęcia — ten jeden, który jest
+głównym tematem kadru.
 
 Zasady:
 - Pisz po polsku, 2–3 zdania, rzeczowo. Bez tonu marketingowego,
   bez ocen i bez zachęt do zakupu.
-- Opisz wyłącznie to, co faktycznie widać na zdjęciu.
-- Każdy czytelny napis na przedmiocie przepisz dosłownie, w cudzysłowie.
+- Opisuj wyłącznie ten jeden przedmiot i wyłącznie to, co faktycznie
+  widać. Przedmioty w tle i obok, otoczenie oraz wystrój pomiń
+  całkowicie — nawet jeśli są wyraźnie widoczne. Możesz wspomnieć, na
+  czym przedmiot leży lub stoi, jeśli to istotne dla jego opisu.
+- Nazwij, czym ten przedmiot jest, tak konkretnie, jak pozwala na to
+  wygląd: rodzaj, typ, model, rasa. Jeśli wygląd nie wystarcza do
+  rozpoznania, użyj nazwy ogólniejszej, zamiast zgadywać.
+- Każdy czytelny napis na opisywanym przedmiocie przepisz dosłownie,
+  w cudzysłowie. Napisów z przedmiotów w tle nie przepisuj w ogóle.
   Napisu nieczytelnego nie zgaduj — pomiń go.
 - Nie podawaj marki, producenta, pochodzenia, materiału, wieku ani
   wartości, jeśli nie wynikają wprost z tego, co widać.
   Jeśli nie wynikają — po prostu ich nie wspominaj.
-- Nie opisuj tła, oświetlenia ani samego zdjęcia jako fotografii.`;
+- Nie opisuj oświetlenia, kompozycji ani samego zdjęcia jako fotografii.`;
 
 /**
  * Why the response is schema-constrained rather than parsed out of prose: a

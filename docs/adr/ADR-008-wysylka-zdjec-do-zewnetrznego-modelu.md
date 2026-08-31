@@ -140,6 +140,21 @@ Zweryfikowane zachowanie końcowe:
 * **Domyślna polityka SDK** — 156 s przed komunikatem i pięciokrotny transfer.
 * **Utrzymanie budżetu 30 s przy jednej próbie ponownej** — wymagałoby zejścia do ~14,75 s na próbę, a generowanie opisu z obrazu 9,4 Mpix bywa wolniejsze. Zamieniałoby to udane generowania w timeouty: pewna szkoda na ścieżce właściwej za niepewny zysk na awaryjnej. Dlatego rozluźniony został budżet całkowity, a nie budżet pojedynczej próby.
 
+### 2.9. Zakres opisu: pierwszy plan i granica rozpoznawania
+
+Pierwsza wersja promptu kazała „opisać przedmiot na zdjęciu" i „przepisać każdy czytelny napis na przedmiocie". Przy jednym obiekcie w kadrze działało to dobrze. Przy dwóch okazało się, że **nigdzie nie było powiedziane, który obiekt jest tym opisywanym** — zdjęcie kota na stole, z półką z książkami za nim, dało opis kota *oraz* książek, razem z dosłownie przepisanymi urywkami z ich grzbietów. Prompt został wykonany poprawnie; to instrukcja była niedomówiona.
+
+Stąd **reguła pierwszego planu**: opisujemy jeden przedmiot, ten będący tematem kadru, a tło, otoczenie i przedmioty obok pomijamy całkowicie. Reguła przepisywania napisów została do niej przypięta — napisy z tła nie trafiają do opisu w ogóle. Powierzchnia, na której przedmiot leży, pozostaje dozwolona, bo bywa częścią jego opisu.
+
+**Granica rozpoznawania została przesunięta**, i to jest zmiana wobec pierwotnej specyfikacji, którą warto zapisać jako świadomą. Pierwotny zakaz obejmował „markę, pochodzenie, materiał, wiek i wartość" w jednym worku. Rozdzielone zostały dwie różne czynności:
+
+* **Czym rzecz jest** — kot, kot rasy brytyjskiej, wiertarka udarowa. To jest czytanie zdjęcia. **Dozwolone**, z zastrzeżeniem, że przy niepewności model ma użyć nazwy ogólniejszej zamiast zgadywać.
+* **Kto ją zrobił, skąd pochodzi, ile ma lat, ile jest warta.** To jest wymyślanie. **Nadal zakazane.**
+
+Koszt tej zmiany jest realny i przyjęty świadomie: rozpoznanie rasy czy typu **bywa błędne, a model poda je z tą samą pewnością co obserwację prawdziwą** — czyli dokładnie to, przed czym chronił pierwotny zakaz. Uznajemy to za akceptowalne, bo klasyfikacja wzrokowa jest tym, po co ta funkcja w ogóle powstała, a ostatnią instancją pozostaje użytkownik, który zapisuje formularz sam (§2.2). Marka pozostaje pod zakazem zgadywania — ale marka **czytelnie napisana na przedmiocie** trafia do opisu i tak, przez regułę przepisywania napisów, czyli jako fakt, a nie domysł.
+
+Obie reguły mają testy (`tests/gemini.test.ts`, „prompt scope"). Prompt jest pokrętłem przewidzianym do kręcenia (§3), ale te dwie klauzule nie są częścią strojenia — ich usunięcie przywraca regresję, która nie wygląda na regresję, bo opis nadal czyta się dobrze.
+
 ---
 
 ## 3. Rozmiar Wysyłanego Obrazu
