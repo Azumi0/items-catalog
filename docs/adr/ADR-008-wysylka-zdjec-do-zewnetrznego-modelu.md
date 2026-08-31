@@ -153,6 +153,16 @@ Stąd **reguła pierwszego planu**: opisujemy jeden przedmiot, ten będący tema
 
 Koszt tej zmiany jest realny i przyjęty świadomie: rozpoznanie rasy czy typu **bywa błędne, a model poda je z tą samą pewnością co obserwację prawdziwą** — czyli dokładnie to, przed czym chronił pierwotny zakaz. Uznajemy to za akceptowalne, bo klasyfikacja wzrokowa jest tym, po co ta funkcja w ogóle powstała, a ostatnią instancją pozostaje użytkownik, który zapisuje formularz sam (§2.2). Marka pozostaje pod zakazem zgadywania — ale marka **czytelnie napisana na przedmiocie** trafia do opisu i tak, przez regułę przepisywania napisów, czyli jako fakt, a nie domysł.
 
+#### Samo rozdzielenie nie wystarczyło: reguły sprzeczały się ze sobą
+
+Pierwsze podejście do powyższego dopisało regułę pozwalającą nazwać rasę, ale **zostawiło słowo „pochodzenia" na liście zakazów**. To jest sprzeczność, choć na pierwszy rzut oka nią nie wygląda: **nazwa rasy jest nazwą pochodzenia** — „kot brytyjski" dosłownie nazywa kraj. Model dostał więc regułę pozwalającą i regułę zakazującą tego samego, a rozstrzygając sprzeczność, wybrał gałąź ostrożną.
+
+Objaw był jednoznaczny i warto go zapamiętać jako wzorzec: model opisał kota **z dokładnością do długości sierści i ustawienia uszu**, po czym rasy nie nazwał. Wszystkie przesłanki wzrokowe były obecne; brakowało wyłącznie pozwolenia. To nie wyglądało na brak możliwości, tylko na zastosowanie się do zakazu.
+
+Naprawione dwiema zmianami: zakaz został **zawężony do pochodzenia egzemplarza** („kraju pochodzenia egzemplarza" zamiast gołego „pochodzenia"), a między obie reguły wstawione zostało zdanie rozstrzygające wprost, że rozpoznanie rodzaju, gatunku, rasy lub typu nie jest podawaniem pochodzenia. Obie rzeczy mają testy.
+
+**Wniosek do zapamiętania przy kolejnych zmianach promptu:** dwie reguły, z których jedna czegoś zabrania, a druga to samo dopuszcza pod inną nazwą, nie dają wyniku pośredniego — dają wynik ostrożny. Objawia się to jako brak informacji, a nie jako błąd, więc łatwo zdiagnozować to jako słabość modelu. Pierwszą reakcją było tu podniesienie `thinking_level` do `medium`; nie o to chodziło i po naprawie promptu wartość wróciła do `low`.
+
 Obie reguły mają testy (`tests/gemini.test.ts`, „prompt scope"). Prompt jest pokrętłem przewidzianym do kręcenia (§3), ale te dwie klauzule nie są częścią strojenia — ich usunięcie przywraca regresję, która nie wygląda na regresję, bo opis nadal czyta się dobrze.
 
 ---
@@ -177,7 +187,7 @@ Ta sama logika dotyczy `DESCRIPTION_PROMPT`, wyeksportowanego z `src/lib/gemini.
 
 ## 4. Decyzje Techniczne Warte Zapamiętania
 
-* **`thinking_level: 'medium'`.** Rodzina Gemini 3 domyślnie myśli na poziomie `high`, celowanym w planowanie wieloetapowe i generowanie kodu — nie w trzy zdania o zdjęciu, więc zaczęliśmy od `low`. Podniesione do `medium`, gdy prompt urósł o §2.9: rozdzielenie pierwszego planu od tła plus warunkowe rozpoznawanie („tak konkretnie, jak pozwala wygląd, inaczej ogólniej") to już wykonywanie kilku reguł naraz, a nie zwykłe opisanie obrazka — i to jest obszar, w którym głębszy budżet może pomóc. Przy samym opisywaniu obrazów opublikowane benchmarki wizyjne nie pokazują pewnej przewagi głębszego myślenia. Budżet 60 s (§2.8) zostawia miejsce w obie strony.
+* **`thinking_level: 'low'`.** Rodzina Gemini 3 domyślnie myśli na poziomie `high`, celowanym w planowanie wieloetapowe i generowanie kodu — nie w trzy zdania o zdjęciu. Google nie publikuje wskazówek dla opisywania obrazów ani OCR, a w opublikowanych benchmarkach wizyjnych głębsze myślenie nie wygrywa w sposób pewny. Co robi pewnie, to opóźnia pierwszy token, podczas gdy użytkownik stoi przed preloaderem. Chwilowo podniesione do `medium`, gdy opis nie nazywał rasy — okazało się to niewłaściwą dźwignią (przyczyną była sprzeczność w promptcie, §2.9) i po naprawie wróciło do `low`. Budżet 60 s (§2.8) zostawia miejsce w obie strony.
 * **Structured output z JSON Schema**, nie parsowanie wolnego tekstu. Odpowiedź tekstowa przychodzi opakowana w to, co modelowi przyjdzie do głowy („Oto opis:", płotek markdown, oferta rozwinięcia), a każde takie opakowanie trzeba by zdejmować regexem, który będzie zły dla następnej wersji modelu.
 * **`Api-Revision: 2026-05-20`** przypięte w nagłówku, z tego samego powodu, dla którego `Dockerfile` przypina `node:24.18.0-alpine` zamiast `node:24-alpine`: kształty, które ten moduł buduje i parsuje, są kontraktem, a kontrakt zmieniający się pod działającym kontenerem to awaria, której nikt nie odtworzy.
 * **`.rotate()` przed pomiarem i skalowaniem**, a wymiary czytane z `metadata().autoOrient`, nie z `width`/`height`. Te ostatnie opisują piksele zapisane w pliku, czyli dla zdjęcia z telefonu — leżące na boku. Budowanie z nich ramki skalowania zmniejszało zdjęcie pionowe do połowy dozwolonych pikseli; złapał to test, nie recenzja.

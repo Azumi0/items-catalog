@@ -171,7 +171,7 @@ describe('Gemini description seam', () => {
 
       expect(params.model).toBe('gemini-3.5-flash-lite');
       // Latency knob, deliberately below the Gemini 3 default of `high`.
-      expect(params.generation_config.thinking_level).toBe('medium');
+      expect(params.generation_config.thinking_level).toBe('low');
       expect(params.input[0]).toEqual({ type: 'text', text: DESCRIPTION_PROMPT });
       expect(params.input[1].type).toBe('image');
       expect(params.input[1].mime_type).toBe('image/jpeg');
@@ -269,8 +269,25 @@ describe('Gemini description seam', () => {
      * is worth invents. ADR-008 §2.9 draws that line.
      */
     it('permits identifying the kind of thing but not its provenance', () => {
-      expect(DESCRIPTION_PROMPT).toMatch(/rodzaj, typ, model, rasa/);
-      expect(DESCRIPTION_PROMPT).toMatch(/Nie podawaj marki, producenta, pochodzenia/);
+      expect(DESCRIPTION_PROMPT).toMatch(/rodzaj, typ, model, gatunek, rasa/);
+      expect(DESCRIPTION_PROMPT).toMatch(/Nie podawaj marki, producenta/);
+    });
+
+    /**
+     * A breed name *is* a provenance word — "kot brytyjski" names an origin —
+     * so permitting breeds while banning provenance reads as a contradiction,
+     * and the model took the cautious branch: it described coat length and ear
+     * set, then declined to name the breed. This clause is what resolves it,
+     * and the ban must stay scoped to the individual item's origin rather than
+     * to the category it belongs to.
+     */
+    it('says outright that a breed is not a provenance claim', () => {
+      expect(DESCRIPTION_PROMPT).toMatch(
+        /Rozpoznanie rodzaju, gatunku, rasy lub typu NIE jest podawaniem\s+pochodzenia/
+      );
+      expect(DESCRIPTION_PROMPT).toContain('kraju pochodzenia egzemplarza');
+      // The unqualified word would re-open the contradiction.
+      expect(DESCRIPTION_PROMPT).not.toMatch(/marki, producenta, pochodzenia,/);
     });
   });
 
