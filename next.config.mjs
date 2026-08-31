@@ -84,6 +84,14 @@ const nextConfig = {
   // version to every scanner that walks past the open port.
   poweredByHeader: false,
   output: 'standalone',
+  // `@google/genai` is deliberately NOT here. It has no native binding, so it
+  // bundles cleanly into the server chunk, and leaving it bundled sidesteps the
+  // pnpm symlink regression documented below — which would otherwise mean
+  // tracing its whole transitive tree (protobufjs, google-auth-library, ws, …)
+  // by hand. Verified: bundled to CJS, the form Next emits for the server, the
+  // SDK's `interactions.create` runs. Bundled to *ESM* it does not —
+  // google-auth-library does a dynamic `require('child_process')` — so if a
+  // future Next emits ESM server output, this is the first thing to re-check.
   serverExternalPackages: ['better-sqlite3', 'sharp', 'bcryptjs'],
   // Next 16 regression, pnpm-specific: packages listed in
   // serverExternalPackages are copied into .next/standalone under

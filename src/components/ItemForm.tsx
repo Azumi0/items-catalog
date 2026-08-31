@@ -19,6 +19,7 @@ import {
   useMultiImagePreviews,
   useSingleImagePreview,
 } from '@/hooks/useImagePreviews';
+import { AiDescriptionButton } from './AiDescriptionButton';
 import { AutoGrid } from './AutoGrid';
 import { CameraButton } from './CameraButton';
 import {
@@ -36,6 +37,12 @@ interface ItemFormProps {
   item?: ItemWithCategory;
   /** Preselected category when adding from inside one. */
   initialCategoryId?: string;
+  /**
+   * Whether AI description generation is available at all. Resolved on the
+   * server from the presence of GEMINI_API_KEY; only ever this boolean crosses
+   * to the client, never the key.
+   */
+  aiEnabled?: boolean;
 }
 
 /**
@@ -47,6 +54,7 @@ export function ItemForm({
   categories,
   item,
   initialCategoryId,
+  aiEnabled = false,
 }: ItemFormProps) {
   const router = useRouter();
   const { run, pending } = useActionRunner();
@@ -248,17 +256,34 @@ export function ItemForm({
           )}
         </FieldBlock>
 
-        <Textarea
-          label="Opis"
-          placeholder="Co to jest, gdzie leży, stan…"
-          value={description}
-          onChange={(event) => setDescription(event.currentTarget.value)}
-          disabled={pending}
-          styles={{
-            ...FIELD_LABEL_STYLES,
-            input: { minHeight: 120, fontSize: 16, resize: 'vertical' },
-          }}
-        />
+        <Stack gap={8}>
+          <Textarea
+            label="Opis"
+            placeholder="Co to jest, gdzie leży, stan…"
+            value={description}
+            onChange={(event) => setDescription(event.currentTarget.value)}
+            disabled={pending}
+            styles={{
+              ...FIELD_LABEL_STYLES,
+              input: { minHeight: 120, fontSize: 16, resize: 'vertical' },
+            }}
+          />
+
+          {/*
+            Absent, not disabled, when the server has no API key: a control
+            that can never do anything is worse than no control on a screen
+            this narrow. The field itself stays editable either way.
+          */}
+          {aiEnabled && (
+            <AiDescriptionButton
+              file={newMain.file}
+              storedFilename={keptMain}
+              description={description}
+              onGenerated={setDescription}
+              disabled={pending}
+            />
+          )}
+        </Stack>
       </Stack>
 
       <FormActionBar

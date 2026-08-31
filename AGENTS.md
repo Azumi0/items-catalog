@@ -38,6 +38,16 @@ Each has a plausible-looking "simplification" that quietly removes the protectio
 
 Read `docs/adr/ADR-006-hartowanie-pod-dostep-z-internetu.md` and `docs/adr/ADR-007-ciastko-urzadzenia-i-uniewaznianie-sesji.md` before touching any of them. ADR-007 supersedes one recorded cost in ADR-006; the rest of ADR-006 stands.
 
+### Wyjścia do internetu
+
+This application makes exactly one outbound call at request time: `src/lib/gemini.ts`, which sends an item's main photo to Google to have a description proposed. Everything else — icons, fonts, the broken-image placeholder — is deliberately local, and the comment on `placeholderSvg` in `src/lib/images.ts` explains why.
+
+That one exception is bounded on purpose: main photo only, only on an explicit click, disabled entirely when `GEMINI_API_KEY` is unset (the button does not render), and never saved without the user submitting the form. `src/lib/gemini.ts` logs status codes and **never** the image bytes or the model's text — there is a test guarding that, because the first `console.error(err)` added while debugging would quietly undo it.
+
+The HTTP layer is Google's `@google/genai` SDK, not hand-built `fetch` — that reversal is deliberate and ADR-008 §2.7 records why (a hand-built client got the request shape wrong three times, including an `output_text` field raw REST does not return, which fails *silently*). Three things there are easy to "clean up" and must not be. The retry policy is tuned against measured numbers, not defaults: **`timeout_ms` in the SDK is per *attempt*, not per call**, so the per-attempt value is *derived* from `TOTAL_BUDGET_MS` and `MAX_RETRIES` — raise one without the other and a hung endpoint runs past the budget (the SDK's own defaults take 156s). `retry_codes` excludes 429 on purpose, and `retryConnectionErrors: true` is set because it defaults to *off* and without it the retry misses the likeliest failure behind a home uplink. Finally, the error mapping switches on `statusCode`/`name` rather than `instanceof`, because the SDK exports only the `ApiError` base class. All measured in ADR-008 §2.8.
+
+**Before adding a second outbound call, or relaxing any of those bounds, read `docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md`.** The tunable constants (`MAX_IMAGE_PIXELS`, `DESCRIPTION_PROMPT`) are named and exported because they are expected to be adjusted; the bounds around them are not.
+
 ### Issue tracker
 
 
