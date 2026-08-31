@@ -102,19 +102,19 @@ const JPEG_QUALITY = 85;
 /**
  * How hard the model may think before answering.
  *
- * Started at `low`, on the reasoning that three sentences about a photo is not
- * the multi-step planning `high` is aimed at, and that a user is standing in
- * front of a spinner while the model deliberates. Raised to `medium` after the
- * prompt grew: it now asks the model to separate a foreground subject from its
- * background *and* to identify what the subject is only as far as the picture
- * supports, falling back to a broader word otherwise. That is conditional
- * instruction-following under several rules at once, which is where a deeper
- * budget plausibly helps — unlike plain captioning, where published vision
- * benchmarks show it does not reliably win.
+ * `low`, deliberately below the Gemini 3 default of `high`: three sentences
+ * about a photo is not the multi-step planning `high` is aimed at, published
+ * vision benchmarks show the deeper setting does not reliably win, and what it
+ * does reliably do is delay the first token while a user watches a spinner.
+ *
+ * Briefly raised to `medium` when the description came back without naming the
+ * subject's breed. That turned out to be the wrong lever — the cause was two
+ * prompt rules contradicting each other (§2.9), not a shortage of thinking, so
+ * this went back to `low` once the prompt was fixed.
  *
  * Raise or lower it here; the 60s budget (§2.8) leaves room either way.
  */
-const THINKING_LEVEL = 'medium';
+const THINKING_LEVEL = 'low';
 
 /**
  * Image detail budget, set per content item (`resolution`) as Gemini 3 allows.
@@ -148,6 +148,14 @@ const MEDIA_RESOLUTION = 'high';
  * description because they read exactly like observations. A brand is still
  * off limits as a guess — but a legible brand *printed on the object* arrives
  * anyway, through the transcription rule, as a fact rather than a claim.
+ *
+ * The line between those two needs stating out loud, and the sentence that
+ * does it is not filler. A breed name *is* a provenance word — "kot brytyjski"
+ * literally names an origin — so a rule permitting breeds and a rule banning
+ * provenance read as a contradiction, and a model resolving a contradiction
+ * takes the cautious branch. It did: given a photo whose subject it described
+ * down to coat length and ear set, it declined to name the breed. Every visual
+ * cue was present; only permission was missing.
  */
 export const DESCRIPTION_PROMPT = `Opisz przedmiot z pierwszego planu zdjęcia — ten jeden, który jest
 głównym tematem kadru.
@@ -160,14 +168,17 @@ Zasady:
   całkowicie — nawet jeśli są wyraźnie widoczne. Możesz wspomnieć, na
   czym przedmiot leży lub stoi, jeśli to istotne dla jego opisu.
 - Nazwij, czym ten przedmiot jest, tak konkretnie, jak pozwala na to
-  wygląd: rodzaj, typ, model, rasa. Jeśli wygląd nie wystarcza do
-  rozpoznania, użyj nazwy ogólniejszej, zamiast zgadywać.
+  wygląd: rodzaj, typ, model, gatunek, rasa. Jeśli widoczne cechy
+  wskazują na konkretną rasę lub typ, podaj ją. Nazwy ogólniejszej użyj
+  dopiero wtedy, gdy wygląd naprawdę nie pozwala rozstrzygnąć.
+- Rozpoznanie rodzaju, gatunku, rasy lub typu NIE jest podawaniem
+  pochodzenia i nie podlega zakazowi z kolejnego punktu.
+- Nie podawaj marki, producenta, kraju pochodzenia egzemplarza,
+  materiału, wieku ani wartości, jeśli nie wynikają wprost z tego, co
+  widać. Jeśli nie wynikają — po prostu ich nie wspominaj.
 - Każdy czytelny napis na opisywanym przedmiocie przepisz dosłownie,
   w cudzysłowie. Napisów z przedmiotów w tle nie przepisuj w ogóle.
   Napisu nieczytelnego nie zgaduj — pomiń go.
-- Nie podawaj marki, producenta, pochodzenia, materiału, wieku ani
-  wartości, jeśli nie wynikają wprost z tego, co widać.
-  Jeśli nie wynikają — po prostu ich nie wspominaj.
 - Nie opisuj oświetlenia, kompozycji ani samego zdjęcia jako fotografii.`;
 
 /**
