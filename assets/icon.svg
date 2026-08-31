@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!--
+    Master source for every app icon. Traced from the original icon-512.png by
+    measuring it, not by eye: vertices and colours below are the values that
+    file actually contains.
+
+    The corner is NOT a circular fillet. Fitting a circle of r=90 misses the
+    real outline by up to 6.7px; the outline is a superellipse of n≈1.78, which
+    as a cubic Bezier means k=0.474 (a circle would be 0.5523). Hence the
+    control offset 42.66 = 90 * 0.474 and its complement 47.34 = 90 - 42.66.
+    Replacing this path with <rect rx="90"> looks equivalent in a diff and is
+    not; scripts/generate-icons.mjs explains what depends on it.
+
+    Cube geometry, measured per face rather than inferred from the silhouette:
+    the top rhombus is 240 x 159 (half-height 79.5) and the sides are 130 tall.
+    Deriving those from the outline instead gives 78 and 133, which moves the
+    top/side seam by 4px and is invisible until you diff against this file.
+
+    The cube sits inside the maskable safe zone (156px from the canvas centre
+    to the top vertex, against a 204.8px budget), which is why one artwork
+    serves both manifest purposes.
+  -->
+  <path fill="#0ca678" d="
+    M 90,0
+    L 422,0
+    C 464.66,0 512,47.34 512,90
+    L 512,422
+    C 512,464.66 464.66,512 422,512
+    L 90,512
+    C 47.34,512 0,464.66 0,422
+    L 0,90
+    C 0,47.34 47.34,0 90,0
+    Z" />
+  <!-- top face -->
+  <path fill="#e7f6f2" d="M 255.5,100 L 375,179.5 L 255.5,259 L 136,179.5 Z" />
+  <!-- left face -->
+  <path fill="#dcf8ef" d="M 136,179.5 L 255.5,259 L 255.5,389 L 136,309.5 Z" />
+  <!-- right face -->
+  <path fill="#b1f1dd" d="M 375,179.5 L 375,309.5 L 255.5,389 L 255.5,259 Z" />
+</svg>

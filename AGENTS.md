@@ -48,6 +48,32 @@ The HTTP layer is Google's `@google/genai` SDK, not hand-built `fetch` — that 
 
 **Before adding a second outbound call, or relaxing any of those bounds, read `docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md`.** The tunable constants (`MAX_IMAGE_PIXELS`, `DESCRIPTION_PROMPT`) are named and exported because they are expected to be adjusted; the bounds around them are not.
 
+### Ikony aplikacji
+
+All five icons are rendered from one vector master, `assets/icon.svg`, by
+`pnpm run icons`. The master is traced from the original bitmap by measurement,
+not by eye, and `tests/icons.test.ts` checks the generated files against the two
+places that reference them by literal path.
+
+Three changes there look like tidying and quietly break something:
+
+- **Collapsing the manifest's plain and `maskable` entries into one
+  `any maskable`.** The maskable entry is what makes Android round the tile into
+  a circle; merging them lets a launcher put the unmasked artwork in a masked
+  slot and add a backdrop behind a tile that already has its own.
+- **Overwriting an icon path in place instead of introducing a new filename.**
+  Android rebuilds its generated APK when the *manifest content* changes, not
+  when bytes move under a URL it already fetched, so an in-place swap can leave
+  the old icon on an installed home screen until reinstall.
+- **Dropping `/icons` from the allowlist in `src/proxy.ts`, or serving icons
+  through Next's `app/icon.png` convention instead.** Next generates those at
+  `/icon0.png`, which the proxy does not wave through, so the one visitor
+  without a session — the person looking at `/login` — gets a redirect instead
+  of a favicon. `tests/proxy.test.ts` pins the paths.
+
+The corner of the tile is a superellipse (n≈1.78, `k=0.474` as a cubic Bezier),
+not a circular fillet; `<rect rx="90">` misses the real outline by up to 6.7px.
+
 ### Issue tracker
 
 
@@ -80,3 +106,13 @@ path and not only in the modal.
 `docs/adr/ADR-005-odstepstwa-od-handoffu-icon-picker.md`.** Each entry is a
 recorded decision with its reasoning; several of them undo a real defect that
 literal compliance would reintroduce.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

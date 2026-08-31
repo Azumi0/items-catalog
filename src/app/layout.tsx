@@ -12,6 +12,18 @@ export const metadata: Metadata = {
   title: 'Katalog Przedmiotów Domowych',
   description: 'Aplikacja PWA do katalogowania i ewidencjonowania przedmiotów domowych',
   manifest: '/manifest.json',
+  // Served from public/icons/ rather than through the app/icon.png convention:
+  // src/proxy.ts only waves through /icons, /_next, /api and four literal
+  // paths, so Next's generated /icon0.png would be redirected to /login for
+  // the one visitor who has no session — and /login is where the favicon is
+  // most visible. Regenerate these with `pnpm run icons`.
+  icons: {
+    icon: [
+      { url: '/icons/app-icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/app-icon-48.png', sizes: '48x48', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/app-icon-180.png', sizes: '180x180', type: 'image/png' }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

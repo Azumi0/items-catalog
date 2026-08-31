@@ -10,7 +10,13 @@ describe('Next.js Route Proxy Seam', () => {
       'http://localhost:3000/manifest.json',
       'http://localhost:3000/_next/static/chunk.js',
       'http://localhost:3000/api/images/thumbs/pic.webp',
-      'http://localhost:3000/icons/icon-192.png',
+      // The favicon and the apple-touch-icon are fetched by a browser sitting
+      // on /login with no session at all. If /icons ever stops being waved
+      // through, they turn into redirects to /login and the login page loses
+      // its icon — silently, because a redirect is not an error.
+      'http://localhost:3000/icons/app-icon-32.png',
+      'http://localhost:3000/icons/app-icon-180.png',
+      'http://localhost:3000/icons/app-icon-192.png',
     ];
 
     for (const url of publicUrls) {
