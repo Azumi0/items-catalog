@@ -164,6 +164,7 @@ const GENERATION_ERRORS: Record<GeminiFailure, string> = {
   timeout: 'AI nie odpowiedziało w ciągu minuty. Spróbuj ponownie.',
   misconfigured: 'AI nie jest poprawnie skonfigurowane.',
   'bad-image': 'Nie udało się przetworzyć zdjęcia.',
+  unreachable: 'Nie udało się połączyć z AI. Sprawdź połączenie serwera z internetem.',
   unknown: 'Nie udało się wygenerować opisu.',
 };
 

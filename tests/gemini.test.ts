@@ -41,10 +41,42 @@ function interaction(description: string) {
  * carrying `statusCode` and a `name`. These stand-ins reproduce exactly the
  * shapes observed from the real SDK against a local server.
  */
-function apiError(statusCode: number) {
+function apiError(statusCode: number, body?: string) {
   const err = new Error('api error');
   err.name = 'APIError';
-  return Object.assign(err, { statusCode });
+  return Object.assign(err, { statusCode, body });
+}
+
+/**
+ * What Google actually answers when the key is not merely wrong but malformed
+ * — a value that arrived with its quotes still attached, say. Verbatim from
+ * the live API: the status is 400, *not* 401, and the only thing separating it
+ * from a genuinely bad request is `reason` in the body.
+ */
+function invalidKeyBody() {
+  return JSON.stringify([
+    {
+      error: {
+        code: 400,
+        message: 'API key not valid. Please pass a valid API key.',
+        status: 'INVALID_ARGUMENT',
+        details: [
+          {
+            '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+            reason: 'API_KEY_INVALID',
+            domain: 'googleapis.com',
+          },
+        ],
+      },
+    },
+  ]);
+}
+
+/** The SDK's shape for a connection that never reached Google at all. */
+function connectionError() {
+  const err = new Error('Connection error.');
+  err.name = 'APIConnectionError';
+  return Object.assign(err, { cause: { code: 'ENOTFOUND' } });
 }
 
 function timeoutError() {
@@ -143,6 +175,34 @@ describe('Gemini description seam', () => {
 
       process.env.GEMINI_API_KEY = 'k';
       expect(isAiConfigured()).toBe(true);
+    });
+
+    /**
+     * The exact shape that took an afternoon to find: the key reached the NAS
+     * with its quotes attached, because Compose strips them when expanding
+     * `.env` and keeps them when the value sits in an `environment:` entry —
+     * and the README asks the operator to move the value between the two.
+     */
+    it('strips quotes a compose environment entry would keep', () => {
+      process.env.GEMINI_API_KEY = '"AQ.abc123"';
+      expect(isAiConfigured()).toBe(true);
+
+      process.env.GEMINI_MODEL = '"gemini-9-flash"';
+      expect(getModel()).toBe('gemini-9-flash');
+
+      process.env.GEMINI_MODEL = "'gemini-9-flash'";
+      expect(getModel()).toBe('gemini-9-flash');
+    });
+
+    /** Only a *matching* surrounding pair goes; a stray quote is left alone. */
+    it('leaves an unmatched quote where it is', () => {
+      process.env.GEMINI_MODEL = '"gemini-9-flash';
+      expect(getModel()).toBe('"gemini-9-flash');
+    });
+
+    it('treats a value that is only quotes as unconfigured', () => {
+      process.env.GEMINI_API_KEY = '""';
+      expect(isAiConfigured()).toBe(false);
     });
 
     it('defaults the model but lets the environment override it', () => {
@@ -323,12 +383,57 @@ describe('Gemini description seam', () => {
       [403, 'misconfigured'],
       [500, 'unknown'],
       [400, 'unknown'],
+      [404, 'misconfigured'],
     ])('maps HTTP %i to %s', async (status, failure) => {
       vi.spyOn(console, 'error').mockImplementation(() => {});
       interactionsCreate.mockRejectedValue(apiError(status as number));
 
       await expect(generateItemDescription(await photo(200, 150))).rejects.toMatchObject({
         failure,
+      });
+    });
+
+    /**
+     * The failure this whole mapping exists for.
+     *
+     * A key that is malformed rather than merely wrong comes back as 400, and
+     * a bare `status === 400` check therefore reads it as `unknown` — the one
+     * message that tells the user nothing and leaves no lead in the log. It is
+     * exactly the shape a key pasted into Synology's Container Manager with
+     * its surrounding quotes produces, and it is invisible in the Google
+     * console, because a request rejected at key validation is never
+     * attributed to the project. Diagnosed once; never again.
+     */
+    it('reads a malformed key out of a 400 rather than calling it unknown', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      interactionsCreate.mockRejectedValue(apiError(400, invalidKeyBody()));
+
+      await expect(generateItemDescription(await photo(200, 150))).rejects.toMatchObject({
+        failure: 'misconfigured',
+      });
+    });
+
+    /** A 400 that is *not* about the key keeps its old, honest 'unknown'. */
+    it('leaves an unrecognised 400 as unknown', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      interactionsCreate.mockRejectedValue(apiError(400, '{"error":{"message":"bad request"}}'));
+
+      await expect(generateItemDescription(await photo(200, 150))).rejects.toMatchObject({
+        failure: 'unknown',
+      });
+    });
+
+    /**
+     * A request that never left the NAS is not the same event as one Google
+     * refused, and collapsing the two sent a diagnosis looking at the wrong
+     * half of the wire.
+     */
+    it('separates a call that never reached Google from a rejected one', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      interactionsCreate.mockRejectedValue(connectionError());
+
+      await expect(generateItemDescription(await photo(200, 150))).rejects.toMatchObject({
+        failure: 'unreachable',
       });
     });
 
@@ -372,6 +477,45 @@ describe('Gemini description seam', () => {
       // Base64 of a JPEG always starts with the SOI marker.
       expect(text).not.toContain('/9j/');
       expect(text.length).toBeLessThan(200);
+    });
+
+    /**
+     * The line an operator greps for. A key rejected as malformed produces no
+     * entry in the Google API console at all, so the container log is the only
+     * place the cause can surface — it has to say so in as many words.
+     */
+    it('names an invalid API key in the log, in Google\'s own words', async () => {
+      const logged: unknown[] = [];
+      vi.spyOn(console, 'error').mockImplementation((...args) => {
+        logged.push(...args);
+      });
+
+      interactionsCreate.mockRejectedValue(apiError(400, invalidKeyBody()));
+      await expect(generateItemDescription(await photo(2000, 1500))).rejects.toThrow();
+
+      const text = logged.map(String).join(' ');
+      expect(text).toContain('API key not valid. Please pass a valid API key.');
+      expect(text).toContain('API_KEY_INVALID');
+      expect(text).toContain('GEMINI_API_KEY');
+      // Still our own text, not the response body echoed back.
+      expect(text).not.toContain('/9j/');
+      expect(text).not.toContain('googleapis.com');
+    });
+
+    it('names the setting to check for a bad model and an unreachable host', async () => {
+      const logged: unknown[] = [];
+      vi.spyOn(console, 'error').mockImplementation((...args) => {
+        logged.push(...args);
+      });
+
+      interactionsCreate.mockRejectedValue(apiError(404));
+      await expect(generateItemDescription(await photo(200, 150))).rejects.toThrow();
+      expect(logged.map(String).join(' ')).toContain('GEMINI_MODEL');
+
+      logged.length = 0;
+      interactionsCreate.mockRejectedValue(connectionError());
+      await expect(generateItemDescription(await photo(200, 150))).rejects.toThrow();
+      expect(logged.map(String).join(' ')).toContain('never left this container');
     });
 
     it('does not log the model text on a successful call', async () => {

@@ -61,6 +61,14 @@ services:
       #
       # Klucz zakladasz w Google AI Studio: https://aistudio.google.com/apikey
       #
+      # Wklej SAMA wartosc, BEZ cudzyslowow. Tutaj nie dziala to tak samo jak
+      # w pliku .env: przy podstawianiu ${GEMINI_API_KEY} z .env Compose zdejmuje
+      # cudzyslowy, ale wpisane wprost w te linie zostaja doslowna czescia klucza.
+      # Google odpowiada wtedy 400 API_KEY_INVALID, a takie zadanie nie jest
+      # przypisywane do projektu — wiec w konsoli Google nie widac go w ogole.
+      # Aplikacja zdejmuje juz jedna warstwe cudzyslowow (src/lib/gemini.ts,
+      # readSetting), ale nie polegaj na tym i nie wklejaj ich.
+      #
       # UWAGA: wlaczenie tego oznacza, ze zdjecie glowne przedmiotu opuszcza
       # NAS i trafia do Google. To jedyne miejsce, w ktorym ta aplikacja
       # wychodzi do internetu w czasie obslugi zadania — swiadomy wyjatek od

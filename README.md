@@ -80,6 +80,16 @@ The add and edit item screens can propose a description from the item's main pho
    GEMINI_MODEL=
    ```
 
+   Write the bare value, **without quotes**. Compose strips quotes when it
+   expands `${GEMINI_API_KEY}` from `.env`, but keeps them verbatim when the
+   value is typed straight into an `environment:` entry — which is what the
+   Synology setup asks you to do. A key quoted here therefore works locally and
+   arrives on the NAS as `"AQ..."`, quotes included. Google answers that with
+   400 `API_KEY_INVALID`, and because a request rejected at key validation is
+   never attributed to your project, it leaves no trace in the API console
+   either. The app strips one layer of surrounding quotes defensively, but do
+   not lean on that.
+
 3. Restart the container. On Synology, `docker-compose.synology.yml` has the same two variables inline, since that file does not read a `.env`.
 
 Switching models is a restart, not a rebuild: `GEMINI_MODEL` is read per request.

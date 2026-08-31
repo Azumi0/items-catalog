@@ -202,6 +202,7 @@ export type GeminiFailure =
   | 'timeout'
   | 'misconfigured'
   | 'bad-image'
+  | 'unreachable'
   | 'unknown';
 
 export class GeminiError extends Error {
@@ -211,9 +212,36 @@ export class GeminiError extends Error {
   }
 }
 
+/**
+ * Read one of this module's two settings out of the environment.
+ *
+ * Trims, and strips a single layer of matching surrounding quotes.
+ *
+ * The quotes are not hypothetical and not sloppiness. README §"AI description
+ * generation" tells the operator to put the key in `.env` and then, for a NAS,
+ * to carry the same value into `environment:` in the compose file. Those two
+ * places do not agree about quoting: Compose *strips* quotes when it expands
+ * `${GEMINI_API_KEY}` from `.env`, and keeps them verbatim when the value is
+ * typed straight into an `environment:` entry. So a key that is quoted in
+ * `.env` works locally and becomes `"AQ..."` — quotes and all — on the NAS.
+ *
+ * Google answers that with 400 `API_KEY_INVALID`, and because a request
+ * rejected at key validation is never attributed to the project, it also
+ * leaves no trace in the API console. Diagnosed the hard way; the two
+ * characters are cheaper to absorb here than to find again.
+ *
+ * Neither a Gemini key nor a model id can legitimately contain a quote, so
+ * nothing valid is lost by removing them.
+ */
+function readSetting(name: 'GEMINI_API_KEY' | 'GEMINI_MODEL'): string {
+  const raw = process.env[name]?.trim() ?? '';
+  const unquoted = /^(["'])(.*)\1$/s.exec(raw);
+  return (unquoted ? unquoted[2] : raw).trim();
+}
+
 /** The model id, overridable at run time so a switch needs no image rebuild. */
 export function getModel(): string {
-  return process.env.GEMINI_MODEL?.trim() || DEFAULT_MODEL;
+  return readSetting('GEMINI_MODEL') || DEFAULT_MODEL;
 }
 
 /**
@@ -224,7 +252,7 @@ export function getModel(): string {
  * into the client bundle.
  */
 export function isAiConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY?.trim());
+  return Boolean(readSetting('GEMINI_API_KEY'));
 }
 
 /**
@@ -292,7 +320,34 @@ export async function prepareImageForModel(input: Buffer): Promise<Buffer> {
 }
 
 /**
- * Map an SDK failure onto the five outcomes the UI distinguishes.
+ * A failure plus one line of operator-facing context for the container log.
+ *
+ * `detail` is always one of *this module's own* strings. It is never taken
+ * from the API response: an error body can echo the request back, base64 image
+ * and all, and a photo of the inside of someone's home does not belong in a
+ * container log. Composed here from the status code and our own text, it
+ * carries the same information with none of that risk.
+ */
+type Diagnosis = { failure: GeminiFailure; detail: string };
+
+/**
+ * Google's wording for a key it cannot parse, reproduced verbatim as a
+ * constant rather than echoed out of the response body.
+ *
+ * Quoted deliberately: this is the string an operator will search the web for
+ * when the button stops working, so the log has to contain the exact words —
+ * but it is *our* copy of them, so nothing from the response can ride along.
+ * The trailing hint names the cause this actually had in the field, where a
+ * key reached a NAS with its quotes still attached (see `readSetting`).
+ */
+const INVALID_KEY_DETAIL =
+  'HTTP 400 API_KEY_INVALID — "API key not valid. Please pass a valid API key." ' +
+  'GEMINI_API_KEY is malformed rather than merely wrong; check it for surrounding ' +
+  'quotes or stray characters.';
+
+/**
+ * Map an SDK failure onto the outcomes the UI distinguishes, plus one line
+ * of operator-facing context for the log.
  *
  * Switched on `statusCode` and `name` rather than `instanceof`, because the
  * concrete classes the SDK throws (`RateLimitError`, `AuthenticationError`,
@@ -300,20 +355,65 @@ export async function prepareImageForModel(input: Buffer): Promise<Buffer> {
  * `ApiError` base is. Matching on data the SDK does expose survives a rename
  * that matching on private classes would not.
  */
-function classify(err: unknown): GeminiFailure {
+function classify(err: unknown): Diagnosis {
   const name = err instanceof Error ? err.name : '';
   if (name === 'APIConnectionTimeoutError') {
-    return 'timeout';
+    return { failure: 'timeout', detail: 'no answer inside the per-attempt budget' };
+  }
+  // A request that never reached Google is a different event from one Google
+  // refused, and the difference is the whole diagnosis: nothing appears in the
+  // API console either way, so if the two share a bucket there is no way to
+  // tell a broken uplink from a rejected key without a shell on the box.
+  if (name === 'APIConnectionError') {
+    return {
+      failure: 'unreachable',
+      detail: 'the request never left this container — check DNS, the firewall and the uplink',
+    };
   }
 
   const status = (err as { statusCode?: number })?.statusCode;
   if (status === 429) {
-    return 'rate-limit';
+    return { failure: 'rate-limit', detail: 'HTTP 429 — the quota for this key is spent' };
   }
   if (status === 401 || status === 403) {
-    return 'misconfigured';
+    return {
+      failure: 'misconfigured',
+      detail: `HTTP ${status} — GEMINI_API_KEY was refused; check the key itself and any restrictions on it`,
+    };
   }
-  return 'unknown';
+  // 404 is the model name, not the route: the SDK builds the path, so the only
+  // part of it this app can get wrong is `GEMINI_MODEL`.
+  if (status === 404) {
+    return {
+      failure: 'misconfigured',
+      detail: `HTTP 404 — no such model; check GEMINI_MODEL (empty means ${DEFAULT_MODEL})`,
+    };
+  }
+  // A *malformed* key — one that arrived with its quotes still attached, say —
+  // is answered with 400 and `API_KEY_INVALID`, not the 401 a merely wrong key
+  // gets. Read verbatim from the live API; see the fixtures in the tests.
+  //
+  // Only this one reason is promoted. A blanket `400 -> misconfigured` would
+  // relabel every genuinely malformed request as a configuration problem and
+  // send the next reader to the compose file for a bug that is in this module.
+  if (status === 400 && mentionsInvalidKey(err)) {
+    return { failure: 'misconfigured', detail: INVALID_KEY_DETAIL };
+  }
+  return {
+    failure: 'unknown',
+    detail: status ? `HTTP ${status}` : `no status code (${name || 'unnamed error'})`,
+  };
+}
+
+/**
+ * Whether an error body blames the API key.
+ *
+ * The body is inspected but never logged or returned: an API error body can
+ * echo the request back, base64 image and all. Only this boolean escapes.
+ */
+function mentionsInvalidKey(err: unknown): boolean {
+  const body = (err as { body?: unknown })?.body;
+  return typeof body === 'string' && body.includes('API_KEY_INVALID');
 }
 
 /**
@@ -326,7 +426,7 @@ function classify(err: unknown): GeminiFailure {
  * no trace is a support call nobody can answer.
  */
 export async function generateItemDescription(image: Buffer): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const apiKey = readSetting('GEMINI_API_KEY');
   if (!apiKey) {
     throw new GeminiError('misconfigured');
   }
@@ -370,10 +470,11 @@ export async function generateItemDescription(image: Buffer): Promise<string> {
 
     outputText = interaction.output_text;
   } catch (err) {
-    const failure = classify(err);
-    // The message and body are not logged: an API error's body can echo the
-    // request back, base64 image and all.
-    console.error('Gemini call failed:', failure);
+    const { failure, detail } = classify(err);
+    // Neither the SDK's message nor the response body is logged: an API
+    // error's body can echo the request back, base64 image and all. `detail`
+    // is this module's own text, built from the status code — see `Diagnosis`.
+    console.error(`Gemini call failed: ${failure} — ${detail}`);
     throw new GeminiError(failure);
   }
 
