@@ -72,6 +72,11 @@ export default defineConfig({
       // The repo has no committed .env, and iron-session refuses a secret
       // under 32 characters. A fixed throwaway value keeps runs reproducible.
       SESSION_SECRET: 'e2e-only-session-secret-not-for-production-use',
+      // Makes the AI description button render so its states can be asserted.
+      // No test clicks through to generation — a real call would send a photo
+      // to Google and fail on a machine with no route out — so this value is
+      // never used against the API. See e2e/ai-description.spec.ts.
+      GEMINI_API_KEY: 'e2e-only-never-sent-anywhere',
     },
   },
 });

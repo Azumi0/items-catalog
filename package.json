@@ -22,6 +22,7 @@
     "db:migrate": "node --import tsx src/db/migrate.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.19.0",
     "@mantine/core": "^9.5.2",
     "@mantine/dropzone": "^9.5.2",
     "@mantine/hooks": "^9.5.2",

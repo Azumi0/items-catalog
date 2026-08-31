@@ -50,6 +50,8 @@ corepack prepare pnpm@latest --activate
 | `NODE_ENV` | `production` in the image | Next.js, `src/lib/auth.ts` | Also controls the `Secure` flag on the session cookie — see the warning below. |
 | `PUID` / `PGID` | `1000` / `1000` | `entrypoint.sh` | UID/GID that owns `/data` inside the container. Set these to match the folder owner on Synology DSM to avoid `EACCES`. |
 | `PORT` | `3000` | Next.js standalone server | Port the server listens on inside the container. |
+| `GEMINI_API_KEY` | none — feature stays off | `src/lib/gemini.ts` | Enables AI description generation. Server-side only; never reaches the browser. See below. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | `src/lib/gemini.ts` | Model used for descriptions. Read at request time, so switching models needs a container restart, not an image rebuild. |
 
 > **Note:** earlier revisions of this document referenced `DATA_PATH`. That variable is **not** read anywhere in the code — use `DATA_DIR`.
 
@@ -60,6 +62,58 @@ openssl rand -hex 32
 ```
 
 In production the application **refuses to start** unless `SESSION_SECRET` is set, is at least 32 characters, and is not one of the placeholder values shipped in this repository's docs and compose files. Earlier revisions fell back to a constant defined in `src/lib/auth.ts` — a value anyone reading the source could use to forge a session cookie — and that fallback has been removed. Outside production (`pnpm dev`, the test suite) a development secret is used so neither needs any setup.
+
+---
+
+## AI description generation (`GEMINI_API_KEY`)
+
+The add and edit item screens can propose a description from the item's main photo, via Google's Gemini API. **The feature is off by default.** Without `GEMINI_API_KEY` the button does not render at all and nothing is ever sent anywhere — an existing installation upgraded to this version keeps behaving exactly as before.
+
+### Enabling it
+
+1. Create an API key in [Google AI Studio](https://aistudio.google.com/apikey).
+2. Put it in the `.env` file beside `docker-compose.yml`:
+
+   ```bash
+   GEMINI_API_KEY=your-key-here
+   # Optional — leave empty for gemini-3.5-flash-lite:
+   GEMINI_MODEL=
+   ```
+
+3. Restart the container. On Synology, `docker-compose.synology.yml` has the same two variables inline, since that file does not read a `.env`.
+
+Switching models is a restart, not a rebuild: `GEMINI_MODEL` is read per request.
+
+The call goes through Google's official `@google/genai` SDK — the only dependency here that is neither a framework, a UI library, nor a database driver. The reasoning for taking it on, and the measured cost, are in ADR-008 §2.7.
+
+### What this actually does — read before enabling
+
+Turning this on means **the item's main photo leaves your NAS and goes to Google.** That is a real change in what this application is: everything else here — icons, fonts, the broken-image placeholder — is deliberately local so the catalog works with no route to the internet.
+
+The exception is bounded on purpose:
+
+* only the **main** photo, never the additional ones;
+* only on an explicit click of "Wygeneruj opis z AI", never on save, upload, or in the background;
+* the result is a **proposal** placed in the description field — nothing is stored until you save the item yourself, and the text stays editable;
+* the API key is read server-side only and never appears in a response body or the client bundle;
+* the photo bytes and the model's reply are **never written to the container log** (only HTTP status codes are).
+
+The reasoning, the alternatives that were rejected, and the accepted costs are in [`docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md`](docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md).
+
+### Tuning it
+
+Two constants in `src/lib/gemini.ts` are meant to be adjusted:
+
+| Constant | What it is for |
+| --- | --- |
+| `MAX_IMAGE_PIXELS` | Pixel-area cap on the image sent (default 9 437 184 px ≈ 4096 × 2304). **Lower it if generation feels slow** — it costs nothing in tokens, which are charged per image at a flat rate, only upload time. |
+| `DESCRIPTION_PROMPT` | The instruction sent with every photo. Change this when descriptions come back with the wrong tone, length, or level of guessing. |
+
+### If it fails
+
+Each failure has its own message rather than a generic one: an exceeded quota says so, a timeout says so, and a bad key says the feature is misconfigured. The description field is never touched on failure.
+
+A call is given a total budget of 60 seconds and at most one retry, and that retry is never spent on a quota error. Worst case — a hung endpoint — the button comes back after ~60s with a message. See ADR-008 §2.8 for the measurements behind those numbers.
 
 ---
 

@@ -1,6 +1,13 @@
 allowBuilds:
+  # Skrypty instalacyjne SDK sa zbedne dla konsumenta i nie sa uruchamiane:
+  # postinstall protobufjs tylko drukuje ostrzezenie o schemacie wersji, a
+  # skrypt `prepare` @google/genai nie istnieje w opublikowanej paczce.
+  # Sprawdzone: SDK dziala bez nich (probe na lokalnym serwerze HTTP).
+  # Trzymanie tego na false nie wpuszcza obcych skryptow do builda obrazu.
+  '@google/genai': false
   better-sqlite3: true
   esbuild: true
+  protobufjs: false
   sharp: true
   # Native resolver behind eslint-config-next's import resolution (dev only).
   unrs-resolver: true

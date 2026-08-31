@@ -53,6 +53,13 @@ services:
       # Bez tej zmiennej aplikacja uzyje stalego sekretu z src/lib/auth.ts,
       # ktory jest publiczny w repozytorium.
       - SESSION_SECRET=${SESSION_SECRET:?ustaw SESSION_SECRET w pliku .env (min. 32 znaki)}
+      # --- Generowanie opisow przez AI (opcjonalne) ---
+      # Bez klucza funkcja jest wylaczona i przycisk sie nie renderuje.
+      # Klucz: https://aistudio.google.com/apikey — patrz .env.example
+      # i docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # Puste = gemini-3.5-flash-lite. Zmiana nie wymaga przebudowy obrazu.
+      - GEMINI_MODEL=${GEMINI_MODEL:-}
 
     logging:
       driver: json-file

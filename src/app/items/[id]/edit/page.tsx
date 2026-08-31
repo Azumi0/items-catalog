@@ -4,6 +4,7 @@ import { getCategories } from '@/lib/services/categories';
 import { notFound } from 'next/navigation';
 import { AppLayout } from '@/components/AppLayout';
 import { ItemForm } from '@/components/ItemForm';
+import { isAiConfigured } from '@/lib/gemini';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,11 @@ export default async function EditItemPage({
       tab="catalog"
       chrome={false}
     >
-      <ItemForm categories={categories} item={item} />
+      <ItemForm
+        categories={categories}
+        item={item}
+        aiEnabled={isAiConfigured()}
+      />
     </AppLayout>
   );
 }
