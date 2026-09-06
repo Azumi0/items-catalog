@@ -449,12 +449,20 @@ SQLite runs in WAL mode (`journal_mode = WAL`), so a live copy can capture a par
 
 ## Documentation & Architecture
 
+> [!NOTE]
+> Detailed documentation for this project in the `docs` directory (including architecture decision records, deployment guides, and design specifications) is in Polish.
+
 - [CONTEXT.md](CONTEXT.md) – Ubiquitous domain language, entity definitions, and naming conventions.
 - [docs/deployment-synology.md](docs/deployment-synology.md) – Step-by-step deployment walkthrough for Synology Container Manager (Polish), covering image import, project setup, auto-start and the reverse proxy.
 - [docs/adr/ADR-001-item-catalog-pwa-architecture.md](docs/adr/ADR-001-item-catalog-pwa-architecture.md) – Architecture decision record covering data model, security, and Synology deployment.
 - [docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md](docs/adr/ADR-002-interactive-image-lightbox-zoom-pan.md) – Lightbox zoom and pan behaviour, and why pinch-to-zoom is component-scoped rather than global.
 - [docs/adr/ADR-003-page-level-authorization-invariant.md](docs/adr/ADR-003-page-level-authorization-invariant.md) – Why `requireAuthPage()` is the real access guard and the proxy is not a security boundary.
 - [docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md](docs/adr/ADR-004-odstepstwa-od-handoffu-mobile-first.md) – The closed list of places where the mobile-first redesign deliberately departs from its design handoff, and why each one is not a bug.
+- [docs/adr/ADR-005-odstepstwa-od-handoffu-icon-picker.md](docs/adr/ADR-005-odstepstwa-od-handoffu-icon-picker.md) – The closed list of places where the icon picker deliberately departs from its design handoff.
+- [docs/adr/ADR-006-hartowanie-pod-dostep-z-internetu.md](docs/adr/ADR-006-hartowanie-pod-dostep-z-internetu.md) – Hardening measures for internet-facing access (throttling, CSP, password floor, account enumeration defense).
+- [docs/adr/ADR-007-ciastko-urzadzenia-i-uniewaznianie-sesji.md](docs/adr/ADR-007-ciastko-urzadzenia-i-uniewaznianie-sesji.md) – Device cookies and session invalidation via database session versioning.
+- [docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md](docs/adr/ADR-008-wysylka-zdjec-do-zewnetrznego-modelu.md) – External model photo sending for AI description generation, boundaries, and measured costs.
 - [docs/design_handoff_mobile_first/README.md](docs/design_handoff_mobile_first/README.md) – The mobile-first design handoff: screen specifications, prototypes and screenshots (Polish).
+- [docs/design_handoff_icon_picker/README.md](docs/design_handoff_icon_picker/README.md) – The icon picker handoff: category form icon field and search modal (Polish).
 - [AGENTS.md](AGENTS.md) – Rules agents must follow when working in this repository.
 - [docs/initial-prompt.md](docs/initial-prompt.md) – The originating specification (Polish, archived).
